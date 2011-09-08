@@ -40,23 +40,24 @@
                           #{"Control" "Comparison" "Problem" "Seed" "type" "runid" "_rev" "_id"}))))
 
 (defmacro summarize-comparative-results
-  [problem field func]
-  (let [f (case func
-                "AVG" '(fn [values] (double (/ (reduce + 0 values) (count values))))
-                "SUM" '(fn [values] (reduce + 0 values))
-                "MAX" '(fn [values] (apply max values))
-                "MIN" '(fn [values] (apply min values))
-                ;; default is SUM
-                '(fn [values] (apply + 0 values)))]
-    `(clutch/with-db local-couchdb
-       (clutch/ad-hoc-view
-        (clutch/with-clj-view-server
-          {:map (fn [doc#]
-                  (when (= "comparative" (:type doc#))
-                    (for [field# (keys doc#) :when (number? (get doc# field#))]
-                      [[(:Problem doc#) field#] (get doc# field#)])))
-           :reduce (fn [keys# values# rereduce#] (~f values#))})
-        {:key [~problem ~field]}))))
+  [problem custom]
+  `(let [~'field (:field ~custom)
+         ~'f (case (:func ~custom)
+                   "AVG" '(fn [~'values] (double (/ (reduce + 0 ~'values) (count ~'values))))
+                   "SUM" '(fn [~'values] (reduce + 0 ~'values))
+                   "MAX" '(fn [~'values] (apply max ~'values))
+                   "MIN" '(fn [~'values] (apply min ~'values))
+                   ;; default is SUM
+                   '(fn [~'values] (apply + 0 ~'values)))]
+     `(clutch/with-db local-couchdb
+        (clutch/ad-hoc-view
+         (clutch/with-clj-view-server
+           {:map (fn [~'~'doc]
+                   (when (= "comparative" (:type ~'~'doc))
+                     (for [~'~'field (keys ~'~'doc) :when (number? (get ~'~'doc ~'~'field))]
+                       [[(:Problem ~'~'doc) ~'~'field] (get ~'~'doc ~'~'field)])))
+            :reduce (fn [~'~'_ ~'~'values ~'~'_] (~~'f ~'~'values))})
+         {:key [~~problem ~~'field]}))))
 
 (defn get-run
   [id]
