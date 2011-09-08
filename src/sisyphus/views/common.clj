@@ -19,7 +19,7 @@
                   [:div.container
                    [:h3 (link-to "/" "Sisyphus")]
                    [:ul.nav
-                    [:li (link-to "/blah" "Blah")]]]]]
+                    [:li (link-to "/" "Overview")]]]]]
                 content]]))
 
 (defpartial date-format

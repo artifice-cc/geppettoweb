@@ -59,10 +59,21 @@
             :reduce (fn [~'~'_ ~'~'values ~'~'_] (~~'f ~'~'values))})
          {:key [~~runid ~~'field]}))))
 
-(defn get-run
+(defn get-doc
   [id]
   (clutch/with-db local-couchdb
     (clutch/get-document id)))
+
+(defn get-results
+  [run results-type]
+  (eval
+   `(clutch/with-db local-couchdb
+      (clutch/ad-hoc-view
+       (clutch/with-clj-view-server
+         {:map (fn [~'doc]
+                 (when (= (name ~results-type) (:type ~'doc))
+                   [[(:runid ~'doc) ~'doc]]))})
+       {:key ~(:_id run)}))))
 
 (defn query-comparative-results
   [fields limit]
