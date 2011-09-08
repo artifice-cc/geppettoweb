@@ -28,13 +28,16 @@
                               ((comp double :value first :rows second) %) Double/NEGATIVE_INFINITY)
                            (map (fn [r] [r (eval (summarize-comparative-results (:id r) custom))])
                                 runs))]
-    [:table [:tr [:th "Time"]
-             [:th "Control strategy"] [:th "Comparison strategy"]
-             [:th (format "%s (%s,%s)" (:field custom) (:order custom) (:func custom))]
-             [:th "Control"] [:th "Comparison"] [:th "Comparative"]
-             [:th "Commit"]]
-     (map (fn [[run summary]] (run-table-row run summary))
-          (if (= "DESC" (:order custom)) (reverse summaries) summaries))]))
+    [:table.tablesorter
+     [:thead
+      [:tr [:th "Time"]
+       [:th "Control strategy"] [:th "Comparison strategy"]
+       [:th (format "%s (%s,%s)" (:field custom) (:order custom) (:func custom))]
+       [:th "Control"] [:th "Comparison"] [:th "Comparative"]
+       [:th "Commit"]]]
+     [:tbody
+      (map (fn [[run summary]] (run-table-row run summary))
+           (if (= "DESC" (:order custom)) (reverse summaries) summaries))]]))
 
 (defpartial runs
   [problem runs]
@@ -42,18 +45,21 @@
         custom-field (or (cookies/get (keyword (format "%s-field" problem))) (first fields))
         custom-order (or (cookies/get (keyword (format "%s-order" problem))) "ASC")
         custom-func (or (cookies/get (keyword (format "%s-func" problem))) "SUM")]
-    [:p
-     (form-to [:post "/set-custom"]
-              (hidden-field :problem problem)
-              (drop-down :field fields custom-field)
-              (drop-down :order ["ASC" "DESC"] custom-order)
-              (drop-down :func ["AVG" "SUM" "MAX" "MIN"] custom-func)
-              (submit-button "Update"))
-     (runs-table runs problem {:field custom-field :order custom-order :func custom-func})]))
+    [:div.row
+     [:div.span16.columns
+      [:h1 problem]
+      [:p
+       (form-to [:post "/set-custom"]
+                (hidden-field :problem problem)
+                (drop-down :field fields custom-field)
+                (drop-down :order ["ASC" "DESC"] custom-order)
+                (drop-down :func ["AVG" "SUM" "MAX" "MIN"] custom-func)
+                (submit-button "Update"))
+       (runs-table runs problem {:field custom-field :order custom-order :func custom-func})]]]))
 
 (defpartial runs-by-problem
   [runs-grouped]
-  (map (fn [problem] [:p problem (runs problem (get runs-grouped problem))])
+  (map (fn [problem] (runs problem (get runs-grouped problem)))
        (keys runs-grouped)))
 
 (defpage
@@ -65,4 +71,4 @@
 
 (defpage "/" []
   (let [runs-grouped (group-by (comp :problem :value) (list-runs))]
-    (runs-by-problem runs-grouped)))
+    (common/layout (runs-by-problem runs-grouped))))

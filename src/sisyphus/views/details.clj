@@ -15,4 +15,4 @@
                (sort (keys details)))])
 
 (defpage "/details/:id" {id :id}
-  (details-table (get-run id)))
+  (common/layout (details-table (get-run id))))
