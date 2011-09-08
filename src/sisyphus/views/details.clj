@@ -1,10 +1,10 @@
 (ns sisyphus.views.details
   (:require [clojure.set :as set])
   (:require [sisyphus.views.common :as common])
+  (:require [noir.response :as resp])
+  (:require [noir.cookies :as cookies])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.runs :only [get-doc get-results]]))
-
-(def dissoc-fields [:Problem :Comparison :Control :Step :runid :type :_rev :_id])
+  (:use [sisyphus.models.runs :only [get-doc get-results get-fields]]))
 
 (defpartial details-metainfo
   [run]
@@ -52,11 +52,17 @@
     [:p (text-area :annotation)]
     [:p (submit-button "Save")]]])
 
+(defn filter-on-fields
+  [problem fields]
+  (filter (fn [f] (= "true" (cookies/get (format "%s-%s" problem (name f))))) fields))
+
 (defpartial details-fields-checkboxes
-  [fields comparative?]
-  [:div
-   [:div.row
-    [:div.span16.columns [:h3 "Fields"]]]
+  [run fields comparative?]
+  (form-to
+   [:post "/details/set-fields"]
+   (hidden-field :id (:_id run))
+   (hidden-field :comparative (if comparative? "true" "false"))
+   (hidden-field :problem (:problem run))
    [:div.row
     (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 4))) fields)]
       (map (fn [fs]
@@ -64,52 +70,57 @@
               [:div
                [:ul.inputs-list
                 (map (fn [f]
-                       [:li [:label (check-box :fields false (name f)) " " (name f)]])
+                       [:li [:label
+                             [:input {:type "checkbox" :name "fields[]" :value (name f)
+                                      :checked (= "true" (cookies/get
+                                                          (format "%s-%s" (:problem run)
+                                                                  (name f))))}]
+                             " " (name f)]])
                      fs)]]])
-           field-groups))]])
+           field-groups))]
+   [:div.row [:div.span16.columns {:style "text-align: right"} (submit-button "Updated fields")]]))
 
 (defpartial details-comparative-table
   [run]
-  (let [comparative-results (map (fn [r] (apply dissoc r dissoc-fields))
-                                 (map :value (:rows (get-results run :comparative))))
-        fields (sort (apply set/intersection (map (fn [r] (set (keys r))) comparative-results)))]
+  (let [comparative-results (get-results (:_id run) :comparative)
+        fields (get-fields comparative-results)
+        on-fields (filter-on-fields (:problem run) fields)]
     [:div
      [:div.row
       [:div.span16.columns
-       [:h2 "Comparative results"]]]
+       [:a {:name "comparative-results"}
+        [:h2 "Comparative results"]]]]
      [:div.row
       [:div.span16.columns {:style "max-width: 960px; overflow: auto;"}
        [:table.tablesorter.zebra-striped
         [:thead
-         [:tr (map (fn [f] [:th (name f)]) fields)]]
+         [:tr (map (fn [f] [:th (name f)]) on-fields)]]
         [:tbody
          (map (fn [r] [:tr (map (fn [f] [:td (let [val (get r f)]
                                                (if (= java.lang.Double (type val))
                                                  (format "%.2f" val)
                                                  (str val)))])
-                                fields)])
+                                on-fields)])
               comparative-results)]]]]
-     (details-fields-checkboxes fields true)]))
+     (details-fields-checkboxes run fields true)]))
 
 (defpartial details-paired-table
   [run]
   (let [[control-results comparison-results]
-        (map (fn [results-type]
-               (sort-by :Seed (map (fn [r] (apply dissoc r dissoc-fields))
-                                   (map :value (:rows (get-results run results-type))))))
+        (map (fn [results-type] (get-results (:_id run) results-type))
              [:control :comparison])
-        fields (sort (apply set/intersection
-                            (map (fn [r] (set (keys r)))
-                                 (concat control-results comparison-results))))]
+        fields (get-fields (concat control-results comparison-results))
+        on-fields (filter-on-fields (:problem run) fields)]
     [:div
      [:div.row
       [:div.span16.columns
-       [:h2 "Control/comparison results"]]]
+       [:a {:name "control-comparison-results"}
+        [:h2 "Control/comparison results"]]]]
      [:div.row
       [:div.span16.columns {:style "max-width: 960px; overflow: auto;"}
        [:table.tablesorter.zebra-striped
         [:thead
-         [:tr (map (fn [f] [:th (name f)]) fields)]]
+         [:tr (map (fn [f] [:th (name f)]) on-fields)]]
         [:tbody
          (map (fn [i]
                 [:tr (map (fn [f]
@@ -125,16 +136,33 @@
                                      (if (= java.lang.Double (type control-val))
                                        (format "%.2f" control-val)
                                        (str control-val))))])
-                          fields)])
+                          on-fields)])
               (range (min (count control-results) (count comparison-results))))]]]]
-     (details-fields-checkboxes fields false)]))
+     (details-fields-checkboxes run fields false)]))
+
+(defpage
+  [:post "/details/set-fields"] {:as fields}
+  (let [results (if (= "true" (:comparative fields))
+                  (get-results (:id fields) :comparative)
+                  (concat (get-results (:id fields) :control)
+                          (get-results (:id fields) :comparison)))
+        all-fields (get-fields results)
+        on-fields (set (:fields fields))
+        off-fields (set/difference (set (map name all-fields)) on-fields)]
+    (doseq [f on-fields]
+      (cookies/put! (keyword (format "%s-%s" (:problem fields) f)) "true"))
+    (doseq [f off-fields]
+      (cookies/put! (keyword (format "%s-%s" (:problem fields) f)) "false")))
+  (resp/redirect (format "/details/%s#%s" (:id fields)
+                         (if (= "true" (:comparative fields)) "comparative-results"
+                             "control-comparison-results"))))
 
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
       (common/layout
        [:div.row [:div.span16.columns
-                  [:h1 (format "%s run %s (%s)"
+                  [:h1 (format "%s run %s <small>(%s)</small>"
                                (:problem doc) (subs id 0 8)
                                (common/date-format (:time doc)))]]]
        (details-comparative-table doc)

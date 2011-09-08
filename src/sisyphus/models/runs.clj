@@ -64,16 +64,24 @@
   (clutch/with-db local-couchdb
     (clutch/get-document id)))
 
+(def dissoc-fields [:Problem :Comparison :Control :Step :runid :type :_rev :_id])
+
+(defn get-fields
+  [results]
+  (sort (apply set/intersection
+               (map (fn [r] (set (keys r)))
+                    (map (fn [r] (apply dissoc r dissoc-fields)) results)))))
+
 (defn get-results
-  [run results-type]
-  (eval
-   `(clutch/with-db local-couchdb
-      (clutch/ad-hoc-view
-       (clutch/with-clj-view-server
-         {:map (fn [~'doc]
-                 (when (= (name ~results-type) (:type ~'doc))
-                   [[(:runid ~'doc) ~'doc]]))})
-       {:key ~(:_id run)}))))
+  [id results-type]
+  (let [results (eval `(clutch/with-db local-couchdb
+                         (clutch/ad-hoc-view
+                          (clutch/with-clj-view-server
+                            {:map (fn [~'doc]
+                                    (when (= (name ~results-type) (:type ~'doc))
+                                      [[(:runid ~'doc) ~'doc]]))})
+                          {:key ~id})))]
+    (sort-by :Seed (map :value (:rows results)))))
 
 (defn query-comparative-results
   [fields limit]
