@@ -8,15 +8,15 @@
          [problem-fields list-runs summarize-comparative-results]]))
 
 (defpartial run-table-row
-  [run problem custom]
+  [run summary]
   (let [id (:id run)
-        r (:value run)
-        ;; why must a macro be called this way?!
-        summary (eval (summarize-comparative-results problem custom))]
+        r (:value run)]
     [:tr
      [:td (link-to (format "/details/%s" id) (common/date-format (:time r)))]
      [:td (:control-strategy r)] [:td (:comparison-strategy r)]
-     [:td (format "%.2f" ((comp double :value first :rows) summary))]
+     [:td (if (not-empty (:rows summary))
+            (format "%.2f" ((comp double :value first :rows) summary))
+            "N/A")]
      [:td (:control-count r)] [:td (:comparison-count r)]
      [:td (:comparative-count r)]
      [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit r))
@@ -24,12 +24,17 @@
 
 (defpartial runs-table
   [runs problem custom]
-  [:table [:tr [:th "Time"]
-           [:th "Control strategy"] [:th "Comparison strategy"]
-           [:th (format "%s (%s,%s)" (:field custom) (:order custom) (:func custom))]
-           [:th "Control"] [:th "Comparison"] [:th "Comparative"]
-           [:th "Commit"]]
-   (map #(run-table-row % problem custom) runs)])
+  (let [summaries (sort-by #(if (not-empty (:rows (second %)))
+                              ((comp double :value first :rows second) %) Double/NEGATIVE_INFINITY)
+                           (map (fn [r] [r (eval (summarize-comparative-results (:id r) custom))])
+                                runs))]
+    [:table [:tr [:th "Time"]
+             [:th "Control strategy"] [:th "Comparison strategy"]
+             [:th (format "%s (%s,%s)" (:field custom) (:order custom) (:func custom))]
+             [:th "Control"] [:th "Comparison"] [:th "Comparative"]
+             [:th "Commit"]]
+     (map (fn [[run summary]] (run-table-row run summary))
+          (if (= "DESC" (:order custom)) (reverse summaries) summaries))]))
 
 (defpartial runs
   [problem runs]

@@ -40,7 +40,7 @@
                           #{"Control" "Comparison" "Problem" "Seed" "type" "runid" "_rev" "_id"}))))
 
 (defmacro summarize-comparative-results
-  [problem custom]
+  [runid custom]
   `(let [~'field (:field ~custom)
          ~'f (case (:func ~custom)
                    "AVG" '(fn [~'values] (double (/ (reduce + 0 ~'values) (count ~'values))))
@@ -55,9 +55,9 @@
            {:map (fn [~'~'doc]
                    (when (= "comparative" (:type ~'~'doc))
                      (for [~'~'field (keys ~'~'doc) :when (number? (get ~'~'doc ~'~'field))]
-                       [[(:Problem ~'~'doc) ~'~'field] (get ~'~'doc ~'~'field)])))
+                       [[(:runid ~'~'doc) ~'~'field] (get ~'~'doc ~'~'field)])))
             :reduce (fn [~'~'_ ~'~'values ~'~'_] (~~'f ~'~'values))})
-         {:key [~~problem ~~'field]}))))
+         {:key [~~runid ~~'field]}))))
 
 (defn get-run
   [id]
