@@ -91,7 +91,7 @@
        [:a {:name "comparative-results"}
         [:h2 "Comparative results"]]]]
      [:div.row
-      [:div.span16.columns {:style "max-width: 960px; overflow: auto;"}
+      [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
        [:table.tablesorter.zebra-striped
         [:thead
          [:tr (map (fn [f] [:th (name f)]) on-fields)]]
@@ -117,7 +117,7 @@
        [:a {:name "control-comparison-results"}
         [:h2 "Control/comparison results"]]]]
      [:div.row
-      [:div.span16.columns {:style "max-width: 960px; overflow: auto;"}
+      [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
        [:table.tablesorter.zebra-striped
         [:thead
          [:tr (map (fn [f] [:th (name f)]) on-fields)]]
