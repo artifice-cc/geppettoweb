@@ -5,7 +5,8 @@
   (:require [noir.cookies :as cookies])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.runs :only
-         [get-doc get-results get-fields add-annotation delete-annotation]]))
+         [get-doc get-results get-fields add-annotation delete-annotation]])
+  (:use [sisyphus.models.graphs :only [get-graph]]))
 
 (defpartial details-metainfo
   [run]
@@ -186,14 +187,16 @@
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
-      (common/layout
-       [:div.row [:div.span16.columns
-                  [:h1 (format "%s run %s <small>(%s)</small>"
-                               (:problem doc) (subs id 0 8)
-                               (common/date-format (:time doc)))]]]
-       (details-comparative-table doc)
-       (details-paired-table doc)
-       (details-annotations doc)
-       (details-metainfo doc))
+      (do
+        (common/layout
+         [:div.row [:div.span16.columns
+                    [:h1 (format "%s run %s <small>(%s)</small>"
+                                 (:problem doc) (subs id 0 8)
+                                 (common/date-format (:time doc)))]]]
+         (details-comparative-table doc)
+         (details-paired-table doc)
+         (details-annotations doc)
+         (details-metainfo doc))
+        (prn (get-graph doc :comparative "mygraph")))
       (common/layout
        [:h1 "blah"]))))
