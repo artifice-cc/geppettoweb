@@ -4,7 +4,8 @@
   (:require [noir.response :as resp])
   (:require [noir.cookies :as cookies])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.runs :only [get-doc get-results get-fields]]))
+  (:use [sisyphus.models.runs :only
+         [get-doc get-results get-fields add-annotation delete-annotation]]))
 
 (defpartial details-metainfo
   [run]
@@ -42,15 +43,30 @@
 (defpartial details-annotations
   [run]
   [:div.row
-   [:div.span4.columns
-    [:h2 "Annotations"]]
-   [:div.span8.columns [:p "No annotations."]]]
+   [:div.span16.columns
+    [:a {:name "annotations"}
+     [:h2 "Annotations"]]]]
+  [:div.row
+   [:div.span4.columns "&nbsp;"]
+   [:div.span8.columns
+    (if (or (nil? (:annotations run)) (empty? (:annotations run)))
+      [:p "No annotations."]
+      (map (fn [i]
+             (form-to [:post "/details/delete-annotation"]
+                      (hidden-field :id (:_id run))
+                      (hidden-field :index i)
+                      [:blockquote [:p (nth (:annotations run) i)]]
+                      [:p {:style "text-align: right;"} (submit-button "Delete")]))
+           (range (count (:annotations run)))))]]
   [:div.row
    [:div.span4.columns
     [:h3 "New annotation"]]
    [:div.span12.columns
-    [:p (text-area :annotation)]
-    [:p (submit-button "Save")]]])
+    (form-to
+     [:post "/details/add-annotation"]
+     (hidden-field :id (:_id run))
+     [:p [:textarea {:style "width: 100%" :name "content"}]]
+     [:p {:style "text-align: right;"} (submit-button "Save")])]])
 
 (defn filter-on-fields
   [problem fields]
@@ -139,6 +155,16 @@
                           on-fields)])
               (range (min (count control-results) (count comparison-results))))]]]]
      (details-fields-checkboxes run fields false)]))
+
+(defpage
+  [:post "/details/delete-annotation"] {:as annotation}
+  (delete-annotation (:id annotation) (Integer/parseInt (:index annotation)))
+  (resp/redirect (format "/details/%s#annotations" (:id annotation))))
+
+(defpage
+  [:post "/details/add-annotation"] {:as annotation}
+  (add-annotation (:id annotation) (:content annotation))
+  (resp/redirect (format "/details/%s#annotations" (:id annotation))))
 
 (defpage
   [:post "/details/set-fields"] {:as fields}

@@ -64,6 +64,20 @@
   (clutch/with-db local-couchdb
     (clutch/get-document id)))
 
+(defn add-annotation
+  [id content]
+  (clutch/with-db local-couchdb
+    (-> (clutch/get-document id)
+        (clutch/update-document #(conj % content) [:annotations]))))
+
+(defn delete-annotation
+  [id index]
+  (clutch/with-db local-couchdb
+    (let [annotations (:annotations (clutch/get-document id))]
+      (-> (clutch/get-document id)
+          (clutch/update-document {:annotations (concat (take index annotations)
+                                                        (drop (inc index) annotations))})))))
+
 (def dissoc-fields [:Problem :Comparison :Control :Step :runid :type :_rev :_id])
 
 (defn get-fields
