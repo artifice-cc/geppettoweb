@@ -6,7 +6,7 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.runs :only
          [get-doc get-results get-fields add-annotation delete-annotation]])
-  (:use [sisyphus.models.graphs :only [get-graph]]))
+  (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]]))
 
 (defpartial details-metainfo
   [run]
@@ -157,6 +157,25 @@
               (range (min (count control-results) (count comparison-results))))]]]]
      (details-fields-checkboxes run fields false)]))
 
+(defpartial details-graphs
+  [run]
+  (let [graphs (get (list-graphs) (:problem run))]
+    [:section#graphs
+     [:div.page-header
+      [:h2 "Graphs"]]
+     (if (empty? graphs)
+       [:div.row
+        [:div.span16.columns [:p "No graphs."]]]
+       (for [g graphs]
+         (if-let [png (get-graph-png run g)]
+           [:div.row
+            [:div.span4.columns
+             [:h3 (:name g)]]
+            [:div.span8.columns
+             [:img {:src png :width 700 :height 400}]]]
+           [:div.row
+            [:div.span16.columns [:p (format "Failed to produce graph %s" (:name g))]]])))]))
+
 (defpage
   [:post "/details/delete-annotation"] {:as annotation}
   (delete-annotation (:id annotation) (Integer/parseInt (:index annotation)))
@@ -194,6 +213,7 @@
                                (common/date-format (:time doc)))]]]
        (details-comparative-table doc)
        (details-paired-table doc)
+       (details-graphs doc)
        (details-annotations doc)
        (details-metainfo doc))
       (common/layout "Blah"

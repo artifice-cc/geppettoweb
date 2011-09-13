@@ -1,22 +1,25 @@
 (ns sisyphus.models.graphs
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.java.io :as io])
+  (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
   (:use [sisyphus.models.runs :only [get-results get-fields]]))
 
 (def local-couchdb "http://localhost:5984/retrospect")
 
 (def cachedir "/tmp")
+(def outdir "/home/josh/research/sisyphus/resources/public/img/graphs")
+(def url "/img/graphs")
 
 (defn csv-filename
-  [run results-type]
+  [run graph]
   (format "%s/%s-%s-%s.csv" cachedir (:_id run)
-          (:_rev run) (name results-type)))
+          (:_rev run) (name (:results-type graph))))
 
 (defn png-filename
-  [run results-type graph-name]
-  (format "%s/%s-%s-%s-%s.png" cachedir (:_id run)
-          (:_rev run) (name results-type) graph-name))
+  [run graph]
+  (format "%s/%s-%s-%s-%s.png" outdir (:_id run)
+          (:_rev run) (name (:results-type graph)) (:name graph)))
 
 (defn format-csv-row
   [row]
@@ -25,10 +28,10 @@
                      [\newline])))
 
 (defn results-to-csv
-  [run results-type]
-  (let [outfile (io/file (csv-filename run results-type))]
+  [run csv-fname graph]
+  (let [outfile (io/file csv-fname)]
     (when (. outfile createNewFile)
-      (let [results (get-results (:_id run) results-type)
+      (let [results (get-results (:_id run) (:results-type graph))
             fields (get-fields results)
             csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
                                 results))]
@@ -58,17 +61,21 @@
   (clutch/with-db local-couchdb
     (clutch/create-document (assoc graph :type "graph"))))
 
-(defn get-graph
-  [run results-type graph-name]
-  (let [csv (csv-filename run results-type)
-        png (png-filename run results-type graph-name)
-        graph "p <- ggplot(comparative) + geom_point(aes(x=Threshold, y=IncreaseAccuracy))"
-        rcode (format "library(ggplot2)\n%s <- read.csv(\"%s\")\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 4, height = 4)"
-                      (name results-type) csv graph png)]
-    ;; save rcode to file
-    (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
-      (.write writer rcode))
-    ;; run Rscript
-    (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))
-    (when (. (io/file png) exists)
-      png)))
+(defn get-graph-png
+  [run graph]
+  (let [csv-fname (csv-filename run graph)
+        png-fname (png-filename run graph)
+        rcode (format "library(ggplot2)\n%s <- read.csv(\"%s\")\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
+                      (name (:results-type graph)) csv-fname (:code graph) png-fname)]
+    (do (results-to-csv run csv-fname graph)
+        (if (. (io/file png-fname) exists)
+          (str/replace png-fname outdir url)
+          (do
+            ;; save rcode to file
+            (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
+              (.write writer rcode))
+            ;; run Rscript
+            (let [status (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))]
+              (when (not= 0 (:exit status)) (prn status)))
+            (when (. (io/file png-fname) exists)
+              (str/replace png-fname outdir url)))))))
