@@ -1,7 +1,12 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def local-couchdb "http://localhost:5984/retrospect")
+(def local-couchdb
+     {:host "localhost"
+      :port 5984
+      :username "sisyphus"
+      :password "sisyphus"
+      :name "retrospect"})
 
 (defn get-doc
   [id]

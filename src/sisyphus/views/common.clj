@@ -24,7 +24,8 @@
         [:h3 (link-to "/" "Sisyphus")]
         [:ul.nav
          [:li (link-to "/" "Overview")]
-         [:li (link-to "/graphs" "Graphs")]]]]]
+         [:li (link-to "/graphs" "Graphs")]
+         [:li (link-to "/configure" "Configure")]]]]]
      content]]))
 
 (defpartial strategy-format
