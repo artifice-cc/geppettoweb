@@ -28,6 +28,10 @@
                 [:div.input
                  (drop-down :results-type ["control" "comparison" "comparative"])]]
                [:div.clearfix
+                [:label {:for "caption"} "Caption"]
+                [:div.input
+                 [:textarea.xxlarge {:id "caption" :name "caption"}]]]
+               [:div.clearfix
                 [:label {:for "code"} "R code"]
                 [:div.input
                  [:textarea.xxlarge {:id "code" :name "code"}
@@ -58,8 +62,8 @@
         (for [graph (get graphs problem)]
           [:div.row
            [:div.span4.columns
-            [:h2 (:name graph)]
-            [:p (format "Results type: %s" (:results-type graph))]]
+            [:h2 (:name graph) [:small (format " (%s)" (:results-type graph))]]
+            [:p (:caption graph)]]
            [:div.span12.columns
             [:pre (:code graph)]]])])
      (new-graph-form))))

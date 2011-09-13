@@ -10,41 +10,43 @@
 
 (defpartial details-metainfo
   [run]
-  [:div.row
-   [:div.span4.columns
+  [:section#metadata
+   [:div.page-header
     [:h2 "Metadata"]]
-   [:div.span4.columns
-    [:h3 "Source code"]
-    [:dl [:dt "Commit hash"]
-     [:dd (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
-                   (subs (:commit run) 0 8))]]
-    [:dl [:dt "Commit message"]
-     [:dd (:commit-msg run)]]]
-   [:div.span4.columns
-    [:h3 "Machine"]
-    [:dl [:dt "Hostname"]
-     [:dd (:hostname run)]]
-    [:dl [:dt "Working directory"]
-     [:dd (:pwd run)]]
-    [:dl [:dt "Data directory"]
-     [:dd (:datadir run)]]
-    [:dl [:dt "Records directory"]
-     [:dd (:recordsdir run)]]
-    [:dl [:dt "Number of threads"]
-     [:dd (:nthreads run)]]]
-   [:div.span4.columns
-    [:h3 "Parameters"]
-    [:dl [:dt "Control strategy"]
-     [:dd (:control-strategy run)]]
-    [:dl [:dt "Comparison strategy"]
-     [:dd (:comparison-strategy run)]]
-    [:dl [:dt "Reptitions"]
-     [:dd (:repetitions run)]]]])
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span4.columns
+     [:h3 "Source code"]
+     [:dl [:dt "Commit hash"]
+      [:dd (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+                    (subs (:commit run) 0 8))]]
+     [:dl [:dt "Commit message"]
+      [:dd (:commit-msg run)]]]
+    [:div.span4.columns
+     [:h3 "Machine"]
+     [:dl [:dt "Hostname"]
+      [:dd (:hostname run)]]
+     [:dl [:dt "Working directory"]
+      [:dd (:pwd run)]]
+     [:dl [:dt "Data directory"]
+      [:dd (:datadir run)]]
+     [:dl [:dt "Records directory"]
+      [:dd (:recordsdir run)]]
+     [:dl [:dt "Number of threads"]
+      [:dd (:nthreads run)]]]
+    [:div.span4.columns
+     [:h3 "Parameters"]
+     [:dl [:dt "Control strategy"]
+      [:dd (:control-strategy run)]]
+     [:dl [:dt "Comparison strategy"]
+      [:dd (:comparison-strategy run)]]
+     [:dl [:dt "Reptitions"]
+      [:dd (:repetitions run)]]]]])
 
 (defpartial details-annotations
   [run]
-  [:div.row
-   [:div.span16.columns
+  [:section#annotations
+   [:div.page-header
     [:a {:name "annotations"}
      [:h2 "Annotations"]]]]
   [:div.row
@@ -102,11 +104,10 @@
   (let [comparative-results (get-results (:_id run) :comparative)
         fields (get-fields comparative-results)
         on-fields (filter-on-fields (:problem run) fields)]
-    [:div
-     [:div.row
-      [:div.span16.columns
-       [:a {:name "comparative-results"}
-        [:h2 "Comparative results"]]]]
+    [:section#comparative
+     [:div.page-header
+      [:a {:name "comparative-results"}
+       [:h2 "Comparative results"]]]
      [:div.row
       [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
        [:table.tablesorter.zebra-striped
@@ -128,11 +129,10 @@
              [:control :comparison])
         fields (get-fields (concat control-results comparison-results))
         on-fields (filter-on-fields (:problem run) fields)]
-    [:div
-     [:div.row
-      [:div.span16.columns
-       [:a {:name "control-comparison-results"}
-        [:h2 "Control/comparison results"]]]]
+    [:section#comparison
+     [:div.page-header
+      [:a {:name "control-comparison-results"}
+       [:h2 "Control/comparison results"]]]
      [:div.row
       [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
        [:table.tablesorter.zebra-striped
@@ -170,7 +170,8 @@
          (if-let [png (get-graph-png run g)]
            [:div.row
             [:div.span4.columns
-             [:h3 (:name g)]]
+             [:h3 (:name g)]
+             [:p (:caption g)]]
             [:div.span8.columns
              [:img {:src png :width 700 :height 400}]]]
            [:div.row
