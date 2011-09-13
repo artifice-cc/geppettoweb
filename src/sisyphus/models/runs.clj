@@ -1,8 +1,7 @@
 (ns sisyphus.models.runs
   (:require [clojure.set :as set])
-  (:require [com.ashafa.clutch :as clutch]))
-
-(def local-couchdb "http://localhost:5984/retrospect")
+  (:require [com.ashafa.clutch :as clutch])
+  (:use sisyphus.models.common))
 
 (defn list-runs
   []
@@ -58,11 +57,6 @@
                        [[(:runid ~'~'doc) ~'~'field] (get ~'~'doc ~'~'field)])))
             :reduce (fn [~'~'_ ~'~'values ~'~'_] (~~'f ~'~'values))})
          {:key [~~runid ~~'field]}))))
-
-(defn get-doc
-  [id]
-  (clutch/with-db local-couchdb
-    (clutch/get-document id)))
 
 (defn add-annotation
   [id content]

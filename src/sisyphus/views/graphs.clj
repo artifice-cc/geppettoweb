@@ -1,7 +1,7 @@
 (ns sisyphus.views.graphs
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
-  (:use [sisyphus.models.runs :only [get-doc]])
+  (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.graphs :only [list-graphs new-graph update-graph]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 

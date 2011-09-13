@@ -4,8 +4,9 @@
   (:require [noir.response :as resp])
   (:require [noir.cookies :as cookies])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
+  (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
-         [get-doc get-results get-fields add-annotation delete-annotation]])
+         [get-results get-fields add-annotation delete-annotation]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]]))
 
 (defpartial details-metainfo

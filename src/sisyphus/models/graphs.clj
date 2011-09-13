@@ -3,9 +3,8 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
-  (:use [sisyphus.models.runs :only [get-results get-fields]]))
-
-(def local-couchdb "http://localhost:5984/retrospect")
+  (:use [sisyphus.models.runs :only [get-results get-fields]])
+  (:use sisyphus.models.common))
 
 (def cachedir "/tmp")
 (def outdir "/home/josh/research/sisyphus/resources/public/img/graphs")
