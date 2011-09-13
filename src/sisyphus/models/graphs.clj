@@ -1,7 +1,10 @@
 (ns sisyphus.models.graphs
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.java.io :as io])
+  (:require [com.ashafa.clutch :as clutch])
   (:use [sisyphus.models.runs :only [get-results get-fields]]))
+
+(def local-couchdb "http://localhost:5984/retrospect")
 
 (def cachedir "/tmp")
 
@@ -33,6 +36,27 @@
         (with-open [writer (io/writer outfile)]
           (.write writer (format-csv-row (map name fields)))
           (.write writer csv))))))
+
+(defn list-graphs
+  []
+  (let [all-graphs
+        (:rows
+         (clutch/with-db local-couchdb
+           (clutch/ad-hoc-view
+            (clutch/with-clj-view-server
+              {:map (fn [doc]
+                      (when (= "graph" (:type doc))
+                        [[[(:problem doc) (:name doc)] doc]]))}))))
+        problems (sort (set (map (comp first :key) all-graphs)))]
+    (reduce (fn [m problem] (assoc m problem
+                                   (map :value (filter (fn [g] (= problem (first (:key g))))
+                                                       all-graphs))))
+            {} problems)))
+
+(defn new-graph
+  [graph]
+  (clutch/with-db local-couchdb
+    (clutch/create-document (assoc graph :type "graph"))))
 
 (defn get-graph
   [run results-type graph-name]

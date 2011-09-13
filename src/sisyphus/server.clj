@@ -9,6 +9,8 @@
     (server/start port {:mode mode
                         :ns 'sisyphus})
     ;; silly hack needed to use (sh)
-    ;; see: http://stackoverflow.com/questions/7259072/clojure-java-shell-sh-throws-rejectedexecutionexception-when-run-in-a-new-thread
+    ;; see: http://stackoverflow.com/questions/7259072/
+    ;;      clojure-java-shell-sh-throws-rejectedexecutionexception
+    ;;      -when-run-in-a-new-thread
     @(promise)))
 

@@ -11,7 +11,7 @@
      (clutch/ad-hoc-view
       (clutch/with-clj-view-server
         {:map (fn [doc]
-                (when (:problem doc)
+                (when (= "run" (:type doc))
                   [[(:time doc)
                     {:problem (:problem doc)
                      :control-strategy (:control-strategy doc)
@@ -88,14 +88,15 @@
 
 (defn get-results
   [id results-type]
-  (let [results (eval `(clutch/with-db local-couchdb
-                         (clutch/ad-hoc-view
-                          (clutch/with-clj-view-server
-                            {:map (fn [~'doc]
-                                    (when (= (name ~results-type) (:type ~'doc))
-                                      [[(:runid ~'doc) ~'doc]]))})
-                          {:key ~id})))]
-    (sort-by :Seed (map :value (:rows results)))))
+  (map :value
+       (:rows
+        (eval `(clutch/with-db local-couchdb
+                 (clutch/ad-hoc-view
+                  (clutch/with-clj-view-server
+                    {:map (fn [~'doc]
+                            (when (and (= (name ~results-type) (:type ~'doc))
+                                       (= ~id (:runid ~'doc)))
+                              [[(:Seed ~'doc) ~'doc]]))})))))))
 
 (defn query-comparative-results
   [fields limit]

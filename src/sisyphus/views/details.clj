@@ -66,7 +66,7 @@
     (form-to
      [:post "/details/add-annotation"]
      (hidden-field :id (:_id run))
-     [:p [:textarea {:style "width: 100%" :name "content"}]]
+     [:p [:textarea {:class "xxlarge" :name "content"}]]
      [:p {:style "text-align: right;"} (submit-button "Save")])]])
 
 (defn filter-on-fields
@@ -187,16 +187,14 @@
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
-      (do
-        (common/layout
-         [:div.row [:div.span16.columns
-                    [:h1 (format "%s run %s <small>(%s)</small>"
-                                 (:problem doc) (subs id 0 8)
-                                 (common/date-format (:time doc)))]]]
-         (details-comparative-table doc)
-         (details-paired-table doc)
-         (details-annotations doc)
-         (details-metainfo doc))
-        (prn (get-graph doc :comparative "mygraph")))
-      (common/layout
+      (common/layout (format "%s run %s" (:problem doc) (subs id 0 8))
+       [:div.row [:div.span16.columns
+                  [:h1 (format "%s run %s <small>(%s)</small>"
+                               (:problem doc) (subs id 0 8)
+                               (common/date-format (:time doc)))]]]
+       (details-comparative-table doc)
+       (details-paired-table doc)
+       (details-annotations doc)
+       (details-metainfo doc))
+      (common/layout "Blah"
        [:h1 "blah"]))))

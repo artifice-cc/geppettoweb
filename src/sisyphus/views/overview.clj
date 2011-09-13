@@ -49,13 +49,13 @@
      [:div.span16.columns
       [:h1 problem]
       [:p
+       (runs-table runs problem {:field custom-field :order custom-order :func custom-func})
        (form-to [:post "/set-custom"]
                 (hidden-field :problem problem)
-                (drop-down :field fields custom-field)
-                (drop-down :order ["ASC" "DESC"] custom-order)
-                (drop-down :func ["AVG" "SUM" "MAX" "MIN"] custom-func)
-                (submit-button "Update"))
-       (runs-table runs problem {:field custom-field :order custom-order :func custom-func})]]]))
+                (drop-down :field fields custom-field) " "
+                (drop-down :order ["ASC" "DESC"] custom-order) " "
+                (drop-down :func ["AVG" "SUM" "MAX" "MIN"] custom-func) " "
+                (submit-button "Update"))]]]))
 
 (defpartial runs-by-problem
   [runs-grouped]
@@ -71,4 +71,4 @@
 
 (defpage "/" []
   (let [runs-grouped (group-by (comp :problem :value) (list-runs))]
-    (common/layout (runs-by-problem runs-grouped))))
+    (common/layout "Overview" (runs-by-problem runs-grouped))))
