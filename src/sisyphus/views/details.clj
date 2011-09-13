@@ -20,7 +20,7 @@
      [:h3 "Source code"]
      [:dl [:dt "Commit hash"]
       [:dd (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
-                    (subs (:commit run) 0 8))]]
+                    (subs (:commit run) 0 10))]]
      [:dl [:dt "Commit message"]
       [:dd (:commit-msg run)]]]
     [:div.span4.columns
@@ -208,10 +208,10 @@
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
-      (common/layout (format "%s run %s" (:problem doc) (subs id 0 8))
+      (common/layout (format "%s run %s" (:problem doc) (subs id 0 10))
        [:div.row [:div.span16.columns
                   [:h1 (format "%s run %s <small>(%s)</small>"
-                               (:problem doc) (subs id 0 8)
+                               (:problem doc) (subs id 0 10)
                                (common/date-format (:time doc)))]]]
        (details-comparative-table doc)
        (details-paired-table doc)
