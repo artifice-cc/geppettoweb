@@ -38,9 +38,9 @@
     [:div.span4.columns
      [:h3 "Parameters"]
      [:dl [:dt "Control strategy"]
-      [:dd (:control-strategy run)]]
+      [:dd (common/strategy-format (:control-strategy run))]]
      [:dl [:dt "Comparison strategy"]
-      [:dd (:comparison-strategy run)]]
+      [:dd (common/strategy-format (:comparison-strategy run))]]
      [:dl [:dt "Reptitions"]
       [:dd (:repetitions run)]]]]])
 
@@ -171,7 +171,7 @@
          (if-let [png (get-graph-png run g)]
            [:div.row
             [:div.span4.columns
-             [:h3 (:name g)]
+             [:h3 (:name g) [:small (format " (%s)" (:results-type g))]]
              [:p (:caption g)]]
             [:div.span8.columns
              [:img {:src png :width 700 :height 400}]]]

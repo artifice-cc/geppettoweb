@@ -14,7 +14,8 @@
     [:tr
      [:td (link-to (format "/details/%s" id) (subs id 0 10))]
      [:td (common/date-format (:time r))]
-     [:td (:control-strategy r)] [:td (:comparison-strategy r)]
+     [:td (common/strategy-format (:control-strategy r))]
+     [:td (common/strategy-format (:comparison-strategy r))]
      [:td (if (not-empty (:rows summary))
             (format "%.2f" ((comp double :value first :rows) summary))
             "N/A")]

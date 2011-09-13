@@ -1,4 +1,5 @@
 (ns sisyphus.views.common
+  (:require [clojure.string :as str])
   (:use noir.core
         hiccup.core
         hiccup.page-helpers))
@@ -25,6 +26,11 @@
          [:li (link-to "/" "Overview")]
          [:li (link-to "/graphs" "Graphs")]]]]]
      content]]))
+
+(defpartial strategy-format
+  [strategy]
+  (let [features (str/split strategy #",")]
+    (interpose "," (for [f features] (if (= \! (nth f 0)) f [:strong f])))))
 
 (defpartial date-format
   [ms]
