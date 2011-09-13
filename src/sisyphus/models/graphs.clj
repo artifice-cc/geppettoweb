@@ -18,8 +18,8 @@
 
 (defn png-filename
   [run graph]
-  (format "%s/%s-%s-%s-%s.png" outdir (:_id run)
-          (:_rev run) (name (:results-type graph)) (:name graph)))
+  (format "%s/%s-%s-%s-%s.png" outdir
+          (:_id run) (:_rev run) (:_id graph) (:_rev graph)))
 
 (defn format-csv-row
   [row]
@@ -50,7 +50,7 @@
               {:map (fn [doc]
                       (when (= "graph" (:type doc))
                         [[[(:problem doc) (:name doc)] doc]]))}))))
-        problems (sort (set (map (comp first :key) all-graphs)))]
+        problems (set (map (comp first :key) all-graphs))]
     (reduce (fn [m problem] (assoc m problem
                                    (map :value (filter (fn [g] (= problem (first (:key g))))
                                                        all-graphs))))
@@ -60,6 +60,11 @@
   [graph]
   (clutch/with-db local-couchdb
     (clutch/create-document (assoc graph :type "graph"))))
+
+(defn update-graph
+  [graph]
+  (clutch/with-db local-couchdb
+    (clutch/update-document (clutch/get-document (:id graph)) (dissoc graph :_id :_rev))))
 
 (defn get-graph-png
   [run graph]
