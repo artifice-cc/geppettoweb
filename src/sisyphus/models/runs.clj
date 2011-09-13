@@ -82,9 +82,10 @@
 
 (defn get-fields
   [results]
-  (sort (apply set/intersection
-               (map (fn [r] (set (keys r)))
-                    (map (fn [r] (apply dissoc r dissoc-fields)) results)))))
+  (if (= 0 (count results)) []
+      (sort (apply set/intersection
+                   (map (fn [r] (set (keys r)))
+                        (map (fn [r] (apply dissoc r dissoc-fields)) results))))))
 
 (defn get-results
   [id results-type]
