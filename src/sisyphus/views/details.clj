@@ -15,36 +15,41 @@
    [:div.page-header
     [:h2 "Metadata"]]
    [:div.row
-    [:div.span4.columns "&nbsp;"]
     [:div.span4.columns
      [:h3 "Source code"]
-     [:dl [:dt "Commit hash"]
-      [:dd (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
-                    (subs (:commit run) 0 10))]]
-     [:dl [:dt "Commit message"]
-      [:dd (:commit-msg run)]]]
+     [:p "Commit " (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+                            (subs (:commit run) 0 10))]]
+    [:div.span12.columns
+     [:pre (:commit-msg run)]]]
+   [:div.row
     [:div.span4.columns
-     [:h3 "Machine"]
-     [:dl [:dt "Hostname"]
-      [:dd (:hostname run)]]
-     [:dl [:dt "Working directory"]
-      [:dd (:pwd run)]]
-     [:dl [:dt "Data directory"]
-      [:dd (:datadir run)]]
-     [:dl [:dt "Records directory"]
-      [:dd (:recordsdir run)]]
-     [:dl [:dt "Number of threads"]
-      [:dd (:nthreads run)]]]
+     [:h3 "Parameters"]]
     [:div.span4.columns
-     [:h3 "Parameters"]
      [:dl [:dt "Control strategy"]
       [:dd (common/strategy-format (:control-strategy run))]]
      [:dl [:dt "Comparison strategy"]
-      [:dd (common/strategy-format (:comparison-strategy run))]]
+      [:dd (common/strategy-format (:comparison-strategy run))]]]
+    [:div.span4.columns
      [:dl [:dt "Reptitions"]
       [:dd (:repetitions run)]]
      [:dl [:dt "Seed"]
-      [:dd (:seed run)]]]]])
+      [:dd (:seed run)]]]]
+   [:div.row
+    [:div.span4.columns
+     [:h3 "Machine"]]
+    [:div.span4.columns
+     [:dl [:dt "Hostname"]
+      [:dd (:hostname run)]]
+     [:dl [:dt "Number of threads"]
+      [:dd (:nthreads run)]]]
+    [:div.span4.columns
+     [:dl [:dt "Working directory"]
+      [:dd (:pwd run)]]]
+    [:div.span4.columns
+     [:dl [:dt "Data directory"]
+      [:dd (:datadir run)]]
+     [:dl [:dt "Records directory"]
+      [:dd (:recordsdir run)]]]]])
 
 (defpartial details-annotations
   [run]
