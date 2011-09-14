@@ -23,6 +23,15 @@
                      :repetitions (:repetitions doc)
                      :time (:time doc)}]]))})))))
 
+(defn delete-run
+  [id]
+  (let [run (get-doc id)]
+    (doseq [r (concat (:comparative run) (:control run) (:comparison run))]
+      (clutch/with-db local-couchdb
+        (clutch/delete-document (get-doc r))))
+    (clutch/with-db local-couchdb
+      (clutch/delete-document run))))
+
 (defn problem-fields
   [problem]
   (let [rows (clutch/with-db local-couchdb

@@ -6,7 +6,7 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
-         [get-results get-fields add-annotation delete-annotation]])
+         [get-results get-fields add-annotation delete-annotation delete-run]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]]))
 
 (defpartial details-metainfo
@@ -42,7 +42,9 @@
      [:dl [:dt "Comparison strategy"]
       [:dd (common/strategy-format (:comparison-strategy run))]]
      [:dl [:dt "Reptitions"]
-      [:dd (:repetitions run)]]]]])
+      [:dd (:repetitions run)]]
+     [:dl [:dt "Seed"]
+      [:dd (:seed run)]]]]])
 
 (defpartial details-annotations
   [run]
@@ -174,9 +176,25 @@
              [:h3 (:name g) [:small (format " (%s)" (:results-type g))]]
              [:p (:caption g)]]
             [:div.span8.columns
-             [:img {:src png :width 700 :height 400}]]]
+             [:p
+              [:img {:src png :width 700 :height 400}]]
+             [:pre {:style "width: 650px;"} (:code g)]]]
            [:div.row
             [:div.span16.columns [:p (format "Failed to produce graph %s" (:name g))]]])))]))
+
+(defpartial details-delete-run
+  [run]
+  [:section#delete
+   [:div.page-header
+    [:h2 "Delete"]]
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span12.columns
+     [:p "Delete run and all associated results?"]
+     (form-to [:post "/details/delete-run"]
+              (hidden-field :id (:_id run))
+              [:div.actions
+               [:input.btn.danger {:value "Delete run" :type "submit"}]])]]])
 
 (defpage
   [:post "/details/delete-annotation"] {:as annotation}
@@ -187,6 +205,31 @@
   [:post "/details/add-annotation"] {:as annotation}
   (add-annotation (:id annotation) (:content annotation))
   (resp/redirect (format "/details/%s#annotations" (:id annotation))))
+
+(defpage
+  [:post "/details/delete-run"] {:as run}
+  (common/layout
+   "Confirm deletion"
+   [:section#confirm
+    [:div.page-header
+     [:h2 "Confirm deletion"]]
+    [:div.row
+     [:div.span4.columns "&nbsp;"]
+     [:div.span12.columns
+      (form-to [:post "/details/delete-run-confirm"]
+               (hidden-field :id (:id run))
+               [:div.actions
+                [:input.btn.danger {:name "choice" :value "Confirm deletion" :type "submit"}]
+                " "
+                [:input.btn {:name "choice" :value "Cancel" :type "submit"}]])]]]))
+
+(defpage
+  [:post "/details/delete-run-confirm"] {:as confirm}
+  (if (= (:choice confirm) "Confirm deletion")
+    (do
+      (delete-run (:id confirm))
+      (resp/redirect "/"))
+    (resp/redirect (format "/details/%s" (:id confirm)))))
 
 (defpage
   [:post "/details/set-fields"] {:as fields}
@@ -217,6 +260,7 @@
        (details-paired-table doc)
        (details-graphs doc)
        (details-annotations doc)
-       (details-metainfo doc))
+       (details-metainfo doc)
+       (details-delete-run doc))
       (common/layout "Blah"
        [:h1 "blah"]))))

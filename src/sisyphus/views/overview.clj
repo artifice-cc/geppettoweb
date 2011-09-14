@@ -79,7 +79,7 @@
 (defpartial runs-by-problem
   [runs-grouped]
   (map (fn [problem] (runs problem (get runs-grouped problem)))
-       (keys runs-grouped)))
+       (sort (keys runs-grouped))))
 
 (defpage
   [:post "/set-custom"] {:as custom}
