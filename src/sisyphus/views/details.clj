@@ -256,10 +256,10 @@
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
-      (common/layout (format "%s run %s" (:problem doc) (subs id 0 10))
+      (common/layout (format "%s run %s" (:problem doc) (subs id 22))
        [:div.row [:div.span16.columns
                   [:h1 (format "%s run %s <small>(%s)</small>"
-                               (:problem doc) (subs id 0 10)
+                               (:problem doc) (subs id 22)
                                (common/date-format (:time doc)))]]]
        (details-comparative-table doc)
        (details-paired-table doc)

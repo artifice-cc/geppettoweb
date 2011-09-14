@@ -12,7 +12,7 @@
   (let [id (:id run)
         r (:value run)]
     [:tr
-     [:td (link-to (format "/details/%s" id) (subs id 0 10))]
+     [:td (link-to (format "/details/%s" id) (subs id 22))]
      [:td (common/date-format (:time r))]
      [:td (common/strategy-format (:control-strategy r))]
      [:td (common/strategy-format (:comparison-strategy r))]
