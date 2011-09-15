@@ -30,8 +30,9 @@
 
 (defpartial strategy-format
   [strategy]
-  (let [features (str/split strategy #",")]
-    (interpose "," (for [f features] (if (= \! (nth f 0)) f [:strong f])))))
+  (let [features (str/split strategy #"\s*,\s*")]
+    (interpose ", " (for [f features] (if (or (re-find #"=" f) (= \! (nth f 0)))
+                                       f [:strong f])))))
 
 (defpartial date-format
   [ms]
