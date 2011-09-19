@@ -7,7 +7,8 @@
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
          [get-results get-fields add-annotation delete-annotation delete-run]])
-  (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]]))
+  (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
+  (:use [sisyphus.models.claims :only [claim-select-options add-claim-association list-claims]]))
 
 (defpartial details-metainfo
   [run]
@@ -187,6 +188,38 @@
            [:div.row
             [:div.span16.columns [:p (format "Failed to produce graph %s" (:name g))]]])))]))
 
+(defpartial details-claims
+  [run]
+  (let [claim-opts (claim-select-options run)
+        run-claims (list-claims run)]
+    [:section#claims
+     [:div.page-header
+      [:a {:name "claims"}
+       [:h2 "Claims"]]]
+     [:div.row
+      [:div.span4.columns
+       [:h2 "Associated claims"]]
+      [:div.span12.columns
+       (if (empty? run-claims)
+         [:p "No claims."]
+         [:p
+          (for [c (:unverified run-claims)]
+            [:pre (str c)])
+          (for [c (:verified run-claims)]
+            [:pre (str c)])])]]
+     [:div.row
+      [:div.span4.columns
+       [:h2 "New association"]]
+      [:div.span12.columns
+       (form-to [:post "/details/associate-claim"]
+                (hidden-field :id (:_id run))
+                [:div.clearfix
+                 [:label {:for "claim"} "Claim"]
+                 [:div.input
+                  (drop-down :claim claim-opts)]]
+                [:div.actions
+                 [:input.btn.primary {:value "Associate" :type "submit"}]])]]]))
+
 (defpartial details-delete-run
   [run]
   [:section#delete
@@ -210,6 +243,11 @@
   [:post "/details/add-annotation"] {:as annotation}
   (add-annotation (:id annotation) (:content annotation))
   (resp/redirect (format "/details/%s#annotations" (:id annotation))))
+
+(defpage
+  [:post "/details/associate-claim"] {:as association}
+  (add-claim-association (:id association) (:claim association))
+  (resp/redirect (format "/details/%s#claims" (:id association))))
 
 (defpage
   [:post "/details/delete-run"] {:as run}
@@ -265,6 +303,7 @@
        (details-paired-table doc)
        (details-graphs doc)
        (details-annotations doc)
+       (details-claims doc)
        (details-metainfo doc)
        (details-delete-run doc))
       (common/layout "Blah"
