@@ -77,8 +77,12 @@
     (form-to
      [:post "/details/add-annotation"]
      (hidden-field :id (:_id run))
-     [:p [:textarea {:class "xxlarge" :name "content"}]]
-     [:p {:style "text-align: right;"} (submit-button "Save")])]])
+     [:div.clearfix
+      [:label {:for "content"} "Content"]
+      [:div.input
+       [:textarea.xxlarge {:id "content" :name "content"}]]]
+     [:div.actions
+      [:input.btn.primary {:value "Save" :type "submit"}]])]])
 
 (defn filter-on-fields
   [problem fields]
@@ -92,7 +96,8 @@
    (hidden-field :comparative (if comparative? "true" "false"))
    (hidden-field :problem (:problem run))
    [:div.row
-    (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 4))) fields)]
+    [:div.span4.columns [:h3 "Active fields"]]
+    (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
       (map (fn [fs]
              [:div.span4.columns
               [:div
@@ -106,7 +111,11 @@
                              " " (name f)]])
                      fs)]]])
            field-groups))]
-   [:div.row [:div.span16.columns {:style "text-align: right"} (submit-button "Updated fields")]]))
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span12.columns
+     [:div.actions
+      [:input.btn.primary {:value "Update" :type "submit"}]]]]))
 
 (defpartial details-comparative-table
   [run]
