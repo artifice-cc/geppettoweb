@@ -51,8 +51,8 @@
     [:div.span4.columns
      [:dl [:dt "Data directory"]
       [:dd (:datadir run)]]
-     [:dl [:dt "Records directory"]
-      [:dd (:recordsdir run)]]]]])
+     [:dl [:dt "Record directory"]
+      [:dd (:recorddir run)]]]]])
 
 (defpartial field-checkbox
   [run n field]
