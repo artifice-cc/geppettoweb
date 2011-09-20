@@ -18,26 +18,31 @@
 
 (defpartial paired-results-table
   [control-results comparison-results on-fields]
-  [:div.row
-   [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
-    [:table.tablesorter.zebra-striped
-     [:thead
-      [:tr (map (fn [f] [:th (name f)]) on-fields)]]
-     [:tbody
-      (map (fn [i]
-             [:tr (map (fn [f]
-                         [:td (let [control-val (get (nth control-results i) f)
-                                    comparison-val (get (nth comparison-results i) f)]
-                                (if (not= control-val comparison-val)
-                                  (if (and (= java.lang.Double (type control-val))
-                                           (= java.lang.Double (type comparison-val)))
-                                    (format "<strong>%.2f</strong><br/>%.2f"
-                                            comparison-val control-val)
-                                    (format "<strong>%s</strong><br/>%s"
-                                            (str comparison-val) (str control-val)))
-                                  (if (= java.lang.Double (type control-val))
-                                    (format "%.2f" control-val)
-                                    (str control-val))))])
-                       on-fields)])
-           (range (min (count control-results) (count comparison-results))))]]]])
+  (let [results-map (reduce (fn [m r] (update-in m [(:Seed r)] conj r))
+                            (zipmap (map :Seed control-results)
+                                    (map (fn [r] [r]) control-results))
+                            comparison-results)]
+    [:div.row
+     [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
+      [:table.tablesorter.zebra-striped
+       [:thead
+        [:tr (map (fn [f] [:th (name f)]) on-fields)]]
+       [:tbody
+        (map (fn [s]
+               [:tr (map (fn [f]
+                           [:td (let [control-val (get (first (get results-map s)) f)
+                                      comparison-val (get (second (get results-map s)) f)]
+                                  (if (not= control-val comparison-val)
+                                    (if (and (= java.lang.Double (type control-val))
+                                             (= java.lang.Double (type comparison-val)))
+                                      (format "<strong>%.2f</strong><br/>%.2f"
+                                              comparison-val control-val)
+                                      (format "<strong>%s</strong><br/>%s"
+                                              (str comparison-val) (str control-val)))
+                                    (if (= java.lang.Double (type control-val))
+                                      (format "%.2f" control-val)
+                                      (str control-val))))])
+                         on-fields)])
+             (filter (fn [s] (= 2 (count (get results-map s))))
+                     (sort (keys results-map))))]]]]))
 
