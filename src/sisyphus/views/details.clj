@@ -8,7 +8,9 @@
   (:use [sisyphus.models.runs :only
          [get-results get-fields add-annotation delete-annotation delete-run]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
-  (:use [sisyphus.models.claims :only [claim-select-options add-claim-association list-claims]]))
+  (:use [sisyphus.models.claims :only [claim-select-options add-claim-association list-claims]])
+  (:use [sisyphus.views.claims :only [claim-summary]])
+  (:use [sisyphus.views.results :only [comparative-results-table paired-results-table]]))
 
 (defpartial details-metainfo
   [run]
@@ -52,6 +54,61 @@
      [:dl [:dt "Records directory"]
       [:dd (:recordsdir run)]]]]])
 
+(defpartial field-checkbox
+  [run n field]
+  [:li [:label
+        [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
+                 :checked (= "true" (cookies/get (format "%s-%s" (:problem run) (name field))))}]
+        " " (name field)]])
+
+(defpartial field-checkboxes
+  [run n fields]
+  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
+    (map (fn [fs]
+           [:div.span4.columns
+            [:ul.inputs-list (map (fn [f] (field-checkbox run n f)) fs)]])
+         field-groups)))
+
+(defpartial details-fields-form
+  [run fields comparative?]
+  (form-to
+   [:post "/details/set-fields"]
+   (hidden-field :id (:_id run))
+   (hidden-field :comparative (if comparative? "true" "false"))
+   (hidden-field :problem (:problem run))
+   [:div.row
+    [:div.span4.columns [:h3 "Active fields"]]
+    (field-checkboxes run :fields fields)]
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span12.columns
+     [:div.actions
+      [:input.btn.primary {:value "Update" :type "submit"}]]]]))
+
+(defn filter-on-fields
+  [problem fields]
+  (filter (fn [f] (= "true" (cookies/get (format "%s-%s" problem (name f))))) fields))
+
+(defpartial details-comparative-results-table
+  [run comparative-results comparative-fields]
+  (let [on-fields (filter-on-fields (:problem run) comparative-fields)]
+    [:section#comparative
+     [:div.page-header
+      [:a {:name "comparative-results"}
+       [:h2 "Comparative results"]]]
+     (comparative-results-table comparative-results on-fields)
+     (details-fields-form run comparative-fields true)]))
+
+(defpartial details-paired-results-table
+  [run control-results comparison-results paired-fields]
+  (let [on-fields (filter-on-fields (:problem run) paired-fields)]
+    [:section#comparison
+     [:div.page-header
+      [:a {:name "control-comparison-results"}
+       [:h2 "Control/comparison results"]]]
+     (paired-results-table control-results comparison-results on-fields)
+     (details-fields-form run paired-fields false)]))
+
 (defpartial details-annotations
   [run]
   [:section#annotations
@@ -84,97 +141,6 @@
      [:div.actions
       [:input.btn.primary {:value "Save" :type "submit"}]])]])
 
-(defn filter-on-fields
-  [problem fields]
-  (filter (fn [f] (= "true" (cookies/get (format "%s-%s" problem (name f))))) fields))
-
-(defpartial details-fields-checkboxes
-  [run fields comparative?]
-  (form-to
-   [:post "/details/set-fields"]
-   (hidden-field :id (:_id run))
-   (hidden-field :comparative (if comparative? "true" "false"))
-   (hidden-field :problem (:problem run))
-   [:div.row
-    [:div.span4.columns [:h3 "Active fields"]]
-    (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
-      (map (fn [fs]
-             [:div.span4.columns
-              [:div
-               [:ul.inputs-list
-                (map (fn [f]
-                       [:li [:label
-                             [:input {:type "checkbox" :name "fields[]" :value (name f)
-                                      :checked (= "true" (cookies/get
-                                                          (format "%s-%s" (:problem run)
-                                                                  (name f))))}]
-                             " " (name f)]])
-                     fs)]]])
-           field-groups))]
-   [:div.row
-    [:div.span4.columns "&nbsp;"]
-    [:div.span12.columns
-     [:div.actions
-      [:input.btn.primary {:value "Update" :type "submit"}]]]]))
-
-(defpartial details-comparative-table
-  [run]
-  (let [comparative-results (get-results (:_id run) :comparative)
-        fields (get-fields comparative-results)
-        on-fields (filter-on-fields (:problem run) fields)]
-    [:section#comparative
-     [:div.page-header
-      [:a {:name "comparative-results"}
-       [:h2 "Comparative results"]]]
-     [:div.row
-      [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
-       [:table.tablesorter.zebra-striped
-        [:thead
-         [:tr (map (fn [f] [:th (name f)]) on-fields)]]
-        [:tbody
-         (map (fn [r] [:tr (map (fn [f] [:td (let [val (get r f)]
-                                               (if (= java.lang.Double (type val))
-                                                 (format "%.2f" val)
-                                                 (str val)))])
-                                on-fields)])
-              comparative-results)]]]]
-     (details-fields-checkboxes run fields true)]))
-
-(defpartial details-paired-table
-  [run]
-  (let [[control-results comparison-results]
-        (map (fn [results-type] (get-results (:_id run) results-type))
-             [:control :comparison])
-        fields (get-fields (concat control-results comparison-results))
-        on-fields (filter-on-fields (:problem run) fields)]
-    [:section#comparison
-     [:div.page-header
-      [:a {:name "control-comparison-results"}
-       [:h2 "Control/comparison results"]]]
-     [:div.row
-      [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
-       [:table.tablesorter.zebra-striped
-        [:thead
-         [:tr (map (fn [f] [:th (name f)]) on-fields)]]
-        [:tbody
-         (map (fn [i]
-                [:tr (map (fn [f]
-                            [:td (let [control-val (get (nth control-results i) f)
-                                       comparison-val (get (nth comparison-results i) f)]
-                                   (if (not= control-val comparison-val)
-                                     (if (and (= java.lang.Double (type control-val))
-                                              (= java.lang.Double (type comparison-val)))
-                                       (format "<strong>%.2f</strong><br/>%.2f"
-                                               comparison-val control-val)
-                                       (format "<strong>%s</strong><br/>%s"
-                                               (str comparison-val) (str control-val)))
-                                     (if (= java.lang.Double (type control-val))
-                                       (format "%.2f" control-val)
-                                       (str control-val))))])
-                          on-fields)])
-              (range (min (count control-results) (count comparison-results))))]]]]
-     (details-fields-checkboxes run fields false)]))
-
 (defpartial details-graphs
   [run]
   (let [graphs (get (list-graphs) (:problem run))]
@@ -198,7 +164,7 @@
             [:div.span16.columns [:p (format "Failed to produce graph %s" (:name g))]]])))]))
 
 (defpartial details-claims
-  [run]
+  [run comparative-fields paired-fields]
   (let [claim-opts (claim-select-options run)
         run-claims (list-claims run)]
     [:section#claims
@@ -209,25 +175,49 @@
       [:div.span4.columns
        [:h2 "Associated claims"]]
       [:div.span12.columns
-       (if (empty? run-claims)
+       (if (and (empty? (:verified run-claims))
+                (empty? (:unverified run-claims)))
          [:p "No claims."]
-         [:p
+         [:div
+          (if (not-empty (:unverified run-claims))
+            [:h3 "Unverified"])
           (for [c (:unverified run-claims)]
-            [:pre (str c)])
+            (claim-summary c))
+          (if (not-empty (:verified run-claims))
+            [:h3 "Verified"])
           (for [c (:verified run-claims)]
-            [:pre (str c)])])]]
-     [:div.row
-      [:div.span4.columns
-       [:h2 "New association"]]
-      [:div.span12.columns
-       (form-to [:post "/details/associate-claim"]
-                (hidden-field :id (:_id run))
-                [:div.clearfix
-                 [:label {:for "claim"} "Claim"]
-                 [:div.input
-                  (drop-down :claim claim-opts)]]
-                [:div.actions
-                 [:input.btn.primary {:value "Associate" :type "submit"}]])]]]))
+            (claim-summary c))])]]
+     (when (not-empty claim-opts)
+       (form-to
+        [:post "/details/associate-claim"]
+        (hidden-field :runid (:_id run))
+        (hidden-field :problem (:problem run))
+        [:div.row
+         [:div.span4.columns
+          [:h2 "New association"]]
+         [:div.span12.columns
+          [:div.clearfix
+           [:label {:for "claim"} "Claim"]
+           [:div.input
+            (drop-down :claim claim-opts)]]
+          [:div.clearfix
+           [:label {:for "comment"} "Comment"]
+           [:div.input
+            [:textarea.xxlarge {:id "comment" :name "comment"}]
+            [:span.help-block "Describe how this run provides support for or against the claim."]]]]]
+        [:div.row
+         [:div.span4.columns
+          [:h3 "Comparative fields"]]
+         (field-checkboxes run :comparative-fields comparative-fields)]
+        [:div.row
+         [:div.span4.columns
+          [:h3 "Control/comparison fields"]]
+         (field-checkboxes run :paired-fields paired-fields)]
+        [:div.row
+         [:div.span4.columns "&nbsp;"]
+         [:div.span12.columns
+          [:div.actions
+           [:input.btn.primary {:value "Associate" :type "submit"}]]]]))]))
 
 (defpartial details-delete-run
   [run]
@@ -255,8 +245,8 @@
 
 (defpage
   [:post "/details/associate-claim"] {:as association}
-  (add-claim-association (:id association) (:claim association))
-  (resp/redirect (format "/details/%s#claims" (:id association))))
+  (add-claim-association association)
+  (resp/redirect (format "/details/%s#claims" (:runid association))))
 
 (defpage
   [:post "/details/delete-run"] {:as run}
@@ -303,17 +293,24 @@
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
-      (common/layout (format "%s run %s" (:problem doc) (subs id 22))
-       [:div.row [:div.span16.columns
-                  [:h1 (format "%s run %s <small>(%s)</small>"
-                               (:problem doc) (subs id 22)
-                               (common/date-format (:time doc)))]]]
-       (details-comparative-table doc)
-       (details-paired-table doc)
-       (details-graphs doc)
-       (details-annotations doc)
-       (details-claims doc)
-       (details-metainfo doc)
-       (details-delete-run doc))
+      (let [comparative-results (get-results (:_id doc) :comparative)
+            comparative-fields (get-fields comparative-results)
+            [control-results comparison-results]
+            (map (fn [results-type] (get-results (:_id doc) results-type))
+                 [:control :comparison])
+            paired-fields (get-fields (concat control-results comparison-results))]
+        (common/layout
+         (format "%s run %s" (:problem doc) (subs id 22))
+         [:div.row [:div.span16.columns
+                    [:h1 (format "%s run %s <small>(%s)</small>"
+                                 (:problem doc) (subs id 22)
+                                 (common/date-format (:time doc)))]]]
+         (details-comparative-results-table doc comparative-results comparative-fields)
+         (details-paired-results-table doc control-results comparison-results paired-fields)
+         (details-graphs doc)
+         (details-annotations doc)
+         (details-claims doc comparative-fields paired-fields)
+         (details-metainfo doc)
+         (details-delete-run doc)))
       (common/layout "Blah"
-       [:h1 "blah"]))))
+                     [:h1 "blah"]))))
