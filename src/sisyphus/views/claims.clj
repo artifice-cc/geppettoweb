@@ -6,6 +6,8 @@
   (:use [sisyphus.models.runs :only [get-results]])
   (:use [sisyphus.models.claims :only
          [new-claim update-claim delete-claim list-claims remove-claim-association]])
+  (:use [sisyphus.models.graphs :only [get-graph]])
+  (:use [sisyphus.views.graphs :only [show-graph]])
   (:use [sisyphus.views.results :only [comparative-results-table paired-results-table]]))
 
 (defpartial claim-summary
@@ -13,7 +15,8 @@
   [:div
    [:p [:strong (link-to (format "/claim/%s" (:_id claim)) (:title claim))]
     " &mdash; " (:description claim)]
-   [:p [:strong (:verification claim)] (if (not= "" (:conclusion claim)) " &mdash; ")
+   [:p [:strong (:verification claim)] " (" (count (:runs claim)) " runs)"
+    (if (not= "" (:conclusion claim)) " &mdash; ")
     (:conclusion claim)]
    [:hr]])
 
@@ -88,6 +91,8 @@
             [:h4 "Control/comparison results"]
             (paired-results-table control-results comparison-results
                                   (map keyword (:paired-fields r)))]]
+          (for [g (map (fn [n] (get-graph (:problem r) n)) (:graphs r))]
+            (show-graph run g))
           [:div.row
            [:div.span4.columns "&nbsp;"]
            [:div.span12.columns

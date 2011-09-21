@@ -55,6 +55,17 @@
                                                        all-graphs))))
             {} problems)))
 
+(defn get-graph
+  [problem n]
+  (:value (first (:rows
+                  (eval `(clutch/with-db local-couchdb
+                           (clutch/ad-hoc-view
+                            (clutch/with-clj-view-server
+                              {:map (fn [~'doc] (when (and (= "graph" (:type ~'doc))
+                                                           (= ~problem (:problem ~'doc))
+                                                           (= ~n (:name ~'doc)))
+                                                  [[nil ~'doc]]))}))))))))
+
 (defn new-graph
   [graph]
   (clutch/with-db local-couchdb

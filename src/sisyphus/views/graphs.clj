@@ -2,8 +2,22 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.graphs :only [list-graphs new-graph update-graph]])
+  (:use [sisyphus.models.graphs :only [list-graphs new-graph update-graph get-graph-png]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
+
+(defpartial show-graph
+  [run graph]
+  (if-let [png (get-graph-png run graph)]
+    [:div.row
+     [:div.span4.columns
+      [:h3 (:name graph) [:small (format " (%s)" (:results-type graph))]]
+      [:p (:caption graph)]]
+     [:div.span8.columns
+      [:p
+       [:img {:src png :width 700 :height 400}]]
+      [:pre {:style "width: 650px;"} (:code graph)]]]
+    [:div.row
+     [:div.span16.columns [:p (format "Failed to produce graph %s" (:name graph))]]]))
 
 (defpartial graph-form
   [graph]

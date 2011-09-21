@@ -10,6 +10,7 @@
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
   (:use [sisyphus.models.claims :only [claim-select-options add-claim-association list-claims]])
   (:use [sisyphus.views.claims :only [claim-summary]])
+  (:use [sisyphus.views.graphs :only [show-graph]])
   (:use [sisyphus.views.results :only [comparative-results-table paired-results-table]]))
 
 (defpartial details-metainfo
@@ -151,17 +152,7 @@
        [:div.row
         [:div.span16.columns [:p "No graphs."]]]
        (for [g graphs]
-         (if-let [png (get-graph-png run g)]
-           [:div.row
-            [:div.span4.columns
-             [:h3 (:name g) [:small (format " (%s)" (:results-type g))]]
-             [:p (:caption g)]]
-            [:div.span8.columns
-             [:p
-              [:img {:src png :width 700 :height 400}]]
-             [:pre {:style "width: 650px;"} (:code g)]]]
-           [:div.row
-            [:div.span16.columns [:p (format "Failed to produce graph %s" (:name g))]]])))]))
+         (show-graph run g)))]))
 
 (defpartial details-claims
   [run comparative-fields paired-fields]
@@ -213,6 +204,20 @@
          [:div.span4.columns
           [:h3 "Control/comparison fields"]]
          (field-checkboxes run :paired-fields paired-fields)]
+        (let [graphs (get (list-graphs) (:problem run))
+              graph-groups (partition-all (int (Math/ceil (/ (count graphs) 3))) graphs)]
+          [:div.row
+           [:div.span4.columns
+            [:h3 "Graphs"]]
+           (map (fn [gs]
+                  [:div.span4.columns
+                   [:ul.inputs-list
+                    (map (fn [g]
+                           [:li [:label [:input {:type "checkbox" :name "graphs[]"
+                                                 :value (:name g)}]
+                                 " " (:name g)]])
+                         gs)]])
+                graph-groups)])
         [:div.row
          [:div.span4.columns "&nbsp;"]
          [:div.span12.columns
