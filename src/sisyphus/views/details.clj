@@ -8,10 +8,12 @@
   (:use [sisyphus.models.runs :only
          [get-results get-fields add-annotation delete-annotation delete-run]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
-  (:use [sisyphus.models.claims :only [claim-select-options add-claim-association list-claims]])
-  (:use [sisyphus.views.claims :only [claim-summary]])
+  (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
+  (:use [sisyphus.views.claims :only
+         [claim-summary claim-association-form]])
   (:use [sisyphus.views.graphs :only [show-graph]])
-  (:use [sisyphus.views.results :only [comparative-results-table paired-results-table]]))
+  (:use [sisyphus.views.results :only
+         [field-checkboxes comparative-results-table paired-results-table]]))
 
 (defpartial details-metainfo
   [run]
@@ -54,21 +56,6 @@
       [:dd (:datadir run)]]
      [:dl [:dt "Record directory"]
       [:dd (:recorddir run)]]]]])
-
-(defpartial field-checkbox
-  [run n field]
-  [:li [:label
-        [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
-                 :checked (= "true" (cookies/get (format "%s-%s" (:problem run) (name field))))}]
-        " " (name field)]])
-
-(defpartial field-checkboxes
-  [run n fields]
-  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
-    (map (fn [fs]
-           [:div.span4.columns
-            [:ul.inputs-list (map (fn [f] (field-checkbox run n f)) fs)]])
-         field-groups)))
 
 (defpartial details-fields-form
   [run fields comparative?]
@@ -179,50 +166,7 @@
           (for [c (:verified run-claims)]
             (claim-summary c))])]]
      (when (not-empty claim-opts)
-       (form-to
-        [:post "/details/associate-claim"]
-        (hidden-field :runid (:_id run))
-        (hidden-field :problem (:problem run))
-        [:div.row
-         [:div.span4.columns
-          [:h2 "New association"]]
-         [:div.span12.columns
-          [:div.clearfix
-           [:label {:for "claim"} "Claim"]
-           [:div.input
-            (drop-down :claim claim-opts)]]
-          [:div.clearfix
-           [:label {:for "comment"} "Comment"]
-           [:div.input
-            [:textarea.xxlarge {:id "comment" :name "comment"}]
-            [:span.help-block "Describe how this run provides support for or against the claim."]]]]]
-        [:div.row
-         [:div.span4.columns
-          [:h3 "Comparative fields"]]
-         (field-checkboxes run :comparative-fields comparative-fields)]
-        [:div.row
-         [:div.span4.columns
-          [:h3 "Control/comparison fields"]]
-         (field-checkboxes run :paired-fields paired-fields)]
-        (let [graphs (get (list-graphs) (:problem run))
-              graph-groups (partition-all (int (Math/ceil (/ (count graphs) 3))) graphs)]
-          [:div.row
-           [:div.span4.columns
-            [:h3 "Graphs"]]
-           (map (fn [gs]
-                  [:div.span4.columns
-                   [:ul.inputs-list
-                    (map (fn [g]
-                           [:li [:label [:input {:type "checkbox" :name "graphs[]"
-                                                 :value (:name g)}]
-                                 " " (:name g)]])
-                         gs)]])
-                graph-groups)])
-        [:div.row
-         [:div.span4.columns "&nbsp;"]
-         [:div.span12.columns
-          [:div.actions
-           [:input.btn.primary {:value "Associate" :type "submit"}]]]]))]))
+       (claim-association-form nil run claim-opts comparative-fields paired-fields))]))
 
 (defpartial details-delete-run
   [run]
@@ -247,11 +191,6 @@
   [:post "/details/add-annotation"] {:as annotation}
   (add-annotation (:id annotation) (:content annotation))
   (resp/redirect (format "/details/%s#annotations" (:id annotation))))
-
-(defpage
-  [:post "/details/associate-claim"] {:as association}
-  (add-claim-association association)
-  (resp/redirect (format "/details/%s#claims" (:runid association))))
 
 (defpage
   [:post "/details/delete-run"] {:as run}

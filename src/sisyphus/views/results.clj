@@ -1,10 +1,26 @@
 (ns sisyphus.views.results
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
+  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
+  (:require [noir.cookies :as cookies]))
+
+(defpartial field-checkbox
+  [run n field]
+  [:li [:label
+        [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
+                 :checked (= "true" (cookies/get (format "%s-%s" (:problem run) (name field))))}]
+        " " (name field)]])
+
+(defpartial field-checkboxes
+  [run n fields]
+  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
+    (map (fn [fs]
+           [:div.span4.columns
+            [:ul.inputs-list (map (fn [f] (field-checkbox run n f)) fs)]])
+         field-groups)))
 
 (defpartial comparative-results-table
   [comparative-results on-fields]
   [:div.row
-   [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
+   [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
     [:table.tablesorter.zebra-striped
      [:thead
       [:tr (map (fn [f] [:th (name f)]) on-fields)]]
@@ -23,7 +39,7 @@
                                     (map (fn [r] [r]) control-results))
                             comparison-results)]
     [:div.row
-     [:div.span16.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
+     [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
       [:table.tablesorter.zebra-striped
        [:thead
         [:tr (map (fn [f] [:th (name f)]) on-fields)]]

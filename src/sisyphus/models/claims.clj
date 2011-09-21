@@ -54,6 +54,10 @@
     (clutch/with-db local-couchdb
       (clutch/update-document claim #(conj % (dissoc association :claim)) [:runs]))))
 
+(defn get-claim-association
+  [claim run]
+  (first (filter (fn [r] (= (:runid r) (:_id run))) (:runs claim))))
+
 (defn remove-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
@@ -62,4 +66,14 @@
        claim (fn [runs] (filter (fn [r] (not= (:runid association)
                                               (:runid r)))
                                 runs))
+       [:runs]))))
+
+(defn update-claim-association
+  [association]
+  (let [claim (get-doc (:claim association))]
+    (clutch/with-db local-couchdb
+      (clutch/update-document
+       claim (fn [runs] (map (fn [r] (if (not= (:runid r) (:runid association)) r
+                                         (dissoc association :claim)))
+                             runs))
        [:runs]))))
