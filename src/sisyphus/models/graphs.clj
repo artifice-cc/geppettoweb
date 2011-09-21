@@ -10,10 +10,12 @@
 (def outdir "/home/josh/research/sisyphus/resources/public/img/graphs")
 (def url "/img/graphs")
 
-(defn csv-filename
-  [run graph]
-  (format "%s/%s-%s-%s.csv" cachedir (:_id run)
-          (:_rev run) (name (:results-type graph))))
+(defn csv-filenames
+  [run]
+  (zipmap [:control :comparison :comparative]
+          (map #(format "%s/%s-%s-%s.csv" cachedir (:_id run)
+                        (:_rev run) (name %))
+               [:control :comparison :comparative])))
 
 (defn png-filename
   [run graph]
@@ -27,17 +29,18 @@
                      [\newline])))
 
 (defn results-to-csv
-  [run csv-fname graph]
-  (let [outfile (io/file csv-fname)]
-    (when (. outfile createNewFile)
-      (let [results (get-results (:_id run) (:results-type graph))
-            fields (get-fields results)
-            csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
-                                results))]
-        ;; save into cache file
-        (with-open [writer (io/writer outfile)]
-          (.write writer (format-csv-row (map name fields)))
-          (.write writer csv))))))
+  [run csv-fnames]
+  (doseq [results-type (keys csv-fnames)]
+    (let [outfile (io/file (get csv-fnames results-type))]
+      (when (. outfile createNewFile)
+        (let [results (get-results (:_id run) results-type)
+              fields (get-fields results)
+              csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
+                                  results))]
+          ;; save into cache file
+          (with-open [writer (io/writer outfile)]
+            (.write writer (format-csv-row (map name fields)))
+            (.write writer csv)))))))
 
 (defn list-graphs
   []
@@ -78,19 +81,23 @@
 
 (defn get-graph-png
   [run graph]
-  (let [csv-fname (csv-filename run graph)
+  (let [csv-fnames (csv-filenames run)
         png-fname (png-filename run graph)
-        rcode (format "library(ggplot2)\n%s <- read.csv(\"%s\")\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
-                      (name (:results-type graph)) csv-fname (:code graph) png-fname)]
-    (do (results-to-csv run csv-fname graph)
-        (if (. (io/file png-fname) exists)
-          (str/replace png-fname outdir url)
-          (do
-            ;; save rcode to file
-            (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
-              (.write writer rcode))
-            ;; run Rscript
-            (let [status (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))]
-              (when (not= 0 (:exit status)) (prn status)))
-            (when (. (io/file png-fname) exists)
-              (str/replace png-fname outdir url)))))))
+        rcode (format "library(ggplot2)\n%s\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
+                      (apply str (map #(format "%s <- read.csv(\"%s\")\n" (name %) (get csv-fnames %))
+                                      (keys csv-fnames)))
+                      (:code graph) png-fname)]
+    (results-to-csv run csv-fnames)
+    (if (. (io/file png-fname) exists)
+      (str/replace png-fname outdir url)
+      (do
+        ;; save rcode to file
+        (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
+          (.write writer rcode))
+        ;; run Rscript
+        (let [status (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))]
+          (cond (not= 0 (:exit status))
+                status
+                (not (. (io/file png-fname) exists))
+                {:err "Resulting file does not exist."}
+                :else (str/replace png-fname outdir url)))))))

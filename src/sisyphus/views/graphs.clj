@@ -7,17 +7,20 @@
 
 (defpartial show-graph
   [run graph]
-  (if-let [png (get-graph-png run graph)]
-    [:div.row
-     [:div.span4.columns
-      [:h3 (:name graph) [:small (format " (%s)" (:results-type graph))]]
-      [:p (:caption graph)]]
-     [:div.span8.columns
-      [:p
-       [:img {:src png :width 700 :height 400}]]
-      [:pre {:style "width: 650px;"} (:code graph)]]]
-    [:div.row
-     [:div.span16.columns [:p (format "Failed to produce graph %s" (:name graph))]]]))
+  (let [png (get-graph-png run graph)]
+    (if (string? png)
+      [:div.row
+       [:div.span4.columns
+        [:h3 (:name graph) [:small (format " (%s)" (:results-type graph))]]
+        [:p (:caption graph)]]
+       [:div.span8.columns
+        [:p
+         [:img {:src png :width 700 :height 400}]]
+        [:pre {:style "width: 650px;"} (:code graph)]]]
+      [:div.row
+       [:div.span16.columns
+        [:p (format "Failed to produce graph %s" (:name graph))]
+        [:pre (:err png)]]])))
 
 (defpartial graph-form
   [graph]
@@ -46,7 +49,7 @@
                [:div.clearfix
                 [:label {:for "results-type"} "Results type"]
                 [:div.input
-                 (drop-down :results-type ["control" "comparison" "comparative"]
+                 (drop-down :results-type ["control/comparison" "comparative"]
                             (:results-type graph))]]
                [:div.clearfix
                 [:label {:for "caption"} "Caption"]
@@ -58,9 +61,9 @@
                  [:textarea.xxlarge {:id "code" :name "code"}
                   (if (:code graph) (:code graph)
                       "p <- ggplot(comparative) + geom_point(aes(x=Field1, y=Field2))")]
-                 [:span.help-block "Assume the existence of a data table named 'control' or
-                                     'comparison' or 'comparative' (depending on
-                                     the results type selected above) and that 'ggplot2' is loaded.
+                 [:span.help-block "Assume the existence of data tables named 'control',
+                                     'comparison', and 'comparative'
+                                     and that 'ggplot2' is loaded.
                                      Save the graph to the variable 'p'."]]]
                [:div.actions
                 [:input.btn.primary {:value "Save" :type "submit"}]]])]]])
