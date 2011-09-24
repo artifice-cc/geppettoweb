@@ -66,7 +66,7 @@
                                      and that 'ggplot2' is loaded.
                                      Save the graph to the variable 'p'."]]]
                [:div.actions
-                [:input.btn.primary {:value "Save" :type "submit"}]]])]]])
+                [:input.btn.primary {:value (if (:name graph) "Update" "Save") :type "submit"}]]])]]])
 
 (defpage
   [:post "/graphs/update-graph"] {:as graph}

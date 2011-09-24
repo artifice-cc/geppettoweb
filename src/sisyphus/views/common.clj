@@ -25,15 +25,14 @@
         [:ul.nav
          [:li (link-to "/" "Overview")]
          [:li (link-to "/claims" "Claims")]
+         [:li (link-to "/parameters" "Parameters")]
          [:li (link-to "/graphs" "Graphs")]
          [:li (link-to "/configure" "Configure")]]]]]
      content]]))
 
 (defpartial strategy-format
   [strategy]
-  (let [features (str/split strategy #"\s*,\s*")]
-    (interpose ", " (for [f features] (if (or (re-find #"=" f) (= \! (nth f 0)))
-                                       f [:strong f])))))
+  "")
 
 (defpartial date-format
   [ms]

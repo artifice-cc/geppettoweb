@@ -14,8 +14,8 @@
     [:tr
      [:td (link-to (format "/details/%s" id) (subs id 22))]
      [:td (common/date-format (:time r))]
-     [:td (common/strategy-format (:control-strategy r))]
-     [:td (common/strategy-format (:comparison-strategy r))]
+     [:td (link-to (format "/parameters/%s/%s" (:paramsid r) (:paramsrev r))
+                   (:paramsname r))]
      [:td (if (not-empty (:rows summary))
             (format "%.2f" ((comp double :value first :rows) summary))
             "N/A")]
@@ -35,7 +35,7 @@
       [:tr
        [:th "Run ID"]
        [:th "Time"]
-       [:th "Control strategy"] [:th "Comparison strategy"]
+       [:th "Parameters"]
        [:th (format "%s (%s,%s)" (:field custom) (:order custom) (:func custom))]
        [:th "Control"] [:th "Comparison"] [:th "Comparative"]
        [:th "Commit"]]]

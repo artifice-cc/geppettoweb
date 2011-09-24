@@ -11,17 +11,9 @@
       (clutch/with-clj-view-server
         {:map (fn [doc]
                 (when (= "run" (:type doc))
-                  [[(:time doc)
-                    {:problem (:problem doc)
-                     :control-strategy (:control-strategy doc)
-                     :comparison-strategy (:comparison-strategy doc)
-                     :control-count (count (:control doc))
-                     :comparison-count (count (:comparison doc))
-                     :comparative-count (count (:comparative doc))
-                     :commit (:commit doc)
-                     :hostname (:hostname doc)
-                     :repetitions (:repetitions doc)
-                     :time (:time doc)}]]))})))))
+                  [[(:time doc) (assoc doc :control-count (count (:control doc))
+                                       :comparison-count (count (:comparison doc))
+                                       :comparative-count (count (:comparative doc)))]]))})))))
 
 (defn delete-run
   [id]
@@ -45,7 +37,7 @@
                                  (set values)))})
                 {:group true :group_level 1 :key problem}))]
     (sort (set/difference (set (:value (first (:rows rows))))
-                          #{"Control" "Comparison" "Problem" "Seed" "type" "runid" "_rev" "_id"}))))
+                          #{"Problem" "Seed" "type" "runid" "_rev" "_id"}))))
 
 (defmacro summarize-comparative-results
   [runid custom]
@@ -81,7 +73,7 @@
           (clutch/update-document {:annotations (concat (take index annotations)
                                                         (drop (inc index) annotations))})))))
 
-(def dissoc-fields [:Problem :Comparison :Control :Step :runid :type :_rev :_id])
+(def dissoc-fields [:Problem :Step :runid :type :_rev :_id])
 
 (defn get-fields
   [results]
