@@ -1,6 +1,7 @@
 (ns sisyphus.models.runs
   (:require [clojure.set :as set])
   (:require [com.ashafa.clutch :as clutch])
+  (:use [sisyphus.models.claims :only [list-claims remove-claim-association]])
   (:use sisyphus.models.common))
 
 (defn list-runs
@@ -16,11 +17,13 @@
 
 (defn delete-run
   [id]
-  (let [run (get-doc id)]
-    (doseq [r (concat (:comparative run) (:control run) (:comparison run))]
-      (clutch/with-db local-couchdb
-        (clutch/delete-document (get-doc r))))
+  (let [run (get-doc id)
+        claims (apply concat (vals (list-claims run)))]
     (clutch/with-db local-couchdb
+      (doseq [c claims]
+        (remove-claim-association {:claim (:_id c) :runid id}))
+      (doseq [r (concat (:comparative run) (:control run) (:comparison run))]
+        (clutch/delete-document (get-doc r)))
       (clutch/delete-document run))))
 
 (defn problem-fields

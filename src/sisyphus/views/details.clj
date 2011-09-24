@@ -12,6 +12,7 @@
   (:use [sisyphus.views.claims :only
          [claim-summary claim-association-form]])
   (:use [sisyphus.views.graphs :only [show-graph]])
+  (:use [sisyphus.views.parameters :only [parameters-summary]])
   (:use [sisyphus.views.results :only
          [field-checkboxes comparative-results-table paired-results-table]]))
 
@@ -22,40 +23,41 @@
     [:h2 "Metadata"]]
    [:div.row
     [:div.span4.columns
-     [:h3 "Source code"]
-     [:p "Commit " (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
-                            (subs (:commit run) 0 10))]]
+     [:h3 "Commit message"]
+     [:p "View commit "
+      (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+               (subs (:commit run) 0 10))]]
     [:div.span12.columns
      [:pre (:commit-msg run)]]]
    [:div.row
     [:div.span4.columns
-     [:h3 "Parameters"]]
+     [:h3 "Simulation properties"]]
     [:div.span4.columns
-     [:dl [:dt "Control strategy"]
-      [:dd (common/strategy-format (:control-strategy run))]]
-     [:dl [:dt "Comparison strategy"]
-      [:dd (common/strategy-format (:comparison-strategy run))]]]
+     [:dl [:dt "User@hostname"]
+      [:dd (format "%s@%s" (:username run) (:hostname run))]]
+     [:dl [:dt "Time"]
+      [:dd (common/date-format (:time run))]]]
     [:div.span4.columns
      [:dl [:dt "Reptitions"]
       [:dd (:repetitions run)]]
      [:dl [:dt "Seed"]
-      [:dd (:seed run)]]]]
-   [:div.row
-    [:div.span4.columns
-     [:h3 "Machine"]]
-    [:div.span4.columns
-     [:dl [:dt "User@hostname"]
-      [:dd (format "%s@%s" (:username run) (:hostname run))]]
+      [:dd (:seed run)]]
      [:dl [:dt "Number of threads"]
       [:dd (:nthreads run)]]]
     [:div.span4.columns
      [:dl [:dt "Working directory"]
-      [:dd (:pwd run)]]]
-    [:div.span4.columns
+      [:dd (:pwd run)]]
      [:dl [:dt "Data directory"]
       [:dd (:datadir run)]]
      [:dl [:dt "Record directory"]
       [:dd (:recorddir run)]]]]])
+
+(defpartial details-parameters
+  [run]
+  (let [params (get-doc (:paramsid run))]
+    [:section#parameters
+     [:div.page-header [:h2 "Parameters"]]
+     (parameters-summary params)]))
 
 (defpartial details-fields-form
   [run fields comparative?]
@@ -264,6 +266,7 @@
          (details-graphs doc)
          (details-annotations doc)
          (details-claims doc comparative-fields paired-fields)
+         (details-parameters doc)
          (details-metainfo doc)
          (details-delete-run doc)))
       (common/layout "Blah"
