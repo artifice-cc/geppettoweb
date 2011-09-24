@@ -3,18 +3,22 @@
   (:require [noir.cookies :as cookies]))
 
 (defpartial field-checkbox
-  [run n field]
+  [run n comparative? field]
   [:li [:label
         [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
-                 :checked (= "true" (cookies/get (format "%s-%s" (:problem run) (name field))))}]
+                 :checked (= "true" (cookies/get (format "%s-%s-%s"
+                                                         (:problem run)
+                                                         (if comparative? "comparative"
+                                                             "control-comparison")
+                                                         (name field))))}]
         " " (name field)]])
 
 (defpartial field-checkboxes
-  [run n fields]
+  [run n comparative? fields]
   (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
     (map (fn [fs]
            [:div.span4.columns
-            [:ul.inputs-list (map (fn [f] (field-checkbox run n f)) fs)]])
+            [:ul.inputs-list (map (fn [f] (field-checkbox run comparative? n f)) fs)]])
          field-groups)))
 
 (defpartial comparative-results-table

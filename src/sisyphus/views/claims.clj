@@ -133,11 +133,11 @@
      [:div.row
       [:div.span4.columns
        [:h3 "Comparative fields"]]
-      (field-checkboxes run :comparative-fields comparative-fields)]
+      (field-checkboxes run true :comparative-fields comparative-fields)]
      [:div.row
       [:div.span4.columns
        [:h3 "Control/comparison fields"]]
-      (field-checkboxes run :paired-fields paired-fields)]
+      (field-checkboxes run false :paired-fields paired-fields)]
      (let [graphs (get (list-graphs) (:problem run))
            graph-groups (partition-all (int (Math/ceil (/ (count graphs) 3))) graphs)]
        [:div.row

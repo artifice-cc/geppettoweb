@@ -66,7 +66,7 @@
    (hidden-field :problem (:problem run))
    [:div.row
     [:div.span4.columns [:h3 "Active fields"]]
-    (field-checkboxes run :fields fields)]
+    (field-checkboxes run comparative? :fields fields)]
    [:div.row
     [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
@@ -74,12 +74,14 @@
       [:input.btn.primary {:value "Update" :type "submit"}]]]]))
 
 (defn filter-on-fields
-  [problem fields]
-  (filter (fn [f] (= "true" (cookies/get (format "%s-%s" problem (name f))))) fields))
+  [problem results-type fields]
+  (filter (fn [f] (= "true" (cookies/get (format "%s-%s-%s"
+                                                 problem (name results-type) (name f)))))
+          fields))
 
 (defpartial details-comparative-results-table
   [run comparative-results comparative-fields]
-  (let [on-fields (filter-on-fields (:problem run) comparative-fields)]
+  (let [on-fields (filter-on-fields (:problem run) :comparative comparative-fields)]
     [:section#comparative
      [:div.page-header
       [:a {:name "comparative-results"}
@@ -89,7 +91,7 @@
 
 (defpartial details-paired-results-table
   [run control-results comparison-results paired-fields]
-  (let [on-fields (filter-on-fields (:problem run) paired-fields)]
+  (let [on-fields (filter-on-fields (:problem run) :control-comparison paired-fields)]
     [:section#comparison
      [:div.page-header
       [:a {:name "control-comparison-results"}
@@ -227,9 +229,17 @@
         on-fields (set (:fields fields))
         off-fields (set/difference (set (map name all-fields)) on-fields)]
     (doseq [f on-fields]
-      (cookies/put! (keyword (format "%s-%s" (:problem fields) f)) "true"))
+      (cookies/put! (keyword (format "%s-%s-%s" (:problem fields)
+                                     (if (= (:comparative fields) "true")
+                                       "comparative" "control-comparison")
+                                     f))
+                    "true"))
     (doseq [f off-fields]
-      (cookies/put! (keyword (format "%s-%s" (:problem fields) f)) "false")))
+      (cookies/put! (keyword (format "%s-%s-%s" (:problem fields)
+                                     (if (= (:comparative fields) "true")
+                                       "comparative" "control-comparison")
+                                     f))
+                    "false")))
   (resp/redirect (format "/details/%s#%s" (:id fields)
                          (if (= "true" (:comparative fields)) "comparative-results"
                              "control-comparison-results"))))
