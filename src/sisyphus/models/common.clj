@@ -14,4 +14,7 @@
        (clutch/get-document id)))
   ([id rev]
      (clutch/with-db local-couchdb
-       (clutch/get-document id {:rev rev} (constantly true)))))
+       (let [revs (:_revisions (clutch/get-document id {:revs true}))]
+         (assoc
+             (clutch/get-document id {:rev rev} (constantly true))
+           :revs revs)))))

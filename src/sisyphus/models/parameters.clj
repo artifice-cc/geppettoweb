@@ -11,7 +11,7 @@
   [params]
   (clutch/with-db local-couchdb
     (clutch/update-document (clutch/get-document (:id params))
-                            (dissoc params :_id :_rev))))
+                            (dissoc params :id :_id :_rev))))
 
 (defn list-parameters
   []

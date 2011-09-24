@@ -1,4 +1,5 @@
 (ns sisyphus.views.parameters
+  (:require [clojure.contrib.string :as str])
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
@@ -64,7 +65,10 @@
   [:div.row
    [:div.span4.columns
     [:h2 (format "%s/%s" (:problem params) (:name params))]
-    [:p (link-to (format "/parameters/%s" (:_id params)) "Update")]]
+    (if (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params)))))
+      [:p (link-to (format "/parameters/%s" (:_id params)) "Update")]
+      [:p "This is an old version. "
+       (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])]
    [:div.span12.columns
     [:p (:description params)]]]
   [:div.row
@@ -101,7 +105,7 @@
   (if-let [params (get-doc id rev)]
     (common/layout
      (format "Parameters: %s/%s" (:problem params) (:name params))
-     (parameters-form params))
+     (parameters-summary params))
     (resp/redirect "/parameters")))
 
 (defpage "/parameters" {}
