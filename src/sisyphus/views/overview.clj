@@ -9,26 +9,25 @@
 
 (defpartial run-table-row
   [run summary]
-  (let [id (:id run)
-        r (:value run)]
+  (let [id (:_id run)]
     [:tr
-     [:td (link-to (format "/details/%s" id) (subs id 22))]
-     [:td (common/date-format (:time r))]
-     [:td (link-to (format "/parameters/%s/%s" (:paramsid r) (:paramsrev r))
-                   (:paramsname r))]
+     [:td (link-to (format "/details/%s" (:_id run)) (subs id 22))]
+     [:td (common/date-format (:time run))]
+     [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
+                   (:paramsname run))]
      [:td (if (not-empty (:rows summary))
             (format "%.2f" ((comp double :value first :rows) summary))
             "N/A")]
-     [:td (:control-count r)] [:td (:comparison-count r)]
-     [:td (:comparative-count r)]
-     [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit r))
-                   (subs (:commit r) 0 10))]]))
+     [:td (:control-count run)] [:td (:comparison-count run)]
+     [:td (:comparative-count run)]
+     [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+                   (subs (:commit run) 0 10))]]))
 
 (defpartial runs-table
   [runs problem custom]
   (let [summaries (sort-by #(if (not-empty (:rows (second %)))
                               ((comp double :value first :rows second) %) Double/NEGATIVE_INFINITY)
-                           (map (fn [r] [r (eval (summarize-comparative-results (:id r) custom))])
+                           (map (fn [r] [r (eval (summarize-comparative-results (:_id r) custom))])
                                 runs))]
     [:table.tablesorter
      [:thead

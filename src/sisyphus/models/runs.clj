@@ -5,15 +5,16 @@
 
 (defn list-runs
   []
-  (:rows
-   (clutch/with-db local-couchdb
-     (clutch/ad-hoc-view
-      (clutch/with-clj-view-server
-        {:map (fn [doc]
-                (when (= "run" (:type doc))
-                  [[(:time doc) (assoc doc :control-count (count (:control doc))
-                                       :comparison-count (count (:comparison doc))
-                                       :comparative-count (count (:comparative doc)))]]))})))))
+  (map :value
+       (:rows
+        (clutch/with-db local-couchdb
+          (clutch/ad-hoc-view
+           (clutch/with-clj-view-server
+             {:map (fn [doc]
+                     (when (= "run" (:type doc))
+                       [[(:time doc) (assoc doc :control-count (count (:control doc))
+                                            :comparison-count (count (:comparison doc))
+                                            :comparative-count (count (:comparative doc)))]]))}))))))
 
 (defn delete-run
   [id]

@@ -5,7 +5,8 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.parameters :only
-         [new-parameters update-parameters list-parameters]]))
+         [new-parameters update-parameters list-parameters runs-with-parameters]])
+  (:use [sisyphus.views.overview :only [runs-table]]))
 
 (defpartial parameters-form
   [params]
@@ -82,7 +83,10 @@
   [:div.row
    [:div.span4.columns [:h3 "Player"]]
    [:div.span12.columns
-    [:pre (:player params)]]])
+    [:pre (:player params)]]]
+  [:div.page-header
+   [:h3 "Runs with these parameters"]]
+  (runs-table (runs-with-parameters params) (:problem params) {:field "XYZ" :order "ASC" :func "SUM"}))
 
 (defpage
   [:post "/parameters/update-parameters"] {:as params}
