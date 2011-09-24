@@ -6,15 +6,13 @@
 (defn list-runs
   []
   (map :value
-       (:rows
-        (clutch/with-db local-couchdb
-          (clutch/ad-hoc-view
-           (clutch/with-clj-view-server
-             {:map (fn [doc]
-                     (when (= "run" (:type doc))
-                       [[(:time doc) (assoc doc :control-count (count (:control doc))
-                                            :comparison-count (count (:comparison doc))
-                                            :comparative-count (count (:comparative doc)))]]))}))))))
+       (:rows (view "runs" "list"
+                    {:map (fn [doc]
+                            (when (= "run" (:type doc))
+                              [[(:time doc)
+                                (assoc doc :control-count (count (:control doc))
+                                       :comparison-count (count (:comparison doc))
+                                       :comparative-count (count (:comparative doc)))]]))}))))
 
 (defn delete-run
   [id]
@@ -27,16 +25,14 @@
 
 (defn problem-fields
   [problem]
-  (let [rows (clutch/with-db local-couchdb
-               (clutch/ad-hoc-view
-                (clutch/with-clj-view-server
-                  {:map (fn [doc]
-                          (when (= "comparative" (:type doc))
-                            (for [field (keys doc)] [(:Problem doc) field])))
-                   :reduce (fn [keys values rereduce]
-                             (if rereduce (apply clojure.set/union values)
-                                 (set values)))})
-                {:group true :group_level 1 :key problem}))]
+  (let [rows (view "runs" "problem-fields"
+                   {:map (fn [doc]
+                           (when (= "comparative" (:type doc))
+                             (for [field (keys doc)] [(:Problem doc) field])))
+                    :reduce (fn [keys values rereduce]
+                              (if rereduce (apply clojure.set/union values)
+                                  (set values)))}
+                   {:group true :group_level 1 :key problem})]
     (sort (set/difference (set (:value (first (:rows rows))))
                           #{"Problem" "Seed" "type" "runid" "_rev" "_id"}))))
 
@@ -98,10 +94,10 @@
 (defn query-comparative-results
   [fields limit]
   (clutch/with-db local-couchdb
-    (let [results (map :doc (:rows (clutch/ad-hoc-view
-                                    (clutch/with-clj-view-server
-                                      {:map (fn [doc] (when (>= (:time doc) 0))
-                                              (vec (map (fn [c] [nil {:_id c}]) (:comparative doc))))})
-                                    {:include_docs true :limit limit})))]
+    (let [results (map :doc (:rows
+                             (view "runs" "query-comparative-results"
+                                   {:map (fn [doc] (when (>= (:time doc) 0))
+                                           (vec (map (fn [c] [nil {:_id c}]) (:comparative doc))))}
+                                   {:include_docs true :limit limit})))]
       (map (fn [r] (select-keys r (conj fields :_id))) results))))
 

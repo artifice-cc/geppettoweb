@@ -44,8 +44,8 @@
     [:div.span4.columns
      [:h3 "Machine"]]
     [:div.span4.columns
-     [:dl [:dt "Hostname"]
-      [:dd (:hostname run)]]
+     [:dl [:dt "User@hostname"]
+      [:dd (format "%s@%s" (:username run) (:hostname run))]]
      [:dl [:dt "Number of threads"]
       [:dd (:nthreads run)]]]
     [:div.span4.columns

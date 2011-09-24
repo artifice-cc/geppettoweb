@@ -46,12 +46,10 @@
   []
   (let [all-graphs
         (:rows
-         (clutch/with-db local-couchdb
-           (clutch/ad-hoc-view
-            (clutch/with-clj-view-server
-              {:map (fn [doc]
-                      (when (= "graph" (:type doc))
-                        [[[(:problem doc) (:name doc)] doc]]))}))))
+         (view "graphs" "list"
+               {:map (fn [doc]
+                       (when (= "graph" (:type doc))
+                         [[[(:problem doc) (:name doc)] doc]]))}))
         problems (set (map (comp first :key) all-graphs))]
     (reduce (fn [m problem] (assoc m problem
                                    (map :value (filter (fn [g] (= problem (first (:key g))))

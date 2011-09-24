@@ -7,12 +7,10 @@
      (let [all-claims
            (map :value
                 (:rows
-                 (clutch/with-db local-couchdb
-                   (clutch/ad-hoc-view
-                    (clutch/with-clj-view-server
-                      {:map (fn [doc]
-                              (when (= "claim" (:type doc))
-                                [[(:created doc) doc]]))})))))]
+                 (view "claims" "list"
+                       {:map (fn [doc]
+                               (when (= "claim" (:type doc))
+                                 [[(:created doc) doc]]))})))]
        (reduce (fn [m c] (update-in m [(if (= "Unverified" (:verification c)) :unverified :verified)]
                                     conj c))
                {:unverified [] :verified []}
