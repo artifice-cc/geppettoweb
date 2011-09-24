@@ -15,9 +15,7 @@
      [:td (common/date-format (:time run))]
      [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
                    (:paramsname run))]
-     [:td (if (not-empty (:rows summary))
-            (format "%.2f" ((comp double :value first :rows) summary))
-            "N/A")]
+     [:td (if summary (format "%.2f" summary) "N/A")]
      [:td (:control-count run)] [:td (:comparison-count run)]
      [:td (:comparative-count run)]
      [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
@@ -25,35 +23,31 @@
 
 (defpartial runs-table
   [runs problem custom]
-  (let [summaries (sort-by #(if (not-empty (:rows (second %)))
-                              ((comp double :value first :rows second) %) Double/NEGATIVE_INFINITY)
-                           (map (fn [r] [r (eval (summarize-comparative-results (:_id r) custom))])
-                                runs))]
+  (let [summaries (sort-by second (map (fn [r] [r (summarize-comparative-results (:_id r) custom)])
+                                       runs))]
     [:table.tablesorter
      [:thead
       [:tr
        [:th "Run ID"]
        [:th "Time"]
        [:th "Parameters"]
-       [:th (format "%s (%s,%s)" (:field custom) (:order custom) (:func custom))]
+       [:th (format "%s (%s)" (:field custom) (:func custom))]
        [:th "Control"] [:th "Comparison"] [:th "Comparative"]
        [:th "Commit"]]]
      [:tbody
-      (map (fn [[run summary]] (run-table-row run summary))
-           (if (= "DESC" (:order custom)) (reverse summaries) summaries))]]))
+      (map (fn [[run summary]] (run-table-row run summary)) summaries)]]))
 
 (defpartial runs
   [problem runs]
   (let [fields (problem-fields problem)
         custom-field (or (cookies/get (keyword (format "%s-field" problem))) (first fields))
-        custom-order (or (cookies/get (keyword (format "%s-order" problem))) "ASC")
         custom-func (or (cookies/get (keyword (format "%s-func" problem))) "SUM")]
     [:section {:id (format "runs-%s" problem)}
      [:div.page-header
       [:h1 problem]]
      [:div.row
       [:div.span16.columns
-       (runs-table runs problem {:field custom-field :order custom-order :func custom-func})]]
+       (runs-table runs problem {:field custom-field :func custom-func})]]
      [:div.row
       [:div.span4.columns
        [:h2 "Summarization"]]
@@ -64,10 +58,6 @@
                  [:label {:for "field"} "Field"]
                  [:div.input
                   (drop-down :field fields custom-field)]]
-                [:div.clearfix
-                 [:label {:for "order"} "Order"]
-                 [:div.input
-                  (drop-down :order ["ASC" "DESC"] custom-order)]]
                 [:div.clearfix
                  [:label {:for "func"} "Function"]
                  [:div.input
@@ -83,10 +73,9 @@
 (defpage
   [:post "/set-custom"] {:as custom}
   (cookies/put! (keyword (format "%s-field" (:problem custom))) (:field custom))
-  (cookies/put! (keyword (format "%s-order" (:problem custom))) (:order custom))
   (cookies/put! (keyword (format "%s-func" (:problem custom))) (:func custom))
   (resp/redirect "/"))
 
 (defpage "/" []
-  (let [runs-grouped (group-by (comp :problem :value) (list-runs))]
+  (let [runs-grouped (group-by :problem (list-runs))]
     (common/layout "Overview" (runs-by-problem runs-grouped))))

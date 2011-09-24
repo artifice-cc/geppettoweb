@@ -36,25 +36,24 @@
     (sort (set/difference (set (:value (first (:rows rows))))
                           #{"Problem" "Seed" "type" "runid" "_rev" "_id"}))))
 
-(defmacro summarize-comparative-results
+(defn summarize-comparative-results
   [runid custom]
-  `(let [~'field (:field ~custom)
-         ~'f (case (:func ~custom)
-                   "AVG" '(fn [~'values] (double (/ (reduce + 0 ~'values) (count ~'values))))
-                   "SUM" '(fn [~'values] (reduce + 0 ~'values))
-                   "MAX" '(fn [~'values] (apply max ~'values))
-                   "MIN" '(fn [~'values] (apply min ~'values))
-                   ;; default is SUM
-                   '(fn [~'values] (apply + 0 ~'values)))]
-     `(clutch/with-db local-couchdb
-        (clutch/ad-hoc-view
-         (clutch/with-clj-view-server
-           {:map (fn [~'~'doc]
-                   (when (= "comparative" (:type ~'~'doc))
-                     (for [~'~'field (keys ~'~'doc) :when (number? (get ~'~'doc ~'~'field))]
-                       [[(:runid ~'~'doc) ~'~'field] (get ~'~'doc ~'~'field)])))
-            :reduce (fn [~'~'_ ~'~'values ~'~'_] (~~'f ~'~'values))})
-         {:key [~~runid ~~'field]}))))
+  (let [f (case (:func custom)
+                "AVG" (fn [values] (double (/ (reduce + 0 values) (count values))))
+                "SUM" (fn [values] (double (reduce + 0 values)))
+                "MAX" (fn [values] (double (apply max values)))
+                "MIN" (fn [values] (double (apply min values)))
+                ;; default is SUM
+                (fn [values] (double (apply + 0 values))))
+        results (map :value
+                     (:rows
+                      (view "runs" "comparative"
+                            {:map (fn [doc]
+                                    (when (= "comparative" (:type doc))
+                                      (for [field (keys doc)] [[(:runid doc) field] (get doc field)])))}
+                            {:key [runid (:field custom)]})))]
+    (if (and (not-empty results) (every? number? results))
+      (f results))))
 
 (defn add-annotation
   [id content]
