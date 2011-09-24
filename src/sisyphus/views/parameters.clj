@@ -66,26 +66,25 @@
   [:div.row
    [:div.span4.columns
     [:h2 (format "%s/%s" (:problem params) (:name params))]
-    (if (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params)))))
+    (if (or (nil? (:revs params))
+            (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
       [:p (link-to (format "/parameters/%s" (:_id params)) "Update")]
       [:p "This is an old version. "
        (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])]
    [:div.span12.columns
     [:p (:description params)]]]
   [:div.row
-   [:div.span4.columns [:h3 "Control"]]
-   [:div.span12.columns
-    [:pre (:control params)]]]
-  [:div.row
-   [:div.span4.columns [:h3 "Comparison"]]
-   [:div.span12.columns
-    [:pre (:comparison params)]]]
-  [:div.row
-   [:div.span4.columns [:h3 "Player"]]
-   [:div.span12.columns
+   [:div.span-one-third.column
+    [:h3 "Control"]
+    [:pre (:control params)]]
+   [:div.span-one-third.column
+    [:h3 "Comparison"]
+    [:pre (:comparison params)]]
+   [:div.span-one-third.column
+    [:h3 "Player"]
     [:pre (:player params)]]]
   [:div.page-header
-   [:h3 "Runs with these parameters"]]
+   [:h3 "Runs with these control/comparison parameters"]]
   (runs-table (runs-with-parameters params) (:problem params) {:field "XYZ" :order "ASC" :func "SUM"}))
 
 (defpage
@@ -118,6 +117,7 @@
      "Parameters"
      [:div
       [:section#parameters
+       [:div.page-header [:h1 "All parameters"]]
        (for [params all-params]
          (parameters-summary params))]
       (parameters-form nil)])))
