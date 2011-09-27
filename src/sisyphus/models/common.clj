@@ -5,7 +5,7 @@
      {:host "localhost"
       :port 5984
       :username "sisyphus"
-      :password "sisyphus"
+      :password "4gGL3n59zupV0f"
       :name "retrospect"})
 
 (defmacro view

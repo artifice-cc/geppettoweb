@@ -1,7 +1,8 @@
 (ns sisyphus.server
-  (:require [noir.server :as server]))
+  (:require [noir.server :as server])
+  (:require [sisyphus.views.claims] [sisyphus.views.configure] [sisyphus.views.details] [sisyphus.views.graphs] [sisyphus.views.overview] [sisyphus.views.parameters] [sisyphus.views.results]))
 
-(server/load-views "src/sisyphus/views/")
+(server/load-views-ns 'sisyphus.views)
 
 (defn -main [& m]
   (let [mode (keyword (or (first m) :dev))
@@ -13,4 +14,6 @@
     ;;      clojure-java-shell-sh-throws-rejectedexecutionexception
     ;;      -when-run-in-a-new-thread
     @(promise)))
+
+(def handler (server/gen-handler {:ns 'sisyphus}))
 

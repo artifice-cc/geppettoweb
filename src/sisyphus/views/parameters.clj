@@ -64,14 +64,15 @@
 (defpartial parameters-summary
   [params]
   [:div.row
-   [:div.span4.columns
+   [:div.span8.columns
+    [:a {:name (:_id params)}]
     [:h2 (format "%s/%s" (:problem params) (:name params))]
     (if (or (nil? (:revs params))
             (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
       [:p (link-to (format "/parameters/%s" (:_id params)) "Update")]
       [:p "This is an old version. "
        (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])]
-   [:div.span12.columns
+   [:div.span8.columns
     [:p (:description params)]]]
   [:div.row
    [:div.span-one-third.column
@@ -95,7 +96,7 @@
 (defpage
   [:post "/parameters/new-parameters"] {:as params}
   (let [id (:_id (new-parameters params))]
-    (resp/redirect (format "/parameters/%s" id))))
+    (resp/redirect (format "/parameters#%s" id))))
 
 (defpage "/parameters/:id" {id :id}
   (if-let [params (get-doc id)]

@@ -5,7 +5,8 @@
 (defn new-parameters
   [params]
   (clutch/with-db local-couchdb
-    (clutch/create-document (assoc params :type "parameters"))))
+    (clutch/create-document
+      (dissoc (assoc params :type "parameters") :id))))
 
 (defn update-parameters
   [params]
