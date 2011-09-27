@@ -1,6 +1,12 @@
 (ns sisyphus.server
   (:require [noir.server :as server])
-  (:require [sisyphus.views.claims] [sisyphus.views.configure] [sisyphus.views.details] [sisyphus.views.graphs] [sisyphus.views.overview] [sisyphus.views.parameters] [sisyphus.views.results]))
+  (:require [sisyphus.views.claims]
+            [sisyphus.views.configure]
+            [sisyphus.views.details]
+            [sisyphus.views.graphs]
+            [sisyphus.views.overview]
+            [sisyphus.views.parameters]
+            [sisyphus.views.results]))
 
 (server/load-views-ns 'sisyphus.views)
 
