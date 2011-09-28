@@ -280,5 +280,7 @@
          (details-overview-notes doc)
          (details-metainfo doc)
          (details-delete-run doc)))
-      (common/layout "Blah"
-                     [:h1 "blah"]))))
+      (common/layout
+       "Not supported"
+       [:h1 "Not supported"]
+       [:p "Details pages for information other than runs are not yet supported."]))))
