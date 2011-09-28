@@ -24,9 +24,9 @@
    [:div.row
     [:div.span4.columns
      [:h3 "Commit message"]
-     [:p "View commit "
-      (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
-               (subs (:commit run) 0 10))]]
+     [:p (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+                  (subs (:commit run) 0 10))
+      " @ " (:branch run)]]
     [:div.span12.columns
      [:pre (:commit-msg run)]]]
    [:div.row
@@ -172,6 +172,16 @@
      (when (not-empty claim-opts)
        (claim-association-form nil run claim-opts comparative-fields paired-fields))]))
 
+(defpartial details-overview-notes
+  [run]
+  [:section#overview
+   [:div.page-header
+    [:h2 "Overview notes"]]
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span12.columns {:style "max-height: 30em; overflow: auto;"}
+     [:p (common/convert-md (:overview run))]]]])
+
 (defpartial details-delete-run
   [run]
   [:section#delete
@@ -267,6 +277,7 @@
          (details-annotations doc)
          (details-claims doc comparative-fields paired-fields)
          (details-parameters doc)
+         (details-overview-notes doc)
          (details-metainfo doc)
          (details-delete-run doc)))
       (common/layout "Blah"

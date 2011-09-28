@@ -2,7 +2,8 @@
   (:require [clojure.string :as str])
   (:use noir.core
         hiccup.core
-        hiccup.page-helpers))
+        hiccup.page-helpers)
+  (:import [com.petebevin.markdown MarkdownProcessor]))
 
 (defpartial layout
   [title & content]
@@ -40,3 +41,9 @@
         dateinstance (. java.text.DateFormat getDateTimeInstance
                         java.text.DateFormat/MEDIUM java.text.DateFormat/SHORT)]
     (. dateinstance format date)))
+
+(def mdp (com.petebevin.markdown.MarkdownProcessor.))
+
+(defpartial convert-md
+  [s]
+  (.markdown mdp s))

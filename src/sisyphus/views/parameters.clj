@@ -2,8 +2,10 @@
   (:require [clojure.contrib.string :as str])
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
+  (:require [noir.cookies :as cookies])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
+  (:use [sisyphus.models.runs :only [problem-fields]])
   (:use [sisyphus.models.parameters :only
          [new-parameters update-parameters list-parameters runs-with-parameters]])
   (:use [sisyphus.views.overview :only [runs-table]]))
@@ -86,7 +88,11 @@
     [:pre (:player params)]]]
   [:div.page-header
    [:h3 "Runs with these control/comparison parameters"]]
-  (runs-table (runs-with-parameters params) (:problem params) {:field "XYZ" :order "ASC" :func "SUM"}))
+  (let [fields (problem-fields (:problem params))
+        custom-field (or (cookies/get (keyword (format "%s-field" (:problem params)))) (first fields))
+        custom-func (or (cookies/get (keyword (format "%s-func" (:problem params)))) "SUM")]
+    (runs-table (runs-with-parameters params) (:problem params)
+                {:field custom-field :func custom-func})))
 
 (defpage
   [:post "/parameters/update-parameters"] {:as params}

@@ -6,13 +6,13 @@
   [params]
   (clutch/with-db local-couchdb
     (clutch/create-document
-      (dissoc (assoc params :type "parameters") :id))))
+      (dissoc (assoc params :type "parameters") :id :action))))
 
 (defn update-parameters
   [params]
   (clutch/with-db local-couchdb
     (clutch/update-document (clutch/get-document (:id params))
-                            (dissoc params :id :_id :_rev))))
+                            (dissoc params :id :_id :_rev :action))))
 
 (defn list-parameters
   []

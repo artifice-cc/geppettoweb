@@ -19,7 +19,8 @@
      [:td (:control-count run)] [:td (:comparison-count run)]
      [:td (:comparative-count run)]
      [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
-                   (subs (:commit run) 0 10))]]))
+                   (subs (:commit run) 0 10))
+      " @ " (:branch run)]]))
 
 (defpartial runs-table
   [runs problem custom]
