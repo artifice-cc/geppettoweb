@@ -3,6 +3,7 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:require [noir.cookies :as cookies])
+  (:require [clojure.contrib.string :as str])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
@@ -77,8 +78,9 @@
 
 (defn filter-on-fields
   [problem results-type fields]
-  (filter (fn [f] (= "true" (cookies/get (format "%s-%s-%s"
-                                                 problem (name results-type) (name f)))))
+  (filter (fn [f] ((set (str/split #"," (or (cookies/get (format "%s-%s" problem (name results-type)))
+                                            "")))
+                   (name f)))
           fields))
 
 (defpartial details-comparative-results-table
@@ -240,18 +242,9 @@
         all-fields (get-fields results)
         on-fields (set (:fields fields))
         off-fields (set/difference (set (map name all-fields)) on-fields)]
-    (doseq [f on-fields]
-      (cookies/put! (keyword (format "%s-%s-%s" (:problem fields)
-                                     (if (= (:comparative fields) "true")
-                                       "comparative" "control-comparison")
-                                     f))
-                    "true"))
-    (doseq [f off-fields]
-      (cookies/put! (keyword (format "%s-%s-%s" (:problem fields)
-                                     (if (= (:comparative fields) "true")
-                                       "comparative" "control-comparison")
-                                     f))
-                    "false")))
+    (cookies/put! (keyword (format "%s-%s" (:problem fields) (if (= (:comparative fields) "true")
+                                                               "comparative" "control-comparison")))
+                  (apply str (interpose "," on-fields))))
   (resp/redirect (format "/details/%s#%s" (:id fields)
                          (if (= "true" (:comparative fields)) "comparative-results"
                              "control-comparison-results"))))

@@ -1,16 +1,17 @@
 (ns sisyphus.views.results
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
+  (:require [clojure.contrib.string :as str])
   (:require [noir.cookies :as cookies]))
 
 (defpartial field-checkbox
   [run n comparative? field]
   [:li [:label
         [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
-                 :checked (= "true" (cookies/get (format "%s-%s-%s"
-                                                         (:problem run)
-                                                         (if comparative? "comparative"
-                                                             "control-comparison")
-                                                         (name field))))}]
+                 :checked ((set (str/split #"," (or (cookies/get (format "%s-%s" (:problem run)
+                                                                         (if comparative? "comparative"
+                                                                             "control-comparison")))
+                                                    "")))
+                           (name field))}]
         " " (name field)]])
 
 (defpartial field-checkboxes
