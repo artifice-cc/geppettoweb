@@ -88,8 +88,8 @@
   (let [on-fields (filter-on-fields (:problem run) :comparative comparative-fields)]
     [:section#comparative
      [:div.page-header
-      [:a {:name "comparative-results"}
-       [:h2 "Comparative results"]]]
+      [:a {:name "comparative-results"}]
+      [:h2 "Comparative results"]]
      (comparative-results-table comparative-results on-fields)
      (details-fields-form run comparative-fields true)]))
 
@@ -98,8 +98,8 @@
   (let [on-fields (filter-on-fields (:problem run) :control-comparison paired-fields)]
     [:section#comparison
      [:div.page-header
-      [:a {:name "control-comparison-results"}
-       [:h2 "Control/comparison results"]]]
+      [:a {:name "control-comparison-results"}]
+      [:h2 "Control/comparison results"]]
      (paired-results-table control-results comparison-results on-fields)
      (details-fields-form run paired-fields false)]))
 
