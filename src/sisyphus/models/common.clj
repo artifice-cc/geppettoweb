@@ -1,12 +1,7 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def local-couchdb
-     {:host "localhost"
-      :port 5984
-      :username "sisyphus"
-      :password "4gGL3n59zupV0f"
-      :name "retrospect"})
+(def local-couchdb "app1384863.heroku/retrospect")
 
 (defmacro view
   [name1 name2 body & opts]
