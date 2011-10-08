@@ -7,20 +7,20 @@
 
 (defpartial show-graph
   [run graph]
-  (let [png (get-graph-png run graph)]
-    (if (string? png)
-      [:div.row
-       [:div.span4.columns
-        [:h3 (:name graph) [:small (format " (%s)" (:results-type graph))]]
-        [:p (:caption graph)]]
-       [:div.span8.columns
-        [:p
-         [:img {:src png :width 700 :height 400}]]
-        [:pre {:style "width: 650px;"} (:code graph)]]]
-      [:div.row
-       [:div.span16.columns
-        [:p (format "Failed to produce graph %s" (:name graph))]
-        [:pre (:err png)]]])))
+  [:div.row
+   [:div.span4.columns
+    [:h3 (:name graph) [:small (format " (%s)" (:results-type graph))]]
+    [:p (:caption graph)]]
+   [:div.span8.columns
+    [:p
+     [:img {:src (format "/graph/%s/%s/%s" (:_id run) (:_id graph) (:_rev graph))
+            :width 700 :height 400}]]
+    [:pre {:style "width: 650px;"} (:code graph)]]])
+
+(comment [:div.row
+          [:div.span16.columns
+           [:p (format "Failed to produce graph %s" (:name graph))]
+           [:pre (:err png)]]])
 
 (defpartial graph-form
   [graph]
@@ -102,3 +102,7 @@
            [:div.span12.columns
             [:pre (:code graph)]]])])
      (graph-form {}))))
+
+(defpage "/graph/:runid/:graphid/:graphrev"
+  {runid :runid graphid :graphid graphrev :graphrev}
+  (resp/content-type "image/png" (get-graph-png (get-doc runid) (get-doc graphid graphrev))))

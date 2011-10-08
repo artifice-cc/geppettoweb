@@ -7,20 +7,17 @@
   (:use sisyphus.models.common))
 
 (def cachedir "/tmp")
-(def outdir "/home/josh/research/sisyphus/resources/public/img/graphs")
-(def url "/img/graphs")
 
 (defn csv-filenames
   [run]
   (zipmap [:control :comparison :comparative]
-          (map #(format "%s/%s-%s-%s.csv" cachedir (:_id run)
-                        (:_rev run) (name %))
+          (map #(format "%s/%s-%s.csv" cachedir (:_id run) (name %))
                [:control :comparison :comparative])))
 
 (defn png-filename
   [run graph]
-  (format "%s/%s-%s-%s-%s.png" outdir
-          (:_id run) (:_rev run) (:_id graph) (:_rev graph)))
+  (format "%s/%s-%s-%s.png" cachedir
+          (:_id run) (:_id graph) (:_rev graph)))
 
 (defn format-csv-row
   [row]
@@ -79,23 +76,27 @@
 
 (defn get-graph-png
   [run graph]
-  (let [csv-fnames (csv-filenames run)
-        png-fname (png-filename run graph)
-        rcode (format "library(ggplot2)\n%s\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
-                      (apply str (map #(format "%s <- read.csv(\"%s\")\n" (name %) (get csv-fnames %))
-                                      (keys csv-fnames)))
-                      (:code graph) png-fname)]
-    (results-to-csv run csv-fnames)
-    (if (. (io/file png-fname) exists)
-      (str/replace png-fname outdir url)
-      (do
-        ;; save rcode to file
-        (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
-          (.write writer rcode))
-        ;; run Rscript
-        (let [status (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))]
-          (cond (not= 0 (:exit status))
-                status
-                (not (. (io/file png-fname) exists))
-                {:err "Resulting file does not exist."}
-                :else (str/replace png-fname outdir url)))))))
+  (if-let [png (clutch/with-db local-couchdb
+                 (clutch/get-attachment (:_id run) (format "%s-%s" (:_id graph) (:_rev graph))))]
+    png
+    (let [csv-fnames (csv-filenames run)
+          png-fname (png-filename run graph)
+          rcode (format "library(ggplot2)\n%s\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
+                        (apply str (map #(format "%s <- read.csv(\"%s\")\n" (name %) (get csv-fnames %))
+                                        (keys csv-fnames)))
+                        (:code graph) png-fname)]
+      (results-to-csv run csv-fnames)
+      ;; save rcode to file
+      (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
+        (.write writer rcode))
+      ;; run Rscript
+      (let [status (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))]
+        (cond (not= 0 (:exit status))
+              status
+              (not (. (io/file png-fname) exists))
+              {:err "Resulting file does not exist."}
+              :else (do (clutch/with-db local-couchdb
+                          (clutch/update-attachment run png-fname
+                                                    (format "%s-%s" (:_id graph) (:_rev graph))
+                                                    "image/png"))
+                        (io/input-stream (io/file png-fname))))))))
