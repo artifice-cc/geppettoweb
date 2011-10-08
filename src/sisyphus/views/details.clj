@@ -67,14 +67,16 @@
    (hidden-field :id (:_id run))
    (hidden-field :comparative (if comparative? "true" "false"))
    (hidden-field :problem (:problem run))
-   [:div.row
-    [:div.span4.columns [:h3 "Active fields"]]
-    (field-checkboxes run comparative? :fields fields)]
-   [:div.row
-    [:div.span4.columns "&nbsp;"]
-    [:div.span12.columns
-     [:div.actions
-      [:input.btn.primary {:value "Update" :type "submit"}]]]]))
+   [:div.fields_checkboxes_header "Click me"
+    [:div.fields_checkboxes
+     [:div.row
+      [:div.span4.columns [:h3 "Active fields"]]
+      (field-checkboxes run comparative? :fields fields)]
+     [:div.row
+      [:div.span4.columns "&nbsp;"]
+      [:div.span12.columns
+       [:div.actions
+        [:input.btn.primary {:value "Update" :type "submit"}]]]]]]))
 
 (defn filter-on-fields
   [problem results-type fields]
