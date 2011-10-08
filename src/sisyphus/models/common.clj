@@ -1,7 +1,7 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def local-couchdb "app1384863.heroku/retrospect")
+(def local-couchdb (format "%s/retrospect" (System/getenv "CLOUDANT_URL")))
 
 (defmacro view
   [name1 name2 body & opts]
