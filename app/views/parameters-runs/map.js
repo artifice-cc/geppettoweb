@@ -1,9 +1,9 @@
 function(doc) {
     if(doc["type"] == "run") {
-        emit(doc["time"],
+        emit([doc["paramsid"], doc["paramsrev"]],
              {"_id": doc["_id"],
-              "problem": doc["problem"],
               "time": doc["time"],
+              "problem": doc["problem"],
               "count": doc["comparative"].length,
               "paramsid": doc["paramsid"],
               "paramsname": doc["paramsname"],

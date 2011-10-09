@@ -5,12 +5,11 @@
 (defn get-configuration
   []
   (if-let [config (get-doc "configuration")] config
-          (clutch/with-db local-couchdb
-            (clutch/create-document {} "configuration"))))
+          (create-doc {} "configuration")))
 
 (defn update-configuration
   [config]
-  (clutch/with-db local-couchdb
+  (clutch/with-db db
     (clutch/update-document (get-configuration) config)))
 
 (defn build-remote
@@ -25,5 +24,6 @@
   []
   (let [config (get-configuration)
         remote (build-remote config)]
-    [(clutch/replicate-database local-couchdb remote)
-     (clutch/replicate-database remote local-couchdb)]))
+    (clutch/with-db db
+      [(clutch/replicate-database (clutch/get-database db) remote)
+       (clutch/replicate-database remote (clutch/get-database db))])))

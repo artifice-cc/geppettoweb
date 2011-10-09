@@ -41,12 +41,7 @@
 
 (defn list-graphs
   []
-  (let [all-graphs
-        (:rows
-         (view "graphs" "list"
-               {:map (fn [doc]
-                       (when (= "graph" (:type doc))
-                         [[[(:problem doc) (:name doc)] doc]]))}))
+  (let [all-graphs (:rows (view "graphs-list"))
         problems (set (map (comp first :key) all-graphs))]
     (reduce (fn [m problem] (assoc m problem
                                    (map :value (filter (fn [g] (= problem (first (:key g))))
@@ -55,29 +50,20 @@
 
 (defn get-graph
   [problem n]
-  (:value (first (:rows
-                  (eval `(clutch/with-db local-couchdb
-                           (clutch/ad-hoc-view
-                            (clutch/with-clj-view-server
-                              {:map (fn [~'doc] (when (and (= "graph" (:type ~'doc))
-                                                           (= ~problem (:problem ~'doc))
-                                                           (= ~n (:name ~'doc)))
-                                                  [[nil ~'doc]]))}))))))))
+  (:value (first (:rows (view "graphs-list" {:key [problem n]})))))
 
 (defn new-graph
   [graph]
-  (clutch/with-db local-couchdb
-    (clutch/create-document (assoc graph :type "graph"))))
+  (create-doc (assoc graph :type "graph")))
 
 (defn update-graph
   [graph]
-  (clutch/with-db local-couchdb
-    (clutch/update-document (clutch/get-document (:id graph)) (dissoc graph :_id :_rev))))
+  (clutch/with-db db
+    (clutch/update-document (get-doc (:id graph)) (dissoc graph :_id :_rev))))
 
 (defn get-graph-png
   [run graph]
-  (if-let [png (clutch/with-db local-couchdb
-                 (clutch/get-attachment (:_id run) (format "%s-%s" (:_id graph) (:_rev graph))))]
+  (if-let [png (get-attachment (:_id run) (format "%s-%s" (:_id graph) (:_rev graph)))]
     png
     (let [csv-fnames (csv-filenames run)
           png-fname (png-filename run graph)
@@ -95,8 +81,9 @@
               status
               (not (. (io/file png-fname) exists))
               {:err "Resulting file does not exist."}
-              :else (do (clutch/with-db local-couchdb
-                          (clutch/update-attachment run png-fname
-                                                    (format "%s-%s" (:_id graph) (:_rev graph))
-                                                    "image/png"))
-                        (io/input-stream (io/file png-fname))))))))
+              :else (do
+                      (clutch/with-db db
+                        (clutch/update-attachment run png-fname
+                                                  (format "%s-%s" (:_id graph) (:_rev graph))
+                                                  "image/png"))
+                      (io/input-stream (io/file png-fname))))))))

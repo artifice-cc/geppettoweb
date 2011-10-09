@@ -4,13 +4,7 @@
 
 (defn list-claims
   ([run]
-     (let [all-claims
-           (map :value
-                (:rows
-                 (view "claims" "list"
-                       {:map (fn [doc]
-                               (when (= "claim" (:type doc))
-                                 [[(:created doc) doc]]))})))]
+     (let [all-claims (map :value (:rows (view "claims-list")))]
        (reduce (fn [m c] (update-in m [(if (= "Unverified" (:verification c)) :unverified :verified)]
                                     conj c))
                {:unverified [] :verified []}
@@ -27,30 +21,27 @@
 
 (defn new-claim
   [claim]
-  (clutch/with-db local-couchdb
-    (clutch/create-document
-     (assoc (dissoc claim :id)
-       :type "claim"
-       :runs []
-       :custom-map {}
-       :created (System/currentTimeMillis)))))
+  (create-doc
+   (assoc (dissoc claim :id)
+     :type "claim"
+     :runs []
+     :custom-map {}
+     :created (System/currentTimeMillis))))
 
 (defn update-claim
   [claim]
-  (clutch/with-db local-couchdb
+  (clutch/with-db db
     (clutch/update-document (get-doc (:id claim))
                             (dissoc claim :_id :_rev :id :runs))))
 
 (defn delete-claim
   [claim]
-  (clutch/with-db local-couchdb
-    (clutch/delete-document (get-doc (:id claim)))))
+  (delete-doc (get-doc (:id claim))))
 
 (defn add-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
-    (clutch/with-db local-couchdb
-      (clutch/update-document claim #(conj % (dissoc association :claim)) [:runs]))))
+    (clutch/with-db db (clutch/update-document claim #(conj % (dissoc association :claim)) [:runs]))))
 
 (defn get-claim-association
   [claim run]
@@ -59,19 +50,14 @@
 (defn remove-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
-    (clutch/with-db local-couchdb
+    (clutch/with-db db
       (clutch/update-document
-       claim (fn [runs] (filter (fn [r] (not= (:runid association)
-                                              (:runid r)))
-                                runs))
-       [:runs]))))
+       claim (fn [runs] (filter (fn [r] (not= (:runid association) (:runid r))) runs)) [:runs]))))
 
 (defn update-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
-    (clutch/with-db local-couchdb
+    (clutch/with-db db
       (clutch/update-document
        claim (fn [runs] (map (fn [r] (if (not= (:runid r) (:runid association)) r
-                                         (dissoc association :claim)))
-                             runs))
-       [:runs]))))
+                                         (dissoc association :claim))) runs)) [:runs]))))

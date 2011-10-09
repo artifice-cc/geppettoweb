@@ -1,24 +1,26 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def local-couchdb (format "%s/retrospect" (get (System/getenv) "CLOUDANT_URL")))
+(def db "http://localhost:5984/retrospect")
 
-(defmacro view
-  [name1 name2 body & opts]
-  `(clutch/with-db local-couchdb
-     (if-let [results# (clutch/get-view ~name1 ~name2 ~@opts)]
-       results#
-       (do
-         (clutch/save-view ~name1 ~name2 (clutch/with-clj-view-server ~body))
-         (clutch/get-view ~name1 ~name2 ~@opts)))))
+(defn view
+  ([name] (view name {} {}))
+  ([name query] (view name query {}))
+  ([name query post] (clutch/with-db db (clutch/get-view "app" name query post))))
 
 (defn get-doc
-  ([id]
-     (clutch/with-db local-couchdb
-       (clutch/get-document id)))
+  ([id] (clutch/with-db db (clutch/get-document id)))
   ([id rev]
-     (clutch/with-db local-couchdb
+     (clutch/with-db db
        (let [revs (:_revisions (clutch/get-document id {:revs true}))]
-         (assoc
-             (clutch/get-document id {:rev rev} (constantly true))
-           :revs revs)))))
+         (assoc (clutch/get-document id {:rev rev} (constantly true)) :revs revs)))))
+
+(defn create-doc
+  ([data] (clutch/with-db db (clutch/create-document data)))
+  ([data name] (clutch/with-db db (clutch/create-document data name))))
+
+(defn delete-doc
+  [doc] (clutch/with-db db (clutch/delete-document doc)))
+
+(defn get-attachment
+  [id name] (clutch/with-db db (clutch/get-attachment id name)))

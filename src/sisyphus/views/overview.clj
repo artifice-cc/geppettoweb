@@ -16,8 +16,7 @@
      [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
                    (:paramsname run))]
      [:td (if summary (format "%.2f" summary) "N/A")]
-     [:td (:control-count run)] [:td (:comparison-count run)]
-     [:td (:comparative-count run)]
+     [:td (:count run)]
      [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
                    (subs (:commit run) 0 10))
       " @ " (:branch run)]]))
@@ -33,7 +32,7 @@
        [:th "Time"]
        [:th "Parameters"]
        [:th (format "%s (%s)" (:field custom) (:func custom))]
-       [:th "Control"] [:th "Comparison"] [:th "Comparative"]
+       [:th "Simulations"]
        [:th "Commit"]]]
      [:tbody
       (map (fn [[run summary]] (run-table-row run summary)) summaries)]]))
