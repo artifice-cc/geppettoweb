@@ -141,6 +141,9 @@
 (defpartial details-graphs
   [run]
   (let [graphs (get (list-graphs) (:problem run))]
+    ;; produce graphs one-at-a-time before browser requests
+    ;; them all-at-once
+    (doseq [g graphs] (get-graph-png run g))
     [:section#graphs
      [:div.page-header
       [:h2 "Graphs"]]
