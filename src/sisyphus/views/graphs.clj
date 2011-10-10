@@ -105,4 +105,4 @@
 
 (defpage "/graph/:runid/:graphid/:graphrev"
   {runid :runid graphid :graphid graphrev :graphrev}
-  (resp/content-type "image/png" (get-graph-png (get-doc runid) (get-doc graphid graphrev))))
+  (resp/content-type "image/png" (get-graph-png runid graphid graphrev)))

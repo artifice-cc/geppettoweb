@@ -61,29 +61,38 @@
   (clutch/with-db db
     (clutch/update-document (get-doc (:id graph)) (dissoc graph :_id :_rev))))
 
+(defn update-graph-attachment
+  [runid png-fname graph]
+  (try
+    (clutch/with-db db
+      (clutch/update-attachment (get-doc runid) png-fname
+                                (format "%s-%s" (:_id graph) (:_rev graph))
+                                "image/png"))
+    (catch Exception e (update-graph-attachment runid png-fname graph))))
+
 (defn get-graph-png
-  [run graph]
-  (if-let [png (get-attachment (:_id run) (format "%s-%s" (:_id graph) (:_rev graph)))]
+  [runid graphid graphrev]
+  (if-let [png (get-attachment runid (format "%s-%s" graphid graphrev))]
     png
-    (let [csv-fnames (csv-filenames run)
+    (let [run (get-doc runid)
+          graph (get-doc graphid graphrev)
+          csv-fnames (csv-filenames run)
           png-fname (png-filename run graph)
+          tmp-fname (format "%s/%s-%s-%s.rscript"
+                            cachedir runid (:_id graph) (:_rev graph))
           rcode (format "library(ggplot2)\n%s\n%s\nggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
                         (apply str (map #(format "%s <- read.csv(\"%s\")\n" (name %) (get csv-fnames %))
                                         (keys csv-fnames)))
                         (:code graph) png-fname)]
       (results-to-csv run csv-fnames)
       ;; save rcode to file
-      (with-open [writer (io/writer (format "%s/tmp.rscript" cachedir))]
+      (with-open [writer (io/writer tmp-fname)]
         (.write writer rcode))
       ;; run Rscript
-      (let [status (sh "/usr/bin/Rscript" (format "%s/tmp.rscript" cachedir))]
+      (let [status (sh "/usr/bin/Rscript" tmp-fname)]
         (cond (not= 0 (:exit status))
               status
               (not (. (io/file png-fname) exists))
               {:err "Resulting file does not exist."}
-              :else (do
-                      (clutch/with-db db
-                        (clutch/update-attachment run png-fname
-                                                  (format "%s-%s" (:_id graph) (:_rev graph))
-                                                  "image/png"))
-                      (io/input-stream (io/file png-fname))))))))
+              :else (do (update-graph-attachment runid png-fname graph)
+                        (io/input-stream (io/file png-fname))))))))
