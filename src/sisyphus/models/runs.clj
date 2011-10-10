@@ -1,5 +1,6 @@
 (ns sisyphus.models.runs
   (:require [clojure.set :as set])
+  (:require [clojure.java.io :as io])
   (:require [com.ashafa.clutch :as clutch])
   (:use [sisyphus.models.claims :only [list-claims remove-claim-association]])
   (:use sisyphus.models.common))
@@ -63,4 +64,30 @@
   (let [results-ids (get (get-doc id) results-type)]
     (sort-by :Seed (for [i results-ids] (get-doc i)))))
 
+(def cachedir "/tmp")
 
+(defn csv-filenames
+  [run]
+  (zipmap [:control :comparison :comparative]
+          (map #(format "%s/%s-%s.csv" cachedir (:_id run) (name %))
+               [:control :comparison :comparative])))
+
+(defn format-csv-row
+  [row]
+  ;; add quotes around string data
+  (apply str (concat (interpose "," (map #(if (= String (type %)) (format "\"%s\"" %) %) row))
+                     [\newline])))
+
+(defn results-to-csv
+  [run csv-fnames]
+  (doseq [results-type (keys csv-fnames)]
+    (let [outfile (io/file (get csv-fnames results-type))]
+      (when (. outfile createNewFile)
+        (let [results (get-results (:_id run) results-type)
+              fields (get-fields results)
+              csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
+                                  results))]
+          ;; save into cache file
+          (with-open [writer (io/writer outfile)]
+            (.write writer (format-csv-row (map name fields)))
+            (.write writer csv)))))))

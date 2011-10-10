@@ -9,10 +9,12 @@
   (:use [sisyphus.models.runs :only
          [get-results get-fields add-annotation delete-annotation delete-run]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
+  (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
   (:use [sisyphus.views.claims :only
          [claim-summary claim-association-form]])
   (:use [sisyphus.views.graphs :only [show-graph]])
+  (:use [sisyphus.views.analysis :only [show-analysis]])
   (:use [sisyphus.views.parameters :only [parameters-summary]])
   (:use [sisyphus.views.results :only
          [field-checkboxes comparative-results-table paired-results-table]]))
@@ -150,6 +152,18 @@
        (for [g graphs]
          (show-graph run g)))]))
 
+(defpartial details-analysis
+  [run]
+  (let [analysis (get (list-analysis) (:problem run))]
+    [:section#analysis
+     [:div.page-header
+      [:h2 "Analysis"]]
+     (if (empty? analysis)
+       [:div.row
+        [:div.span16.columns [:p "No analysis."]]]
+       (for [a analysis]
+         (show-analysis run a)))]))
+
 (defpartial details-claims
   [run comparative-fields paired-fields]
   (let [claim-opts (claim-select-options run)
@@ -269,6 +283,7 @@
                                  (common/date-format (:time doc)))]]]
          (details-comparative-results-table doc comparative-results comparative-fields)
          (details-paired-results-table doc control-results comparison-results paired-fields)
+         (details-analysis doc)
          (details-graphs doc)
          (details-annotations doc)
          (details-claims doc comparative-fields paired-fields)

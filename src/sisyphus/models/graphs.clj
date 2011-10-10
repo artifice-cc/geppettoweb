@@ -3,41 +3,14 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
-  (:use [sisyphus.models.runs :only [get-results get-fields]])
+  (:use [sisyphus.models.runs :only
+         [get-results get-fields csv-filenames results-to-csv cachedir]])
   (:use sisyphus.models.common))
-
-(def cachedir "/tmp")
-
-(defn csv-filenames
-  [run]
-  (zipmap [:control :comparison :comparative]
-          (map #(format "%s/%s-%s.csv" cachedir (:_id run) (name %))
-               [:control :comparison :comparative])))
 
 (defn png-filename
   [run graph]
   (format "%s/%s-%s-%s.png" cachedir
           (:_id run) (:_id graph) (:_rev graph)))
-
-(defn format-csv-row
-  [row]
-  ;; add quotes around string data
-  (apply str (concat (interpose "," (map #(if (= String (type %)) (format "\"%s\"" %) %) row))
-                     [\newline])))
-
-(defn results-to-csv
-  [run csv-fnames]
-  (doseq [results-type (keys csv-fnames)]
-    (let [outfile (io/file (get csv-fnames results-type))]
-      (when (. outfile createNewFile)
-        (let [results (get-results (:_id run) results-type)
-              fields (get-fields results)
-              csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
-                                  results))]
-          ;; save into cache file
-          (with-open [writer (io/writer outfile)]
-            (.write writer (format-csv-row (map name fields)))
-            (.write writer csv)))))))
 
 (defn list-graphs
   []
@@ -59,7 +32,7 @@
 (defn update-graph
   [graph]
   (clutch/with-db db
-    (clutch/update-document (get-doc (:id graph)) (dissoc graph :_id :_rev))))
+    (clutch/update-document (get-doc (:id graph)) (dissoc graph :id :_id :_rev))))
 
 (defn update-graph-attachment
   [runid png-fname graph]

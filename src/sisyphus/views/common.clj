@@ -30,6 +30,7 @@
          [:li (link-to "/claims" "Claims")]
          [:li (link-to "/parameters" "Parameters")]
          [:li (link-to "/graphs" "Graphs")]
+         [:li (link-to "/analysis" "Analysis")]
          [:li (link-to "/configure" "Configure")]]]]]
      content]]))
 
