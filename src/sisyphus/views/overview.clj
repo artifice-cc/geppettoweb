@@ -49,21 +49,14 @@
       [:div.span16.columns
        (runs-table runs problem {:field custom-field :func custom-func})]]
      [:div.row
-      [:div.span4.columns
-       [:h2 "Summarization"]]
-      [:div.span12.columns
+      [:div.span16.columns {:style "text-align: right;"}
        (form-to [:post "/set-custom"]
                 (hidden-field :problem problem)
-                [:div.clearfix
-                 [:label {:for "field"} "Field"]
-                 [:div.input
-                  (drop-down :field fields custom-field)]]
-                [:div.clearfix
-                 [:label {:for "func"} "Function"]
-                 [:div.input
-                  (drop-down :func ["AVG" "SUM" "MAX" "MIN"] custom-func)]]
-                [:div.actions
-                 [:input.btn.primary {:value "Update" :type "submit"}]])]]]))
+                (drop-down :field fields custom-field)
+                "&nbsp;"
+                (drop-down :func ["AVG" "SUM" "MAX" "MIN"] custom-func)
+                "&nbsp;"
+                [:input.btn.primary {:value "Update" :type "submit"}])]]]))
 
 (defpartial runs-by-problem
   [runs-grouped]
