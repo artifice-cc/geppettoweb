@@ -26,7 +26,7 @@
        [:div.container
         [:h3 (link-to "/" "Sisyphus")]
         [:ul.nav
-         [:li (link-to "/" "Overview")]
+         [:li (link-to "/" "Runs")]
          [:li (link-to "/claims" "Claims")]
          [:li (link-to "/parameters" "Parameters")]
          [:li (link-to "/graphs" "Graphs")]
