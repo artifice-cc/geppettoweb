@@ -132,12 +132,18 @@
          [:span.help-block "Describe how this run provides support for or against the claim."]]]]]
      [:div.row
       [:div.span4.columns
-       [:h3 "Comparative fields"]]
-      (field-checkboxes run true :comparative-fields comparative-fields)]
+       [:h3.fields_checkboxes_header "Select comparative fields..."]]]
+     [:div.fields_checkboxes
+      [:div.row
+       [:div.span4.columns "&nbsp;"]
+       (field-checkboxes run true :comparative-fields comparative-fields)]]
      [:div.row
       [:div.span4.columns
-       [:h3 "Control/comparison fields"]]
-      (field-checkboxes run false :paired-fields paired-fields)]
+       [:h3.fields_checkboxes_header "Select control / comparison fields..."]]]
+     [:div.fields_checkboxes
+      [:div.row
+       [:div.span4.columns "&nbsp;"]
+       (field-checkboxes run false :paired-fields paired-fields)]]
      (let [graphs (get (list-graphs) (:problem run))
            graph-groups (partition-all (int (Math/ceil (/ (count graphs) 3))) graphs)]
        [:div.row
