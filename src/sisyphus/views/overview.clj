@@ -17,7 +17,7 @@
                    (:paramsname run))]
      [:td (if summary (format "%.2f" summary) "N/A")]
      [:td (:count run)]
-     [:td (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+     [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s" (:commit run))
                    (subs (:commit run) 0 10))
       " @ " (:branch run)]]))
 

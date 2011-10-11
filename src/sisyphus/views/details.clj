@@ -27,7 +27,7 @@
    [:div.row
     [:div.span4.columns
      [:h3 "Commit message"]
-     [:p (link-to (format "https://github.com/joshuaeckroth/retrospect/commit/%s" (:commit run))
+     [:p (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s" (:commit run))
                   (subs (:commit run) 0 10))
       " @ " (:branch run)]]
     [:div.span12.columns
