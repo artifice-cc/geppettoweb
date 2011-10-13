@@ -172,12 +172,9 @@
 (defpage
   [:post "/claims/update-claim"] {:as claim}
   (if (= "Update" (:action claim))
-    (do
-      (update-claim (dissoc claim :action))
-      (resp/redirect (format "/claim/%s" (:id claim))))
-    (do
-      (delete-claim claim)
-      (resp/redirect "/claims"))))
+    (update-claim (dissoc claim :action))
+    (delete-claim claim))
+  (resp/redirect "/claims"))
 
 (defpage
   [:post "/claims/add-association"] {:as association}
