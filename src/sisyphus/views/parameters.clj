@@ -3,6 +3,7 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:require [noir.cookies :as cookies])
+  (:require [clojure.set :as set])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only [problem-fields]])
@@ -63,6 +64,22 @@
               [:div.actions
                [:input.btn.primary {:value (if (:name params) "Update" "Save") :type "submit"}]])]]])
 
+(defpartial params-diff
+  [params1 params2]
+  (let [ps1 (read-string params1)
+        ps2 (read-string params2)
+        common-keys (set/intersection (set (keys ps1)) (set (keys ps2)))
+        unique-keys (set/difference (set (keys ps1)) (set (keys ps2)))]
+    [:pre
+     "{\n"
+     (for [k (sort common-keys)]
+       (if (= (ps1 k) (ps2 k))
+         (format "%s %s\n" k (ps1 k))
+         [:b (format "%s %s\n" k (ps1 k))]))
+     (for [k (sort unique-keys)]
+       [:b (format "%s %s\n" k (ps1 k))])
+     "}"]))
+
 (defpartial parameters-summary
   [params]
   [:div.row
@@ -78,10 +95,10 @@
   [:div.row
    [:div.span-one-third.column
     [:h3 "Control"]
-    [:pre (:control params)]]
+    (params-diff (:control params) (:comparison params))]
    [:div.span-one-third.column
     [:h3 "Comparison"]
-    [:pre (:comparison params)]]
+    (params-diff (:comparison params) (:control params))]
    [:div.span-one-third.column
     [:h3 "Player"]
     [:pre (:player params)]]]
