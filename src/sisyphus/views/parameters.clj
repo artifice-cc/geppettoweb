@@ -66,15 +66,14 @@
 (defpartial parameters-summary
   [params]
   [:div.row
-   [:div.span8.columns
+   [:div.span16.columns
     [:a {:name (:_id params)}]
     [:h2 (format "%s/%s" (:problem params) (:name params))]
     (if (or (nil? (:revs params))
             (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
       [:p (link-to (format "/parameters/%s" (:_id params)) "Update")]
       [:p "This is an old version. "
-       (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])]
-   [:div.span8.columns
+       (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])
     [:p (:description params)]]]
   [:div.row
    [:div.span-one-third.column
@@ -86,7 +85,7 @@
    [:div.span-one-third.column
     [:h3 "Player"]
     [:pre (:player params)]]]
-  [:div.page-header
+  [:div
    [:h3 "Runs with these control/comparison parameters"]]
   (let [fields (problem-fields (:problem params))
         custom-field (or (cookies/get (keyword (format "%s-field" (:problem params)))) (first fields))
@@ -97,7 +96,7 @@
 (defpage
   [:post "/parameters/update-parameters"] {:as params}
   (update-parameters params)
-  (resp/redirect (format "/parameters/%s" (:id params))))
+  (resp/redirect (format "/parameters#%s" (:id params))))
 
 (defpage
   [:post "/parameters/new-parameters"] {:as params}
