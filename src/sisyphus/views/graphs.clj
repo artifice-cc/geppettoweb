@@ -9,13 +9,12 @@
   [run graph]
   [:div.row
    [:div.span4.columns
-    [:h3 (:name graph) [:small (format " (%s)" (:results-type graph))]]
+    [:h3 (:name graph) [:br] [:small (format " (%s)" (:results-type graph))]]
     [:p (:caption graph)]]
    [:div.span8.columns
     [:p
      [:img {:src (format "/graph/%s/%s/%s" (:_id run) (:_id graph) (:_rev graph))
-            :width 700 :height 400}]]
-    [:pre {:style "width: 650px;"} (:code graph)]]])
+            :width 700 :height 400}]]]])
 
 (comment [:div.row
           [:div.span16.columns
