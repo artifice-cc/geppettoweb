@@ -2,7 +2,8 @@
   (:require [clojure.string :as str])
   (:use noir.core
         hiccup.core
-        hiccup.page-helpers)
+        hiccup.page-helpers
+        hiccup.form-helpers)
   (:import [com.petebevin.markdown MarkdownProcessor]))
 
 (defpartial layout
@@ -50,3 +51,19 @@
 (defpartial convert-md
   [s]
   (.markdown mdp s))
+
+(defpartial confirm-deletion
+  [post id msg]
+  [:section#confirm
+   [:div.page-header
+    [:h2 "Confirm deletion"]]
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span12.columns
+     [:p msg]
+     (form-to [:post post]
+              (hidden-field :id id)
+              [:div.actions
+               [:input.btn.danger {:name "choice" :value "Confirm deletion" :type "submit"}]
+               " "
+               [:input.btn {:name "choice" :value "Cancel" :type "submit"}]])]]])

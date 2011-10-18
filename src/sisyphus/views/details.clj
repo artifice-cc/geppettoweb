@@ -229,18 +229,8 @@
   [:post "/details/delete-run"] {:as run}
   (common/layout
    "Confirm deletion"
-   [:section#confirm
-    [:div.page-header
-     [:h2 "Confirm deletion"]]
-    [:div.row
-     [:div.span4.columns "&nbsp;"]
-     [:div.span12.columns
-      (form-to [:post "/details/delete-run-confirm"]
-               (hidden-field :id (:id run))
-               [:div.actions
-                [:input.btn.danger {:name "choice" :value "Confirm deletion" :type "submit"}]
-                " "
-                [:input.btn {:name "choice" :value "Cancel" :type "submit"}]])]]]))
+   (common/confirm-deletion "/details/delete-run-confirm" (:id run)
+                            "Are you sure you want to delete the run?")))
 
 (defpage
   [:post "/details/delete-run-confirm"] {:as confirm}

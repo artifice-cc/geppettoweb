@@ -35,8 +35,8 @@
                             (dissoc claim :_id :_rev :id :runs))))
 
 (defn delete-claim
-  [claim]
-  (delete-doc (get-doc (:id claim))))
+  [id]
+  (delete-doc (get-doc id)))
 
 (defn add-claim-association
   [association]

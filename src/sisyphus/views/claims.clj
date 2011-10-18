@@ -190,10 +190,25 @@
 
 (defpage
   [:post "/claims/update-claim"] {:as claim}
-  (if (= "Update" (:action claim))
-    (update-claim (dissoc claim :action))
-    (delete-claim claim))
-  (resp/redirect "/claims"))
+  (cond (= "Update" (:action claim))
+        (do
+          (update-claim (dissoc claim :action))
+          (resp/redirect "/claims"))
+        (= "Delete" (:action claim))
+        (common/layout
+         "Confirm deletion"
+         (common/confirm-deletion "/claims/delete-claim-confirm" (:id claim)
+                                  "Are you sure you want to delete the claim?"))
+        :else
+        (resp/redirect "/claims")))
+
+(defpage
+  [:post "/claims/delete-claim-confirm"] {:as confirm}
+  (if (= (:choice confirm) "Confirm deletion")
+    (do
+      (delete-claim (:id confirm))
+      (resp/redirect "/claims"))
+    (resp/redirect (format "/claim/%s" (:id confirm)))))
 
 (defpage
   [:post "/claims/add-association"] {:as association}
