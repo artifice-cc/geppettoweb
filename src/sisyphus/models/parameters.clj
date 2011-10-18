@@ -20,3 +20,7 @@
 (defn runs-with-parameters
   [params]
   (map :value (:rows (view "parameters-runs" {:key [(:_id params) (:_rev params)]}))))
+
+(defn delete-parameters
+  [id]
+  (delete-doc (get-doc id)))

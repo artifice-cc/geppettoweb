@@ -8,7 +8,7 @@
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only [problem-fields]])
   (:use [sisyphus.models.parameters :only
-         [new-parameters update-parameters list-parameters runs-with-parameters]])
+         [new-parameters update-parameters list-parameters runs-with-parameters delete-parameters]])
   (:use [sisyphus.views.overview :only [runs-table]]))
 
 (defpartial parameters-form
@@ -62,7 +62,11 @@
                  (:player params)]]
                [:span.help-block "Write a Clojure map snippet."]]
               [:div.actions
-               [:input.btn.primary {:value (if (:name params) "Update" "Save") :type "submit"}]])]]])
+               [:input.btn.primary {:value (if (:name params) "Update" "Save")
+                                    :name "action" :type "submit"}]
+               " "
+               (if (and (:name params) (empty? (runs-with-parameters params)))
+                 [:input.btn.danger {:value "Delete" :name "action":type "submit"}])])]]])
 
 (defpartial params-diff
   [params1 params2]
@@ -112,8 +116,25 @@
 
 (defpage
   [:post "/parameters/update-parameters"] {:as params}
-  (update-parameters params)
-  (resp/redirect (format "/parameters#%s" (:id params))))
+  (cond (= "Update" (:action params))
+        (do
+          (update-parameters params)
+          (resp/redirect (format "/parameters#%s" (:id params))))
+        (= "Delete" (:action params))
+        (common/layout
+         "Confirm deletion"
+         (common/confirm-deletion "/parameters/delete-parameters-confirm" (:id params)
+                                  "Are you sure you want to delete the parameters?"))
+        :else
+        (resp/redirect (format "/parameters#%s" (:id params)))))
+
+(defpage
+  [:post "/parameters/delete-parameters-confirm"] {:as confirm}
+  (if (= (:choice confirm) "Confirm deletion")
+    (do
+      (delete-parameters (:id confirm))
+      (resp/redirect "/parameters"))
+    (resp/redirect (format "/parameters#%s" (:id confirm)))))
 
 (defpage
   [:post "/parameters/new-parameters"] {:as params}
