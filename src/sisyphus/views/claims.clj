@@ -9,7 +9,9 @@
           add-claim-association remove-claim-association update-claim-association
           get-claim-association]])
   (:use [sisyphus.models.graphs :only [get-graph list-graphs]])
+  (:use [sisyphus.models.analysis :only [get-analysis list-analysis]])
   (:use [sisyphus.views.graphs :only [show-graph]])
+  (:use [sisyphus.views.analysis :only [show-analysis]])
   (:use [sisyphus.views.results :only
          [field-checkboxes comparative-results-table paired-results-table]]))
 
@@ -99,6 +101,8 @@
                                   (map keyword (:paired-fields r)))]]
           (for [g (map (fn [n] (get-graph (:problem r) n)) (:graphs r))]
             (show-graph run g))
+          (for [a (map (fn [n] (get-analysis (:problem r) n)) (:analysis r))]
+            (show-analysis run a))
           [:div.row
            [:div.span4.columns "&nbsp;"]
            [:div.span12.columns
@@ -158,6 +162,21 @@
                               " " (:name g)]])
                       gs)]])
              graph-groups)])
+     (let [analysis (get (list-analysis) (:problem run))
+           analysis-groups (partition-all (int (Math/ceil (/ (count analysis) 3))) analysis)]
+       [:div.row
+        [:div.span4.columns
+         [:h3 "Analysis"]]
+        (map (fn [as]
+               [:div.span4.columns
+                [:ul.inputs-list
+                 (map (fn [a]
+                        [:li [:label [:input {:type "checkbox" :name "analysis[]" :value (:name a)
+                                              :checked (if claim ((set (:analysis association))
+                                                                  (:name a)))}]
+                              " " (:name a)]])
+                      as)]])
+             analysis-groups)])
      [:div.row
       [:div.span4.columns "&nbsp;"]
       [:div.span12.columns
