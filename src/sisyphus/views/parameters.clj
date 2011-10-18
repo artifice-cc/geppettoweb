@@ -40,27 +40,26 @@
                 [:label {:for "description"} "Description"]
                 [:div.input
                  [:textarea.xxlarge {:id "description" :name "description"}
-                  (:description params)]]]]
+                  (:description params)]]]
+               [:div.clearfix
+                [:div.input
+                 (radio-button "params-type" (= "comparative" (:params-type params))
+                               "comparative") " Comparative"
+                 " "
+                 (radio-button "params-type" (= "non-comparative" (:params-type params))
+                               "non-comparative") " Non-comparative"]]]
               [:fieldset
                [:legend "Parameters"]
                [:div.clearfix
-                [:label {:for "control"} "Control"]
+                [:label {:for "control"} "Control /<br/>Non-comparative"]
                 [:div.input
                  [:textarea.xxlarge {:id "control" :name "control" :rows 10}
-                  (:control params)]]
-                [:span.help-block "Write a Clojure map snippet."]]
+                  (:control params)]]]
                [:div.clearfix
-                [:label {:for "comparison"} "Comparison"]
+                [:label {:for "comparison"} "Comparison<br/>(if comparative)"]
                 [:div.input
                  [:textarea.xxlarge {:id "comparison" :name "comparison" :rows 10}
-                  (:comparison params)]]
-                [:span.help-block "Write a Clojure map snippet."]]]
-              [:div.clearfix
-               [:label {:for "player"} "Player"]
-               [:div.input
-                [:textarea.xxlarge {:id "player" :name "player" :rows 10}
-                 (:player params)]]
-               [:span.help-block "Write a Clojure map snippet."]]
+                  (:comparison params)]]]]
               [:div.actions
                [:input.btn.primary {:value (if (:name params) "Update" "Save")
                                     :name "action" :type "submit"}]
@@ -96,18 +95,20 @@
       [:p "This is an old version. "
        (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])
     [:p (:description params)]]]
-  [:div.row
-   [:div.span-one-third.column
-    [:h3 "Control"]
-    (params-diff (:control params) (:comparison params))]
-   [:div.span-one-third.column
-    [:h3 "Comparison"]
-    (params-diff (:comparison params) (:control params))]
-   [:div.span-one-third.column
-    [:h3 "Player"]
-    [:pre (:player params)]]]
+  (if (= "comparative" (:params-type params))
+    [:div.row
+     [:div.span8.columns
+      [:h3 "Control"]
+      (params-diff (:control params) (:comparison params))]
+     [:div.span8.columns
+      [:h3 "Comparison"]
+      (params-diff (:comparison params) (:control params))]]
+    [:div.row
+     [:div.span4.columns "&nbsp;"]
+     [:div.span8.columns
+      [:pre (:control params)]]])
   [:div
-   [:h3 "Runs with these control/comparison parameters"]]
+   [:h3 "Runs with these parameters"]]
   (let [fields (problem-fields (:problem params))
         custom-field (or (cookies/get (keyword (format "%s-field" (:problem params)))) (first fields))
         custom-func (or (cookies/get (keyword (format "%s-func" (:problem params)))) "SUM")]
@@ -156,12 +157,16 @@
     (resp/redirect "/parameters")))
 
 (defpage "/parameters" {}
-  (let [all-params (list-parameters)]
+  (let [{:keys [comparative non-comparative]} (list-parameters)]
     (common/layout
      "Parameters"
      [:div
-      [:section#parameters
-       [:div.page-header [:h1 "All parameters"]]
-       (for [params all-params]
+      [:section#comparative-parameters
+       [:div.page-header [:h1 "Comparative parameters"]]
+       (for [params comparative]
+         (parameters-summary params))]
+      [:section#non-comparative-parameters
+       [:div.page-header [:h1 "Non-comparative parameters"]]
+       (for [params non-comparative]
          (parameters-summary params))]
       (parameters-form nil)])))
