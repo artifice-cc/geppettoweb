@@ -10,6 +10,14 @@
 
 (server/load-views-ns 'sisyphus.views)
 
+(defn cache-control
+  [handler]
+  (fn [request]
+    (let [resp (handler request)]
+      (assoc-in resp [:headers "Cache-Control"] "max-age=60"))))
+
+(server/add-middleware cache-control)
+
 (defn -main [& m]
   (let [mode (keyword (or (first m) :dev))
         port (Integer. (get (System/getenv) "PORT" "3737"))]
