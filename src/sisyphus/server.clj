@@ -14,7 +14,7 @@
   [handler]
   (fn [request]
     (let [resp (handler request)]
-      (assoc-in resp [:headers "Cache-Control"] "max-age=60"))))
+      (assoc-in resp [:headers "Cache-Control"] "public, max-age=60"))))
 
 (server/add-middleware cache-control)
 
