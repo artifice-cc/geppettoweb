@@ -9,7 +9,7 @@
   [run analysis]
   [:div.row
    [:div.span4.columns
-    [:h3 (:name analysis)]
+    [:h3 (:name analysis) [:br] [:small (format " (%s)" (:resultstype analysis))]]
     [:p (:caption analysis)]]
    [:div.span12.columns
     [:pre (get-analysis-output (:_id run) (:_id analysis) (:_rev analysis))]]])
@@ -38,6 +38,11 @@
                 [:div.input
                  [:input.xlarge {:id "name" :name "name" :size 30
                                  :type "text" :value (:name analysis)}]]]
+               [:div.clearfix
+                [:label {:for "resultstype"} "Results type"]
+                [:div.input
+                 (drop-down :resultstype ["non-comparative" "comparative"]
+                            (:resultstype analysis))]]
                [:div.clearfix
                 [:label {:for "caption"} "Caption"]
                 [:div.input
@@ -81,7 +86,7 @@
         (for [analysis (get analysis problem)]
           [:div.row
            [:div.span4.columns
-            [:h2 (:name analysis)]
+            [:h2 (:name analysis) [:br] [:small (format " (%s)" (:resultstype analysis))]]
             [:p (:caption analysis)]
             [:p (link-to (format "/analysis/update/%s" (:_id analysis)) "Update analysis")]]
            [:div.span12.columns

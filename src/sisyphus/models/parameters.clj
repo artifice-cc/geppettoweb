@@ -15,7 +15,7 @@
 
 (defn list-parameters
   []
-  (reduce (fn [m ps] (update-in m [(keyword (:params-type ps))] conj ps))
+  (reduce (fn [m ps] (update-in m [(keyword (:paramstype ps))] conj ps))
           {:comparative [] :non-comparative []}
           (map :value (:rows (view "parameters-list")))))
 

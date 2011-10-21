@@ -4,17 +4,20 @@
   (:require [noir.cookies :as cookies])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
+  (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
          [problem-fields list-runs summarize-comparative-results]]))
 
 (defpartial run-table-row
   [run summary]
-  (let [id (:_id run)]
+  (let [id (:_id run)
+        params (get-doc (:paramsid run) (:paramsrev run))]
     [:tr
      [:td (link-to (format "/details/%s" (:_id run)) (subs id 22))]
      [:td (common/date-format (:time run))]
      [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
-                   (:paramsname run))]
+                   (format "%s (%s)" (:paramsname run)
+                           (if (= "comparative" (:paramstype run)) "c" "nc")))]
      [:td (if summary (format "%.2f" summary) "N/A")]
      [:td (:count run)]
      [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s" (:commit run))
@@ -30,7 +33,7 @@
       [:tr
        [:th "Run ID"]
        [:th "Time"]
-       [:th "Parameters"]
+       [:th "Parameters (c/nc)"]
        [:th (format "%s (%s)" (:field custom) (:func custom))]
        [:th "Simulations"]
        [:th "Commit"]]]

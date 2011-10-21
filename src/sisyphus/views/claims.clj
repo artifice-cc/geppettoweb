@@ -13,7 +13,7 @@
   (:use [sisyphus.views.graphs :only [show-graph]])
   (:use [sisyphus.views.analysis :only [show-analysis]])
   (:use [sisyphus.views.results :only
-         [field-checkboxes comparative-results-table paired-results-table]]))
+         [field-checkboxes results-table paired-results-table]]))
 
 (defpartial claim-summary
   [claim]
@@ -74,7 +74,7 @@
        [:div.page-header
         [:a {:name (:runid r)}]
         [:h2 (:problem r) " run " (link-to (format "/details/%s" (:runid r))
-                          (subs (:runid r) 22))]]
+                                           (subs (:runid r) 22))]]
        [:div.row
         [:div.span4.columns
          [:h3 "Summary"]
@@ -84,21 +84,29 @@
         [:div.span12.columns
          [:p (:comment r)]]]
        (let [run (get-doc (:runid r))
+             comparative? (= "comparative" (:paramstype run))
              comparative-results (get-results (:runid r) :comparative)
              [control-results comparison-results]
              (map (fn [results-type] (get-results (:runid r) results-type))
                   [:control :comparison])]
          [:div
-          [:div.row
-           [:div.span16.columns
-            [:h4 "Comparative results"]
-            (comparative-results-table comparative-results
-                                       (map keyword (:comparative-fields r)))]]
-          [:div.row
-           [:div.span16.columns
-            [:h4 "Control/comparison results"]
-            (paired-results-table control-results comparison-results
-                                  (map keyword (:paired-fields r)))]]
+          (if comparative?
+            [:div.row
+             [:div.span16.columns
+              [:h4 "Comparative results"]
+              (results-table comparative-results
+                             (map keyword (:comparative-fields r)))]])
+          (if comparative?
+            [:div.row
+             [:div.span16.columns
+              [:h4 "Control/comparison results"]
+              (paired-results-table control-results comparison-results
+                                    (map keyword (:paired-fields r)))]])
+          (if-not comparative?
+            [:div.row
+             [:div.span16.columns
+              [:h4 "Results"]
+              (results-table control-results (map keyword (:non-comparative-fields r)))]])
           (for [g (map (fn [n] (get-graph (:problem r) n)) (:graphs r))]
             (show-graph run g))
           (for [a (map (fn [n] (get-analysis (:problem r) n)) (:analysis r))]
@@ -107,33 +115,76 @@
            [:div.span4.columns "&nbsp;"]
            [:div.span12.columns
             (form-to [:post "/claims/remove-association"]
-                      (hidden-field :claim (:_id claim))
-                      (hidden-field :runid (:runid r))
-                      [:div.actions
-                       [:input.btn.danger {:value "Remove" :name "action" :type "submit"}]])]]])])]])
+                     (hidden-field :claim (:_id claim))
+                     (hidden-field :runid (:runid r))
+                     [:div.actions
+                      [:input.btn.danger {:value "Remove" :name "action" :type "submit"}]])]]])])]])
 
-(defpartial claim-association-form
+(defpartial claim-association-form-header
+  [claim run claim-opts association]
+  [:div
+   (hidden-field :claim (:_id claim))
+   (hidden-field :runid (:_id run))
+   (hidden-field :problem (:problem run))
+   [:div.row
+    [:div.span4.columns
+     [:h2 (if claim "Update association" "New association")]]
+    [:div.span12.columns
+     (if-not claim
+       [:div.clearfix
+        [:label {:for "claim"} "Claim"]
+        [:div.input
+         (drop-down :claim claim-opts (:_id claim))]])
+     [:div.clearfix
+      [:label {:for "comment"} "Comment"]
+      [:div.input
+       [:textarea.xxlarge {:id "comment" :name "comment"} (:comment association)]
+       [:span.help-block "Describe how this run provides support for or against the claim."]]]]]])
+
+(defpartial claim-association-form-footer
+  [claim run association]
+  [:div
+   (let [graphs (filter #(= (:paramstype run) (:resultstype %)) (get (list-graphs) (:problem run)))
+         graph-groups (partition-all (int (Math/ceil (/ (count graphs) 3))) graphs)]
+     [:div.row
+      [:div.span4.columns
+       [:h3 "Graphs"]]
+      (map (fn [gs]
+             [:div.span4.columns
+              [:ul.inputs-list
+               (map (fn [g]
+                      [:li [:label [:input {:type "checkbox" :name "graphs[]" :value (:name g)
+                                            :checked (if claim ((set (:graphs association)) (:name g)))}]
+                            " " (:name g)]])
+                    gs)]])
+           graph-groups)])
+   (let [analysis (filter #(= (:paramstype run) (:resultstype %)) (get (list-analysis) (:problem run)))
+         analysis-groups (partition-all (int (Math/ceil (/ (count analysis) 3))) analysis)]
+     [:div.row
+      [:div.span4.columns
+       [:h3 "Analysis"]]
+      (map (fn [as]
+             [:div.span4.columns
+              [:ul.inputs-list
+               (map (fn [a]
+                      [:li [:label [:input {:type "checkbox" :name "analysis[]" :value (:name a)
+                                            :checked (if claim ((set (:analysis association))
+                                                                (:name a)))}]
+                            " " (:name a)]])
+                    as)]])
+           analysis-groups)])
+   [:div.row
+    [:div.span4.columns "&nbsp;"]
+    [:div.span12.columns
+     [:div.actions
+      [:input.btn.primary {:value (if claim "Update" "Associate") :type "submit"}]]]]])
+
+(defpartial claim-association-form-comparative
   [claim run claim-opts comparative-fields paired-fields]
   (let [association (if claim (get-claim-association claim run))]
     (form-to
      [:post (if claim "/claims/update-association" "/claims/add-association")]
-     (hidden-field :claim (:_id claim))
-     (hidden-field :runid (:_id run))
-     (hidden-field :problem (:problem run))
-     [:div.row
-      [:div.span4.columns
-       [:h2 (if claim "Update association" "New association")]]
-      [:div.span12.columns
-       (if-not claim
-         [:div.clearfix
-          [:label {:for "claim"} "Claim"]
-          [:div.input
-           (drop-down :claim claim-opts (:_id claim))]])
-       [:div.clearfix
-        [:label {:for "comment"} "Comment"]
-        [:div.input
-         [:textarea.xxlarge {:id "comment" :name "comment"} (:comment association)]
-         [:span.help-block "Describe how this run provides support for or against the claim."]]]]]
+     (claim-association-form-header claim run claim-opts association)
      [:div.row
       [:div.span4.columns
        [:h3.fields_checkboxes_header "Select comparative fields..."]]]
@@ -148,40 +199,22 @@
       [:div.row
        [:div.span4.columns "&nbsp;"]
        (field-checkboxes run false :paired-fields paired-fields)]]
-     (let [graphs (get (list-graphs) (:problem run))
-           graph-groups (partition-all (int (Math/ceil (/ (count graphs) 3))) graphs)]
-       [:div.row
-        [:div.span4.columns
-         [:h3 "Graphs"]]
-        (map (fn [gs]
-               [:div.span4.columns
-                [:ul.inputs-list
-                 (map (fn [g]
-                        [:li [:label [:input {:type "checkbox" :name "graphs[]" :value (:name g)
-                                              :checked (if claim ((set (:graphs association)) (:name g)))}]
-                              " " (:name g)]])
-                      gs)]])
-             graph-groups)])
-     (let [analysis (get (list-analysis) (:problem run))
-           analysis-groups (partition-all (int (Math/ceil (/ (count analysis) 3))) analysis)]
-       [:div.row
-        [:div.span4.columns
-         [:h3 "Analysis"]]
-        (map (fn [as]
-               [:div.span4.columns
-                [:ul.inputs-list
-                 (map (fn [a]
-                        [:li [:label [:input {:type "checkbox" :name "analysis[]" :value (:name a)
-                                              :checked (if claim ((set (:analysis association))
-                                                                  (:name a)))}]
-                              " " (:name a)]])
-                      as)]])
-             analysis-groups)])
+     (claim-association-form-footer claim run association))))
+
+(defpartial claim-association-form-non-comparative
+  [claim run claim-opts fields]
+  (let [association (if claim (get-claim-association claim run))]
+    (form-to
+     [:post (if claim "/claims/update-association" "/claims/add-association")]
+     (claim-association-form-header claim run claim-opts association)
      [:div.row
-      [:div.span4.columns "&nbsp;"]
-      [:div.span12.columns
-       [:div.actions
-        [:input.btn.primary {:value (if claim "Update" "Associate") :type "submit"}]]]])))
+      [:div.span4.columns
+       [:h3.fields_checkboxes_header "Select fields..."]]]
+     [:div.fields_checkboxes
+      [:div.row
+       [:div.span4.columns "&nbsp;"]
+       (field-checkboxes run false :non-comparative-fields fields)]]
+     (claim-association-form-footer claim run association))))
 
 (defpage
   [:post "/claims/new-claim"] {:as claim}
@@ -228,15 +261,19 @@
 (defpage "/claim/:id/update-association/:runid" {id :id runid :runid}
   (let [claim (get-doc id)
         run (get-doc runid)
+        comparative? (= "comparative" (:paramstype run))
         comparative-results (get-results runid :comparative)
         comparative-fields (get-fields comparative-results)
         [control-results comparison-results]
         (map (fn [results-type] (get-results runid results-type))
              [:control :comparison])
+        control-fields (get-fields control-results)
         paired-fields (get-fields (concat control-results comparison-results))]
     (common/layout
      (format "Update association for claim: %s" (:title claim))
-     (claim-association-form claim run nil comparative-fields paired-fields))))
+     (if comparative?
+       (claim-association-form-comparative claim run nil comparative-fields paired-fields)
+       (claim-association-form-non-comparative claim run nil control-fields)))))
 
 (defpage "/claim/:id" {id :id}
   (let [claim (get-doc id)]

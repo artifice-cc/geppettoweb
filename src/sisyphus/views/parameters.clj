@@ -43,10 +43,10 @@
                   (:description params)]]]
                [:div.clearfix
                 [:div.input
-                 (radio-button "params-type" (= "comparative" (:params-type params))
+                 (radio-button "paramstype" (= "comparative" (:paramstype params))
                                "comparative") " Comparative"
                  " "
-                 (radio-button "params-type" (= "non-comparative" (:params-type params))
+                 (radio-button "paramstype" (= "non-comparative" (:paramstype params))
                                "non-comparative") " Non-comparative"]]]
               [:fieldset
                [:legend "Parameters"]
@@ -95,7 +95,7 @@
       [:p "This is an old version. "
        (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])
     [:p (:description params)]]]
-  (if (= "comparative" (:params-type params))
+  (if (= "comparative" (:paramstype params))
     [:div.row
      [:div.span8.columns
       [:h3 "Control"]
@@ -104,7 +104,6 @@
       [:h3 "Comparison"]
       (params-diff (:comparison params) (:control params))]]
     [:div.row
-     [:div.span4.columns "&nbsp;"]
      [:div.span8.columns
       [:pre (:control params)]]])
   [:div

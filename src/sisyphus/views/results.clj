@@ -22,8 +22,8 @@
             [:ul.inputs-list (map (fn [f] (field-checkbox run comparative? n f)) fs)]])
          field-groups)))
 
-(defpartial comparative-results-table
-  [comparative-results on-fields]
+(defpartial results-table
+  [results on-fields]
   [:div.row
    [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
     [:table.tablesorter.zebra-striped
@@ -35,7 +35,7 @@
                                               (format "%.2f" val)
                                               (str val)))])
                              on-fields)])
-           comparative-results)]]]])
+           results)]]]])
 
 (defpartial paired-results-table
   [control-results comparison-results on-fields]

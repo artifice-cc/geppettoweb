@@ -12,12 +12,13 @@
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
   (:use [sisyphus.views.claims :only
-         [claim-summary claim-association-form]])
+         [claim-summary claim-association-form-non-comparative
+          claim-association-form-comparative]])
   (:use [sisyphus.views.graphs :only [show-graph]])
   (:use [sisyphus.views.analysis :only [show-analysis]])
   (:use [sisyphus.views.parameters :only [parameters-summary]])
   (:use [sisyphus.views.results :only
-         [field-checkboxes comparative-results-table paired-results-table]]))
+         [field-checkboxes results-table paired-results-table]]))
 
 (defpartial details-metainfo
   [run]
@@ -82,8 +83,8 @@
        [:input.btn.primary {:value "Update" :type "submit"}]]]]]))
 
 (defn filter-on-fields
-  [problem results-type fields]
-  (filter (fn [f] ((set (str/split #"," (or (cookies/get (format "%s-%s" problem (name results-type)))
+  [problem resultstype fields]
+  (filter (fn [f] ((set (str/split #"," (or (cookies/get (format "%s-%s" problem (name resultstype)))
                                             "")))
                    (name f)))
           fields))
@@ -95,7 +96,7 @@
      [:div.page-header
       [:a {:name "comparative-results"}]
       [:h2 "Comparative results"]]
-     (comparative-results-table comparative-results on-fields)
+     (results-table comparative-results on-fields)
      (details-fields-form run comparative-fields true)]))
 
 (defpartial details-paired-results-table
@@ -107,6 +108,16 @@
       [:h2 "Control/comparison results"]]
      (paired-results-table control-results comparison-results on-fields)
      (details-fields-form run paired-fields false)]))
+
+(defpartial details-non-comparative-results-table
+  [run results fields]
+  (let [on-fields (filter-on-fields (:problem run) :control-comparison fields)]
+    [:section#results
+     [:div.page-header
+      [:a {:name "results"}]
+      [:h2 "Results"]]
+     (results-table results on-fields)
+     (details-fields-form run fields false)]))
 
 (defpartial details-annotations
   [run]
@@ -142,7 +153,8 @@
 
 (defpartial details-graphs
   [run]
-  (let [graphs (get (list-graphs) (:problem run))]
+  (let [graphs (filter #(= (:paramstype run) (:resultstype %))
+                       (get (list-graphs) (:problem run)))]
     [:section#graphs
      [:div.page-header
       [:h2 "Graphs"]]
@@ -154,7 +166,8 @@
 
 (defpartial details-analysis
   [run]
-  (let [analysis (get (list-analysis) (:problem run))]
+  (let [analysis (filter #(= (:paramstype run) (:resultstype %))
+                         (get (list-analysis) (:problem run)))]
     [:section#analysis
      [:div.page-header
       [:h2 "Analysis"]]
@@ -164,10 +177,9 @@
        (for [a analysis]
          (show-analysis run a)))]))
 
-(defpartial details-claims
-  [run comparative-fields paired-fields]
-  (let [claim-opts (claim-select-options run)
-        run-claims (list-claims run)]
+(defpartial details-claims-header
+  [run]
+  (let [run-claims (list-claims run)]
     [:section#claims
      [:div.page-header
       [:a {:name "claims"}
@@ -187,9 +199,21 @@
           (if (not-empty (:verified run-claims))
             [:h3 "Verified"])
           (for [c (:verified run-claims)]
-            (claim-summary c))])]]
+            (claim-summary c))])]]]))
+
+(defpartial details-claims-comparative
+  [run comparative-fields paired-fields]
+  (let [claim-opts (claim-select-options run)]
+    [:div (details-claims-header run)
      (when (not-empty claim-opts)
-       (claim-association-form nil run claim-opts comparative-fields paired-fields))]))
+       (claim-association-form-comparative nil run claim-opts comparative-fields paired-fields))]))
+
+(defpartial details-claims-non-comparative
+  [run fields]
+  (let [claim-opts (claim-select-options run)]
+    [:div (details-claims-header run)
+     (when (not-empty claim-opts)
+       (claim-association-form-non-comparative nil run claim-opts fields))]))
 
 (defpartial details-overview-notes
   [run]
@@ -259,11 +283,13 @@
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]
     (if (= "run" (:type doc))
-      (let [comparative-results (get-results (:_id doc) :comparative)
+      (let [comparative? (= "comparative" (:paramstype doc))
+            comparative-results (get-results (:_id doc) :comparative)
             comparative-fields (get-fields comparative-results)
             [control-results comparison-results]
-            (map (fn [results-type] (get-results (:_id doc) results-type))
+            (map (fn [resultstype] (get-results (:_id doc) resultstype))
                  [:control :comparison])
+            control-fields (get-fields control-results)
             paired-fields (get-fields (concat control-results comparison-results))]
         (common/layout
          (format "%s run %s" (:problem doc) (subs id 22))
@@ -271,12 +297,19 @@
                     [:h1 (format "%s run %s <small>(%s)</small>"
                                  (:problem doc) (subs id 22)
                                  (common/date-format (:time doc)))]]]
-         (details-comparative-results-table doc comparative-results comparative-fields)
-         (details-paired-results-table doc control-results comparison-results paired-fields)
+         (if comparative?
+           (details-comparative-results-table doc comparative-results comparative-fields))
+         (if comparative?
+           (details-paired-results-table doc control-results comparison-results paired-fields))
+         (if-not comparative?
+           (details-non-comparative-results-table doc control-results control-fields))
          (details-analysis doc)
          (details-graphs doc)
          (details-annotations doc)
-         (details-claims doc comparative-fields paired-fields)
+         (if comparative?
+           (details-claims-comparative doc comparative-fields paired-fields))
+         (if-not comparative?
+           (details-claims-non-comparative doc control-fields))
          (details-parameters doc)
          (details-overview-notes doc)
          (details-metainfo doc)

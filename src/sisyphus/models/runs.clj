@@ -68,9 +68,10 @@
 
 (defn csv-filenames
   [run]
-  (zipmap [:control :comparison :comparative]
-          (map #(format "%s/%s-%s.csv" cachedir (:_id run) (name %))
-               [:control :comparison :comparative])))
+  (let [results (if (= "comparative" (:paramstype run))
+                  [:control :comparison :comparative]
+                  [:control])]
+    (zipmap results (map #(format "%s/%s-%s.csv" cachedir (:_id run) (name %)) results))))
 
 (defn format-csv-row
   [row]

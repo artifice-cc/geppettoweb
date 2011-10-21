@@ -9,7 +9,7 @@
   [run graph]
   [:div.row
    [:div.span4.columns
-    [:h3 (:name graph) [:br] [:small (format " (%s)" (:results-type graph))]]
+    [:h3 (:name graph) [:br] [:small (format " (%s)" (:resultstype graph))]]
     [:p (:caption graph)]]
    [:div.span8.columns
     [:p
@@ -46,10 +46,10 @@
                  [:input.xlarge {:id "name" :name "name" :size 30
                                  :type "text" :value (:name graph)}]]]
                [:div.clearfix
-                [:label {:for "results-type"} "Results type"]
+                [:label {:for "resultstype"} "Results type"]
                 [:div.input
-                 (drop-down :results-type ["control/comparison" "comparative"]
-                            (:results-type graph))]]
+                 (drop-down :resultstype ["non-comparative" "comparative"]
+                            (:resultstype graph))]]
                [:div.clearfix
                 [:label {:for "caption"} "Caption"]
                 [:div.input
@@ -60,10 +60,7 @@
                  [:textarea.xxlarge {:id "code" :name "code"}
                   (if (:code graph) (:code graph)
                       "p <- ggplot(comparative) + geom_point(aes(x=Field1, y=Field2))")]
-                 [:span.help-block "Assume the existence of data tables named 'control',
-                                     'comparison', and 'comparative'
-                                     and that 'ggplot2' is loaded.
-                                     Save the graph to the variable 'p'."]]]
+                 [:span.help-block "Assume the existence of a data table named 'control', and tables 'comparison' and 'comparative' if the results type is comparative; also assume that that 'ggplot2' is loaded. Save the graph to the variable 'p'."]]]
                [:div.actions
                 [:input.btn.primary {:value (if (:name graph) "Update" "Save") :type "submit"}]]])]]])
 
@@ -95,7 +92,7 @@
         (for [graph (get graphs problem)]
           [:div.row
            [:div.span4.columns
-            [:h2 (:name graph) [:small (format " (%s)" (:results-type graph))]]
+            [:h2 (:name graph) [:br] [:small (format " (%s)" (:resultstype graph))]]
             [:p (:caption graph)]
             [:p (link-to (format "/graphs/update/%s" (:_id graph)) "Update graph")]]
            [:div.span12.columns

@@ -4,10 +4,11 @@ function(doc) {
              {"_id": doc["_id"],
               "problem": doc["problem"],
               "time": doc["time"],
-              "count": doc["comparative"].length,
+              "count": doc["control"].length,
               "paramsid": doc["paramsid"],
               "paramsname": doc["paramsname"],
               "paramsrev": doc["paramsrev"],
+              "paramstype": doc["paramstype"],
               "commit": doc["commit"],
               "branch": doc["branch"]});
     }
