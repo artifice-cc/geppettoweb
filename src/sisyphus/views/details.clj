@@ -2,12 +2,11 @@
   (:require [clojure.set :as set])
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
-  (:require [noir.cookies :as cookies])
   (:require [clojure.contrib.string :as str])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
-         [get-results get-fields add-annotation delete-annotation delete-run]])
+         [get-results get-fields set-fields add-annotation delete-annotation delete-run]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
@@ -40,7 +39,9 @@
      [:dl [:dt "User@hostname"]
       [:dd (format "%s@%s" (:username run) (:hostname run))]]
      [:dl [:dt "Time"]
-      [:dd (common/date-format (:time run))]]]
+      [:dd (common/date-format (:time run))]]
+     [:dl [:dt "Simulation type"]
+      [:dd (:paramstype run)]]]
     [:div.span4.columns
      [:dl [:dt "Reptitions"]
       [:dd (:repetitions run)]]
@@ -58,66 +59,59 @@
 
 (defpartial details-parameters
   [run]
-  (let [params (get-doc (:paramsid run))]
+  (let [params (get-doc (:paramsid run) (:paramsrev run))]
     [:section#parameters
      [:div.page-header [:h2 "Parameters"]]
      (parameters-summary params)]))
 
 (defpartial details-fields-form
-  [run fields comparative?]
+  [run fields fieldstype]
   (form-to
    [:post "/details/set-fields"]
    (hidden-field :id (:_id run))
-   (hidden-field :comparative (if comparative? "true" "false"))
+   (hidden-field :fieldstype fieldstype)
    (hidden-field :problem (:problem run))
    [:div.row
     [:div.span4.columns [:h3.fields_checkboxes_header "Select active fields..."]]]
    [:div.fields_checkboxes
     [:div.row
      [:div.span4.columns "&nbsp;"]
-     (field-checkboxes run comparative? :fields fields)]
+     (field-checkboxes run :fields fieldstype fields)]
     [:div.row
      [:div.span4.columns "&nbsp;"]
      [:div.span12.columns
       [:div.actions
        [:input.btn.primary {:value "Update" :type "submit"}]]]]]))
 
-(defn filter-on-fields
-  [problem resultstype fields]
-  (filter (fn [f] ((set (str/split #"," (or (cookies/get (format "%s-%s" problem (name resultstype)))
-                                            "")))
-                   (name f)))
-          fields))
-
 (defpartial details-comparative-results-table
   [run comparative-results comparative-fields]
-  (let [on-fields (filter-on-fields (:problem run) :comparative comparative-fields)]
-    [:section#comparative
+  (let [on-fields (map keyword (:comparative-fields run))]
+    [:section#comparative-results
      [:div.page-header
       [:a {:name "comparative-results"}]
       [:h2 "Comparative results"]]
      (results-table comparative-results on-fields)
-     (details-fields-form run comparative-fields true)]))
+     (details-fields-form run comparative-fields :comparative)]))
 
 (defpartial details-paired-results-table
   [run control-results comparison-results paired-fields]
-  (let [on-fields (filter-on-fields (:problem run) :control-comparison paired-fields)]
-    [:section#comparison
+  (let [on-fields (map keyword (:paired-fields run))]
+    [:section#paired-results
      [:div.page-header
       [:a {:name "control-comparison-results"}]
       [:h2 "Control/comparison results"]]
      (paired-results-table control-results comparison-results on-fields)
-     (details-fields-form run paired-fields false)]))
+     (details-fields-form run paired-fields :paired)]))
 
 (defpartial details-non-comparative-results-table
   [run results fields]
-  (let [on-fields (filter-on-fields (:problem run) :control-comparison fields)]
-    [:section#results
+  (let [on-fields (map keyword (:non-comparative-fields run))]
+    [:section#non-comparative-results
      [:div.page-header
       [:a {:name "results"}]
       [:h2 "Results"]]
      (results-table results on-fields)
-     (details-fields-form run fields false)]))
+     (details-fields-form run fields :non-comparative)]))
 
 (defpartial details-annotations
   [run]
@@ -266,19 +260,9 @@
 
 (defpage
   [:post "/details/set-fields"] {:as fields}
-  (let [results (if (= "true" (:comparative fields))
-                  (get-results (:id fields) :comparative)
-                  (concat (get-results (:id fields) :control)
-                          (get-results (:id fields) :comparison)))
-        all-fields (get-fields results)
-        on-fields (set (:fields fields))
-        off-fields (set/difference (set (map name all-fields)) on-fields)]
-    (cookies/put! (keyword (format "%s-%s" (:problem fields) (if (= (:comparative fields) "true")
-                                                               "comparative" "control-comparison")))
-                  (apply str (interpose "," on-fields))))
+  (set-fields (:id fields) (:fieldstype fields) (:fields fields))
   (resp/redirect (format "/details/%s#%s" (:id fields)
-                         (if (= "true" (:comparative fields)) "comparative-results"
-                             "control-comparison-results"))))
+                         (format "%s-results" (name (:fieldstype fields))))))
 
 (defpage "/details/:id" {id :id}
   (let [doc (get-doc id)]

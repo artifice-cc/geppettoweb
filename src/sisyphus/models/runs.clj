@@ -39,16 +39,15 @@
 
 (defn add-annotation
   [id content]
-  (-> (get-doc id)
-      (clutch/with-db db (clutch/update-document #(conj % content) [:annotations]))))
+  (clutch/with-db db (clutch/update-document (get-doc id) #(conj % content) [:annotations])))
 
 (defn delete-annotation
   [id index]
   (let [annotations (:annotations (clutch/get-document id))]
-    (-> (get-doc id)
-        (clutch/with-db db
-          (clutch/update-document {:annotations (concat (take index annotations)
-                                                        (drop (inc index) annotations))})))))
+    (clutch/with-db db
+      (clutch/update-document
+       (get-doc id) {:annotations (concat (take index annotations)
+                                          (drop (inc index) annotations))}))))
 
 (def dissoc-fields [:Problem :Step :runid :type :_rev :_id])
 
@@ -58,6 +57,12 @@
       (sort (apply set/intersection
                    (map (fn [r] (set (keys r)))
                         (map (fn [r] (apply dissoc r dissoc-fields)) results))))))
+
+(defn set-fields
+  [id fieldstype fields]
+  (clutch/with-db db
+    (clutch/update-document
+     (get-doc id) {(keyword (format "%s-fields" (name fieldstype))) fields})))
 
 (defn get-results
   [id results-type]

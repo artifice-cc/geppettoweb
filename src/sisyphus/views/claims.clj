@@ -191,14 +191,14 @@
      [:div.fields_checkboxes
       [:div.row
        [:div.span4.columns "&nbsp;"]
-       (field-checkboxes run true :comparative-fields comparative-fields)]]
+       (field-checkboxes run :comparative-fields :comparative comparative-fields)]]
      [:div.row
       [:div.span4.columns
        [:h3.fields_checkboxes_header "Select control / comparison fields..."]]]
      [:div.fields_checkboxes
       [:div.row
        [:div.span4.columns "&nbsp;"]
-       (field-checkboxes run false :paired-fields paired-fields)]]
+       (field-checkboxes run :paired-fields :paired paired-fields)]]
      (claim-association-form-footer claim run association))))
 
 (defpartial claim-association-form-non-comparative
@@ -213,7 +213,7 @@
      [:div.fields_checkboxes
       [:div.row
        [:div.span4.columns "&nbsp;"]
-       (field-checkboxes run false :non-comparative-fields fields)]]
+       (field-checkboxes run :non-comparative-fields :non-comparative fields)]]
      (claim-association-form-footer claim run association))))
 
 (defpage
