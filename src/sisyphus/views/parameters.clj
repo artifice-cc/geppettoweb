@@ -77,10 +77,10 @@
      "{\n"
      (for [k (sort common-keys)]
        (if (= (ps1 k) (ps2 k))
-         (format "%s %s\n" k (ps1 k))
-         [:b (format "%s %s\n" k (ps1 k))]))
+         (format "%s %s\n" k (pr-str (ps1 k)))
+         [:b (format "%s %s\n" k (pr-str (ps1 k)))]))
      (for [k (sort unique-keys)]
-       [:b (format "%s %s\n" k (ps1 k))])
+       [:b (format "%s %s\n" k (pr-str (ps1 k)))])
      "}"]))
 
 (defpartial parameters-summary
