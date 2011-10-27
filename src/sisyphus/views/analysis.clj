@@ -57,10 +57,10 @@
                  [:span.help-block "Assume the existence of data tables named 'control',
                                     'comparison', and 'comparative'."]]]
                [:div.actions
-                [:input.btn.primary {:value (if (:name analysis) "Update" "Save") :type "submit"}]
+                [:input.btn.primary {:name "action" :value (if (:name analysis) "Update" "Save") :type "submit"}]
                 " "
                 (if (:name analysis)
-                  [:input.btn.danger {:value "Delete" :name "action":type "submit"}])]])]]])
+                  [:input.btn.danger {:value "Delete" :name "action" :type "submit"}])]])]]])
 
 (defpage
   [:post "/analysis/update-analysis"] {:as analysis}
