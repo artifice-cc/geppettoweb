@@ -6,7 +6,8 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
-         [get-results get-fields set-fields add-annotation delete-annotation delete-run]])
+         [get-results get-fields set-fields add-annotation delete-annotation
+          set-graphs set-analysis delete-run]])
   (:use [sisyphus.models.graphs :only [get-graph-png list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
@@ -159,16 +160,34 @@
 
 (defpartial details-graphs
   [run]
-  (let [graphs (filter #(= (:paramstype run) (:resultstype %))
-                       (get (list-graphs) (:problem run)))]
+  (let [all-graphs (filter #(= (:paramstype run) (:resultstype %))
+                           (get (list-graphs) (:problem run)))
+        problem-graphs (set (map get-doc (:graphs run)))]
     [:section#graphs
      [:div.page-header
       [:h2 "Graphs"]]
-     (if (empty? graphs)
+     (if (empty? problem-graphs)
        [:div.row
         [:div.span16.columns [:p "No graphs."]]]
-       (for [g graphs]
-         (show-graph run g)))]))
+       (for [g (sort-by :name problem-graphs)]
+         (show-graph run g)))
+     [:div.row
+      [:div.span4.columns
+       [:h3 "Choose graphs"]]
+      [:div.span12.columns
+       (form-to
+        [:post "/details/set-graphs"]
+        (hidden-field :id (:_id run))
+        [:div.clearfix
+         [:div.input
+          [:ul.inputs-list
+           (for [g all-graphs]
+             [:li [:label
+                   [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
+                            :checked (problem-graphs g)}]
+                   " " (:name g)]])]]
+         [:div.actions
+          [:input.btn.primary {:value "Update" :type "submit"}]]])]]]))
 
 (defpartial details-analysis
   [run]
@@ -256,6 +275,11 @@
   (resp/redirect (format "/details/%s#annotations" (:id annotation))))
 
 (defpage
+  [:post "/details/set-graphs"] {:as graphs}
+  (set-graphs (:id graphs) (:graphs graphs))
+  (resp/redirect (format "/details/%s#graphs" (:id graphs))))
+
+(defpage
   [:post "/details/delete-run"] {:as run}
   (common/layout
    "Confirm deletion"
@@ -292,7 +316,7 @@
          [:div.row [:div.span16.columns
                     [:h1 (format "%s run %s <small>(%s)</small>"
                                  (:problem doc) (subs id 22)
-                                 (common/date-format (:time doc)))]]]
+                                 (:paramstype doc))]]]
          (if comparative?
            (details-comparative-results-table doc comparative-results comparative-fields))
          (if comparative?

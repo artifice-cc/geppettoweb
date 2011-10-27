@@ -64,6 +64,16 @@
     (clutch/update-document
      (get-doc id) {(keyword (format "%s-fields" (name fieldstype))) fields})))
 
+(defn set-graphs
+  [id graphs]
+  (clutch/with-db db
+    (clutch/update-document (get-doc id) {:graphs graphs})))
+
+(defn set-analysis
+  [id analysis]
+  (clutch/with-db db
+    (clutch/update-document (get-doc id) {:analysis analysis})))
+
 (defn get-results
   [id results-type]
   (let [results-ids (get (get-doc id) results-type)]
