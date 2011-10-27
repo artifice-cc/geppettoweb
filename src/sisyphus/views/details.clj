@@ -19,6 +19,13 @@
   (:use [sisyphus.views.results :only
          [field-checkboxes results-table paired-results-table]]))
 
+(defn make-run-command
+  [run]
+  (format (str "lein run -m retrospect.core --action run --params \"%s\" "
+               "--database \"%s\" --nthreads %d --repetitions %d --seed %d")
+          (:paramsname run) (:database run) (:nthreads run)
+          (:repetitions run) (:seed run)))
+
 (defpartial details-metainfo
   [run]
   [:section#metadata
@@ -55,7 +62,12 @@
      [:dl [:dt "Data directory"]
       [:dd (:datadir run)]]
      [:dl [:dt "Record directory"]
-      [:dd (:recorddir run)]]]]])
+      [:dd (:recorddir run)]]]]
+   [:div.row
+    [:div.span4.columns
+     [:h3 "Run command"]]
+    [:div.span12.columns
+     [:pre (make-run-command run)]]]])
 
 (defpartial details-parameters
   [run]
