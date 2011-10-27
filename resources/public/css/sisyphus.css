@@ -19,3 +19,8 @@ div.params span.paramscount {
 div.params span.paramscount small {
     font-size: 50%;
 }
+
+div.paramsmodal div.modal {
+    display: none;
+}
+

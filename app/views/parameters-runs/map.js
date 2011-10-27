@@ -3,6 +3,8 @@ function(doc) {
         emit([doc["paramsid"], doc["paramsrev"]],
              {"_id": doc["_id"],
               "time": doc["time"],
+              "username": doc["username"],
+              "hostname": doc["hostname"],
               "problem": doc["problem"],
               "count": doc["comparative"].length,
               "paramsid": doc["paramsid"],

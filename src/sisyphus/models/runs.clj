@@ -49,7 +49,7 @@
        (get-doc id) {:annotations (concat (take index annotations)
                                           (drop (inc index) annotations))}))))
 
-(def dissoc-fields [:Problem :Step :runid :type :_rev :_id])
+(def dissoc-fields [:Problem :Step :runid :type :_rev :_id :params :control-params :comparison-params])
 
 (defn get-fields
   [results]
