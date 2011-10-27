@@ -20,6 +20,8 @@
                    (format "%s (%s)" (:paramsname run)
                            (if (= "comparative" (:paramstype run)) "c" "nc")))]
      [:td (:count run)]
+     [:td (:graph-count run)]
+     [:td (:analysis-count run)]
      [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s" (:commit run))
                    (subs (:commit run) 0 10))
       " @ " (:branch run)]]))
@@ -34,6 +36,8 @@
      [:th "User"]
      [:th "Params (c/nc)"]
      [:th "Sims"]
+     [:th "Graphs"]
+     [:th "Analysis"]
      [:th "Commit"]]]
    [:tbody (map run-table-row runs)]])
 
