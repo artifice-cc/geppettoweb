@@ -187,14 +187,14 @@
      (claim-association-form-header claim run claim-opts association)
      [:div.row
       [:div.span4.columns
-       [:h3.fields_checkboxes_header "Select comparative fields..."]]]
+       [:p [:b [:a.fields_checkboxes_header "Select comparative fields..."]]]]]
      [:div.fields_checkboxes
       [:div.row
        [:div.span4.columns "&nbsp;"]
        (field-checkboxes run :comparative-fields :comparative comparative-fields)]]
      [:div.row
       [:div.span4.columns
-       [:h3.fields_checkboxes_header "Select control / comparison fields..."]]]
+       [:p [:b [:a.fields_checkboxes_header "Select control / comparison fields..."]]]]]
      [:div.fields_checkboxes
       [:div.row
        [:div.span4.columns "&nbsp;"]

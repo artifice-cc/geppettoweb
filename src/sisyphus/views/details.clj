@@ -85,7 +85,8 @@
    (hidden-field :fieldstype fieldstype)
    (hidden-field :problem (:problem run))
    [:div.row
-    [:div.span4.columns [:h3.fields_checkboxes_header "Select active fields..."]]]
+    [:div.span4.columns
+     [:p [:b [:a.fields_checkboxes_header "Select active fields..."]]]]]
    [:div.fields_checkboxes
     [:div.row
      [:div.span4.columns "&nbsp;"]
