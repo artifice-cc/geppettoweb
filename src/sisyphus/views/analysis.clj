@@ -2,7 +2,8 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.analysis :only [list-analysis new-analysis update-analysis get-analysis-output]])
+  (:use [sisyphus.models.analysis :only
+         [list-analysis new-analysis update-analysis get-analysis-output delete-analysis]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (defpartial show-analysis
@@ -56,12 +57,32 @@
                  [:span.help-block "Assume the existence of data tables named 'control',
                                     'comparison', and 'comparative'."]]]
                [:div.actions
-                [:input.btn.primary {:value (if (:name analysis) "Update" "Save") :type "submit"}]]])]]])
+                [:input.btn.primary {:value (if (:name analysis) "Update" "Save") :type "submit"}]
+                " "
+                (if (:name analysis)
+                  [:input.btn.danger {:value "Delete" :name "action":type "submit"}])]])]]])
 
 (defpage
   [:post "/analysis/update-analysis"] {:as analysis}
-  (update-analysis analysis)
-  (resp/redirect "/analysis"))
+  (cond (= "Update" (:action analysis))
+        (do
+          (update-analysis analysis)
+          (resp/redirect "/analysis"))
+        (= "Delete" (:action analysis))
+        (common/layout
+         "Confirm deletion"
+         (common/confirm-deletion "/analysis/delete-analysis-confirm" (:id analysis)
+                                  "Are you sure you want to delete the analysis?"))
+        :else
+        (resp/redirect "/analysis")))
+
+(defpage
+  [:post "/analysis/delete-analysis-confirm"] {:as confirm}
+  (if (= (:choice confirm) "Confirm deletion")
+    (do
+      (delete-analysis (:id confirm))
+      (resp/redirect "/analysis"))
+    (resp/redirect (format "/analysis#%s" (:id confirm)))))
 
 (defpage
   [:post "/analysis/new-analysis"] {:as analysis}

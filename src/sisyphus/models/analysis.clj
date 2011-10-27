@@ -63,3 +63,7 @@
               (.write writer (str (:out status) (:err status))))
             (update-analysis-attachment runid output-fname analysis)
             (str (:out status) (:err status)))))))
+
+(defn delete-analysis
+  [id]
+  (delete-doc (get-doc id)))
