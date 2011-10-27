@@ -191,16 +191,34 @@
 
 (defpartial details-analysis
   [run]
-  (let [analysis (filter #(= (:paramstype run) (:resultstype %))
-                         (get (list-analysis) (:problem run)))]
+  (let [all-analysis (filter #(= (:paramstype run) (:resultstype %))
+                             (get (list-analysis) (:problem run)))
+        problem-analysis (set (map get-doc (:analysis run)))]
     [:section#analysis
      [:div.page-header
       [:h2 "Analysis"]]
-     (if (empty? analysis)
+     (if (empty? problem-analysis)
        [:div.row
         [:div.span16.columns [:p "No analysis."]]]
-       (for [a analysis]
-         (show-analysis run a)))]))
+       (for [a (sort-by :name problem-analysis)]
+         (show-analysis run a)))
+     [:div.row
+      [:div.span4.columns
+       [:h3 "Choose analysis"]]
+      [:div.span12.columns
+       (form-to
+        [:post "/details/set-analysis"]
+        (hidden-field :id (:_id run))
+        [:div.clearfix
+         [:div.input
+          [:ul.inputs-list
+           (for [a all-analysis]
+             [:li [:label
+                   [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
+                            :checked (problem-analysis a)}]
+                   " " (:name a)]])]]
+         [:div.actions
+          [:input.btn.primary {:value "Update" :type "submit"}]]])]]]))
 
 (defpartial details-claims-header
   [run]
@@ -278,6 +296,11 @@
   [:post "/details/set-graphs"] {:as graphs}
   (set-graphs (:id graphs) (:graphs graphs))
   (resp/redirect (format "/details/%s#graphs" (:id graphs))))
+
+(defpage
+  [:post "/details/set-analysis"] {:as analysis}
+  (set-analysis (:id analysis) (:analysis analysis))
+  (resp/redirect (format "/details/%s#analysis" (:id analysis))))
 
 (defpage
   [:post "/details/delete-run"] {:as run}
