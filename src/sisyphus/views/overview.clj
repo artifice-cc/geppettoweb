@@ -5,8 +5,7 @@
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.runs :only
-         [list-runs summarize-comparative-results]]))
+  (:use [sisyphus.models.runs :only [list-runs]]))
 
 (defpartial run-table-row
   [run]
