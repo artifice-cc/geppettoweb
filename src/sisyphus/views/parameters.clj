@@ -67,11 +67,26 @@
                (if (and (:name params) (empty? (runs-with-parameters params)))
                  [:input.btn.danger {:value "Delete" :name "action":type "submit"}])])]]])
 
+(defn vectorize-params
+  [params]
+  (reduce (fn [m k] (let [v (k params)]
+                      (assoc m k (if (vector? v) v [v]))))
+          {} (keys params)))
+
+(defn explode-params
+  "Want {:Xyz [1 2 3], :Abc [3 4]} to become [{:Xyz 1, :Abc 3}, {:Xyz 2, :Abc 4}, ...]"
+  [params]
+  (when (not-empty params)
+    (if (= 1 (count params))
+      (for [v (second (first params))]
+        {(first (first params)) v})
+      (let [p (first params)
+            deeper (explode-params (rest params))]
+        (flatten (map (fn [v] (map #(assoc % (first p) v) deeper)) (second p)))))))
+
 (defpartial params-diff
-  [params1 params2]
-  (let [ps1 (read-string params1)
-        ps2 (read-string params2)
-        common-keys (set/intersection (set (keys ps1)) (set (keys ps2)))
+  [ps1 ps2]
+  (let [common-keys (set/intersection (set (keys ps1)) (set (keys ps2)))
         unique-keys (set/difference (set (keys ps1)) (set (keys ps2)))]
     [:pre
      "{\n"
@@ -82,6 +97,11 @@
      (for [k (sort unique-keys)]
        [:b (format "%s %s\n" k (pr-str (ps1 k)))])
      "}"]))
+
+(defpartial paramscount
+  [params]
+  [:span.paramscount (count (explode-params (vectorize-params params)))
+   [:br [:small "params"]]])
 
 (defpartial parameters-summary
   [params]
@@ -96,16 +116,25 @@
        (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])
     [:p (:description params)]]]
   (if (= "comparative" (:paramstype params))
-    [:div.row
-     [:div.span8.columns
-      [:h3 "Control"]
-      (params-diff (:control params) (:comparison params))]
-     [:div.span8.columns
-      [:h3 "Comparison"]
-      (params-diff (:comparison params) (:control params))]]
-    [:div.row
-     [:div.span8.columns
-      [:pre (:control params)]]])
+    (let [control-params (read-string (:control params))
+          comparison-params (read-string (:comparison params))]
+      [:div.row
+       [:div.span8.columns
+        [:h3 "Control"]
+        [:div.params
+         (paramscount control-params)
+         (params-diff control-params comparison-params)]]
+       [:div.span8.columns
+        [:h3 "Comparison"]
+        [:div.params
+         (paramscount comparison-params)
+         (params-diff comparison-params control-params)]]])
+    (let [control-params (read-string (:control params))]
+      [:div.row
+       [:div.span8.columns
+        [:div.params
+         (paramscount control-params)
+         [:pre (:control params)]]]]))
   [:div
    [:h3 "Runs with these parameters"]]
   (let [fields (problem-fields (:problem params))
