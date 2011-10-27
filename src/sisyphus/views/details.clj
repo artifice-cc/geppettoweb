@@ -43,7 +43,7 @@
     [:div.span4.columns
      [:h3 "Simulation properties"]]
     [:div.span4.columns
-     [:dl [:dt "User@hostname"]
+     [:dl [:dt "User@host"]
       [:dd (format "%s@%s" (:username run) (:hostname run))]]
      [:dl [:dt "Time"]
       [:dd (common/date-format (:time run))]]

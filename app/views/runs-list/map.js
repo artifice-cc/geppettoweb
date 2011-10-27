@@ -4,6 +4,8 @@ function(doc) {
              {"_id": doc["_id"],
               "problem": doc["problem"],
               "time": doc["time"],
+              "username": doc["username"],
+              "hostname": doc["hostname"],
               "count": doc["control"].length,
               "paramsid": doc["paramsid"],
               "paramsname": doc["paramsname"],

@@ -15,6 +15,7 @@
     [:tr
      [:td (link-to (format "/details/%s" (:_id run)) (subs id 22))]
      [:td (common/date-format (:time run))]
+     [:td (format "%s@%s" (:username run) (:hostname run))]
      [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
                    (format "%s (%s)" (:paramsname run)
                            (if (= "comparative" (:paramstype run)) "c" "nc")))]
@@ -33,9 +34,10 @@
       [:tr
        [:th "Run ID"]
        [:th "Time"]
-       [:th "Parameters (c/nc)"]
+       [:th "User@host"]
+       [:th "Params (c/nc)"]
        [:th (format "%s (%s)" (:field custom) (:func custom))]
-       [:th "Simulations"]
+       [:th "Sims"]
        [:th "Commit"]]]
      [:tbody
       (map (fn [[run summary]] (run-table-row run summary)) summaries)]]))
