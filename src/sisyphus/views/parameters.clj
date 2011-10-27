@@ -137,11 +137,7 @@
          [:pre (:control params)]]]]))
   [:div
    [:h3 "Runs with these parameters"]]
-  (let [fields (problem-fields (:problem params))
-        custom-field (or (cookies/get (keyword (format "%s-field" (:problem params)))) (first fields))
-        custom-func (or (cookies/get (keyword (format "%s-func" (:problem params)))) "SUM")]
-    (runs-table (runs-with-parameters params) (:problem params)
-                {:field custom-field :func custom-func})))
+  (runs-table (runs-with-parameters params) (:problem params)))
 
 (defpage
   [:post "/parameters/update-parameters"] {:as params}

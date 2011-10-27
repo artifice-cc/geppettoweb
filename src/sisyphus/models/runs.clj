@@ -19,24 +19,6 @@
       (delete-doc (get-doc r)))
     (delete-doc run)))
 
-(defn problem-fields
-  [problem]
-  (let [fields (map :key (:rows (view "problem-fields" {:group true :group_level 2})))]
-    (sort (map second (filter #(= problem (first %)) fields)))))
-
-(defn summarize-comparative-results
-  [runid custom]
-  (let [f (case (:func custom)
-                "AVG" (fn [values] (double (/ (reduce + 0 values) (count values))))
-                "SUM" (fn [values] (double (reduce + 0 values)))
-                "MAX" (fn [values] (double (apply max values)))
-                "MIN" (fn [values] (double (apply min values)))
-                ;; default is SUM
-                (fn [values] (double (apply + 0 values))))
-        results (map :value (:rows (view "comparative-results" {:key [runid (:field custom)]})))]
-    (if (and (not-empty results) (every? number? results))
-      (f results))))
-
 (defn add-annotation
   [id content]
   (clutch/with-db db (clutch/update-document (get-doc id) #(conj % content) [:annotations])))
