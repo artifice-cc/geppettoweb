@@ -6,7 +6,6 @@
   (:require [clojure.set :as set])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.runs :only [problem-fields]])
   (:use [sisyphus.models.parameters :only
          [new-parameters update-parameters list-parameters runs-with-parameters delete-parameters]])
   (:use [sisyphus.views.overview :only [runs-table]]))

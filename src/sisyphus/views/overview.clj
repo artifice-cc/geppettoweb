@@ -6,7 +6,7 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
-         [problem-fields list-runs summarize-comparative-results]]))
+         [list-runs summarize-comparative-results]]))
 
 (defpartial run-table-row
   [run]
@@ -43,13 +43,12 @@
 
 (defpartial runs
   [problem runs]
-  (let [fields (problem-fields problem)]
-    [:section {:id (format "runs-%s" problem)}
-     [:div.page-header
-      [:h1 problem]]
-     [:div.row
-      [:div.span16.columns
-       (runs-table runs problem)]]]))
+  [:section {:id (format "runs-%s" problem)}
+   [:div.page-header
+    [:h1 problem]]
+   [:div.row
+    [:div.span16.columns
+     (runs-table runs problem)]]])
 
 (defpartial runs-by-problem
   [runs-grouped]
