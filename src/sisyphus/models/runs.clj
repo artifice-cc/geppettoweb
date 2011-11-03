@@ -34,11 +34,13 @@
 (def dissoc-fields [:Problem :Step :runid :type :_rev :_id :params :control-params :comparison-params])
 
 (defn get-fields
-  [results]
+  [results & opts]
   (if (= 0 (count results)) []
       (sort (apply set/intersection
                    (map (fn [r] (set (keys r)))
-                        (map (fn [r] (apply dissoc r dissoc-fields)) results))))))
+                        (map (fn [r] (if (some #{:all} opts) r ;; don't remove fields
+                                         (apply dissoc r dissoc-fields))) ;; remove fields
+                             results))))))
 
 (defn set-fields
   [id fieldstype fields]
@@ -82,7 +84,7 @@
     (let [outfile (io/file (get csv-fnames results-type))]
       (when (. outfile createNewFile)
         (let [results (get-results (:_id run) results-type)
-              fields (get-fields results)
+              fields (get-fields results :all)
               csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
                                   results))]
           ;; save into cache file
