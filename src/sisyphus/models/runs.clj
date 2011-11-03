@@ -1,5 +1,6 @@
 (ns sisyphus.models.runs
   (:require [clojure.set :as set])
+  (:require [clojure.string :as str])
   (:require [clojure.java.io :as io])
   (:require [com.ashafa.clutch :as clutch])
   (:use [sisyphus.models.claims :only [list-claims remove-claim-association]])
@@ -75,8 +76,12 @@
 (defn format-csv-row
   [row]
   ;; add quotes around string data
-  (apply str (concat (interpose "," (map #(if (= String (type %)) (format "\"%s\"" %) %) row))
-                     [\newline])))
+  (let [fmt (fn [s] (format "\"%s\"" (str/replace s "\"" "\\\"")))]
+    (apply str (concat (interpose "," (map #(cond (= String (type %)) (fmt %)
+                                                  (map? %) (fmt (pr-str %))
+                                                  :else %)
+                                           row))
+                       [\newline]))))
 
 (defn results-to-csv
   [run csv-fnames]
