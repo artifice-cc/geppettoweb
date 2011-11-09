@@ -3,7 +3,8 @@
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.simulations :only [get-simulation-fields]])
+  (:use [sisyphus.models.simulations :only
+         [get-simulation-fields set-simulation-fields]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.views.graphs :only [graphs]])
@@ -15,7 +16,7 @@
 (defpartial field-checkbox
   [field on-fields]
   [:li [:label [:input {:type "checkbox" :name "fields[]" :value (name field)
-                        :checked (on-fields (name field))}] " " (name field)]])
+                        :checked (on-fields field)}] " " (name field)]])
 
 (defpartial field-checkboxes
   [sim fieldstype fields on-fields]
@@ -51,14 +52,14 @@
         results (:comparative sim)]
     [:section#results
      [:div.page-header
-      [:a {:name "results"}]
-      [:h2 "Results"]]
+      [:a {:name "comparative-results"}]
+      [:h2 "Comparative results"]]
      (results-table results on-fields)
      (sim-fields-form sim :comparative on-fields)]))
 
 (defpartial sim-paired-results-table
   [sim]
-  (let [on-fields (set (map keyword (:paired-fields sim)))
+  (let [on-fields (set (map keyword (:control-fields sim)))
         control-results (:control sim)
         comparison-results (:comparison sim)
         paired-results (partition 2 (interleave control-results comparison-results))]
@@ -71,14 +72,14 @@
 
 (defpartial sim-non-comparative-results-table
   [sim]
-  (let [on-fields (set (map keyword (:non-comparative-fields sim)))
+  (let [on-fields (set (map keyword (:control-fields sim)))
         results (:control sim)]
     [:section#non-comparative-results
      [:div.page-header
       [:a {:name "results"}]
       [:h2 "Results"]]
      (results-table results on-fields)
-     (sim-fields-form sim :non-comparative on-fields)]))
+     (sim-fields-form sim :control on-fields)]))
 
 (defpartial sim-parameters
   [sim]
@@ -90,6 +91,12 @@
           [:pre control-params]
           :else
           [:pre comparison-params])))
+
+(defpage
+  [:post "/simulation/set-fields"] {:as fields}
+  (set-simulation-fields (:id fields) (:fieldstype fields) (:fields fields))
+  (resp/redirect (format "/simulation/%s#%s" (:id fields)
+                         (format "%s-results" (name (:fieldstype fields))))))
 
 (defpage "/simulation/:id" {id :id}
   (let [sim (get-doc id)
