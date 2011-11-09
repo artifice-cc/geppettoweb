@@ -131,7 +131,10 @@
 
 (defpartial run-paired-results-table
   [run control-results comparison-results paired-fields]
-  (let [on-fields (map keyword (:paired-fields run))]
+  (let [fields-funcs (map (fn [f] [(keyword f) "avg"]) ["PEC" "PEW"])
+        on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
+        control-results (get-summary-results run :control fields-funcs)
+        comparison-results (get-summary-results run :comparison fields-funcs)]
     [:section#paired-results
      [:div.page-header
       [:a {:name "control-comparison-results"}]
@@ -141,7 +144,9 @@
 
 (defpartial run-non-comparative-results-table
   [run results fields]
-  (let [on-fields (map keyword (:non-comparative-fields run))]
+  (let [fields-funcs (map (fn [f] [(keyword f) "avg"]) ["PEC" "PEW"])
+        on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
+        results (get-summary-results run :control fields-funcs)]
     [:section#non-comparative-results
      [:div.page-header
       [:a {:name "results"}]

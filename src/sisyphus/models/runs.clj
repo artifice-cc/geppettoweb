@@ -60,13 +60,13 @@
            (zipmap
             (concat
              ["Simulation"]
-             (if (= :control results-type)
+             (if (:params (first (get sim results-type)))
                [:params] [:control-params :comparison-params])
              (format-summary-fields fields-funcs))
             (concat
              [(format "<a href=\"/simulation/%s\">%s</a>"
                       (:_id sim) (subs (:_id sim) 22))]
-             (if (= :control results-type)
+             (if (:params (first (get sim results-type)))
                [(:params (first (get sim results-type)))]
                [(:control-params (first (get sim results-type)))
                 (:comparison-params (first (get sim results-type)))])

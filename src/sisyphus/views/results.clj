@@ -38,7 +38,7 @@
           [:tr [:td (if (and (:control-params r) (:comparison-params r))
                       (params-modal i :comparative
                                     [(:control-params r) (:comparison-params r)])
-                      (params-modal i :control (:control-params r)))]
+                      (params-modal i :control (:params r)))]
            (map (fn [f] [:td (let [val (get r f)]
                                (if (= java.lang.Double (type val))
                                  (format "%.2f" val)
