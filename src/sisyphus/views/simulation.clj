@@ -61,13 +61,12 @@
   [sim]
   (let [on-fields (set (map keyword (:control-fields sim)))
         control-results (:control sim)
-        comparison-results (:comparison sim)
-        paired-results (partition 2 (interleave control-results comparison-results))]
+        comparison-results (:comparison sim)]
     [:section#paired-results
      [:div.page-header
       [:a {:name "control-comparison-results"}]
       [:h2 "Control/comparison results"]]
-     (paired-results-table paired-results on-fields)
+     (paired-results-table control-results comparison-results on-fields)
      (sim-fields-form sim :control on-fields)]))
 
 (defpartial sim-non-comparative-results-table

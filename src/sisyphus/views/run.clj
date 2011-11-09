@@ -7,6 +7,7 @@
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
          [get-summary-results get-summary-fields set-summary-fields
+          format-summary-fields
           add-annotation delete-annotation
           set-graphs set-analysis delete-run]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
@@ -118,12 +119,14 @@
 
 (defpartial run-comparative-results-table
   [run comparative-results comparative-fields]
-  (let [on-fields (map keyword (:comparative-fields run))]
+  (let [fields-funcs (map (fn [f] [(keyword f) "avg"]) ["IncPEC" "IncPEW"])
+        on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
+        results (get-summary-results run :comparative fields-funcs)]
     [:section#comparative-results
      [:div.page-header
       [:a {:name "comparative-results"}]
       [:h2 "Comparative results"]]
-     (results-table comparative-results on-fields)
+     (results-table results on-fields)
      (run-fields-form run comparative-fields :comparative)]))
 
 (defpartial run-paired-results-table
@@ -252,13 +255,13 @@
 (defpage "/run/:id" {id :id}
   (let [run (get-doc id)
         comparative? (= "comparative" (:paramstype run))
-        comparative-results (get-summary-results run :comparative)
-        comparative-fields (get-summary-fields comparative-results)
+        comparative-results (get-summary-results run :comparative [])
+        comparative-fields (get-summary-fields run :comparative)
         [control-results comparison-results]
-        (map (fn [resultstype] (get-summary-results id resultstype))
+        (map (fn [resultstype] (get-summary-results id resultstype []))
              [:control :comparison])
-        control-fields (get-summary-fields control-results)
-        paired-fields (get-summary-fields (concat control-results comparison-results))]
+        control-fields (get-summary-fields run :control)
+        paired-fields (get-summary-fields run :control)]
     (common/layout
      (format "%s run %s" (:problem run) (subs id 22))
      [:div.row [:div.span16.columns

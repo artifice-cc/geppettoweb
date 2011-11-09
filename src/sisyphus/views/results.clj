@@ -45,43 +45,35 @@
                                  (str val)))])
                 on-fields)]))]]]])
 
-;; Group results together for a paired table
-(defn build-results-map
-  [control-results comparison-results]
-  (letfn [(make-key [r] [(:Seed r) (:control-params r) (:comparison-params r)])]
-    (reduce (fn [m r] (update-in m [(make-key r)] conj r))
-            (zipmap (map make-key control-results)
-                    (map (fn [r] [r]) control-results))
-            comparison-results)))
-
 ;; A paired results table; each cell has either one or two values: one
 ;; if control/comparison values are identical, otherwise two values,
 ;; the top bold representing comparison value, the bottom regular font
 ;; representing control value
 (defpartial paired-results-table
-  [paired-results on-fields]
-  [:div.row
-   [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
-    [:table.tablesorter.zebra-striped
-     [:thead
-      [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
-     [:tbody
-      (for [i (range (count paired-results))]
-        (let [[control comparison] (nth paired-results i)]
-          [:tr [:td (params-modal i :paired
-                                  [(:control-params control)
-                                   (:comparison-params comparison)])]
-           (map (fn [f]
-                  [:td (let [control-val (get control f)
-                             comparison-val (get comparison f)]
-                         (if (not= control-val comparison-val)
-                           (if (and (= java.lang.Double (type control-val))
-                                    (= java.lang.Double (type comparison-val)))
-                             (format "<strong>%.2f</strong><br/>%.2f"
-                                     comparison-val control-val)
-                             (format "<strong>%s</strong><br/>%s"
-                                     (str comparison-val) (str control-val)))
-                           (if (= java.lang.Double (type control-val))
-                             (format "%.2f" control-val)
-                             (str control-val))))])
-                on-fields)]))]]]])
+  [control-results comparison-results on-fields]
+  (let [paired-results (partition 2 (interleave control-results comparison-results))]
+    [:div.row
+     [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
+      [:table.tablesorter.zebra-striped
+       [:thead
+        [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
+       [:tbody
+        (for [i (range (count paired-results))]
+          (let [[control comparison] (nth paired-results i)]
+            [:tr [:td (params-modal i :paired
+                                    [(:control-params control)
+                                     (:comparison-params comparison)])]
+             (map (fn [f]
+                    [:td (let [control-val (get control f)
+                               comparison-val (get comparison f)]
+                           (if (not= control-val comparison-val)
+                             (if (and (= java.lang.Double (type control-val))
+                                      (= java.lang.Double (type comparison-val)))
+                               (format "<strong>%.2f</strong><br/>%.2f"
+                                       comparison-val control-val)
+                               (format "<strong>%s</strong><br/>%s"
+                                       (str comparison-val) (str control-val)))
+                             (if (= java.lang.Double (type control-val))
+                               (format "%.2f" control-val)
+                               (str control-val))))])
+                  on-fields)]))]]]]))

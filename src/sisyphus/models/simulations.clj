@@ -8,8 +8,8 @@
                      :params :control-params :comparison-params})
 
 (defn get-simulation-fields
-  [sim fieldstype & opts]
-  (let [fields (set (keys (first (fieldstype sim))))]
+  [sim results-type & opts]
+  (let [fields (set (keys (first (results-type sim))))]
     (sort (if (some #{:all} opts) fields
               (set/difference fields dissoc-fields)))))
 

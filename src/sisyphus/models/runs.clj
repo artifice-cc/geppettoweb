@@ -44,16 +44,40 @@
     (clutch/update-document (get-doc id) {:analysis analysis})))
 
 (defn get-summary-fields
-  [results & opts]
-  (if (empty? results) []
-      (get-simulation-fields (get-doc (first results)) opts)))
+  [run results-type & opts]
+  (get-simulation-fields (get-doc (first (:results run))) results-type opts))
+
+(defn format-summary-fields
+  [fields-funcs]
+  (map (fn [[field func]] (format "%s (%s)" (name field) func)) fields-funcs))
 
 (defn set-summary-fields)
 
 (defn get-summary-results
-  [run results-type]
-  (let [sims-ids (get run results-type)]
-    (sort-by :Seed (for [i sims-ids] (get-doc i)))))
+  [run results-type fields-funcs]
+  (let [sims (map get-doc (:results run))]
+    (map (fn [sim]
+           (zipmap
+            (concat
+             ["Simulation"]
+             (if (= :control results-type)
+               [:params] [:control-params :comparison-params])
+             (format-summary-fields fields-funcs))
+            (concat
+             [(format "<a href=\"/simulation/%s\">%s</a>"
+                      (:_id sim) (subs (:_id sim) 22))]
+             (if (= :control results-type)
+               [(:params (first (get sim results-type)))]
+               [(:control-params (first (get sim results-type)))
+                (:comparison-params (first (get sim results-type)))])
+             (for [[field func] fields-funcs]
+               (let [vals (map field (get sim results-type))]
+                 (cond (= func "sum")
+                       (reduce + 0 vals)
+                       (= func "avg")
+                       (double (/ (reduce + 0 vals) (count vals)))
+                       :else (reduce + 0 vals)))))))
+         sims)))
 
 (def cachedir "/tmp")
 
