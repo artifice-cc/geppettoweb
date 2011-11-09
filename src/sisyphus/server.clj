@@ -2,7 +2,8 @@
   (:require [noir.server :as server])
   (:require [sisyphus.views.claims]
             [sisyphus.views.configure]
-            [sisyphus.views.details]
+            [sisyphus.views.run]
+            [sisyphus.views.simulation]
             [sisyphus.views.graphs]
             [sisyphus.views.overview]
             [sisyphus.views.parameters]

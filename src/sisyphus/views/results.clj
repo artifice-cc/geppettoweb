@@ -1,41 +1,30 @@
 (ns sisyphus.views.results
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:require [clojure.contrib.string :as str]))
+  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
-(defpartial field-checkbox
-  [n fieldstype field on-fields]
-  [:li [:label
-        [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
-                 :checked (on-fields (name field))}]
-        " " (name field)]])
-
-(defpartial field-checkboxes
-  [run n fieldstype fields]
-  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)
-        on-fields (set (get run (keyword (format "%s-fields" (name fieldstype)))))]
-    (map (fn [fs]
-           [:div.span4.columns
-            [:ul.inputs-list (map (fn [f] (field-checkbox n fieldstype f on-fields)) fs)]])
-         field-groups)))
-
+;; Provide a modal dialog for the parameters for a single row in a
+;; results table; the output of this defpartial should be placed in a
+;; table cell
 (defpartial params-modal
-  [results]
-  [:div.paramsmodal
-   [:a {:href "#" :data-controls-modal (:_id results) :data-keyboard "true"
-        :data-backdrop "true"}
-    "Params"]
-   [:div.modal.hide.fade {:id (:_id results)}
-    [:div {:style "padding: 10px;"}
-     (if (:params results)
-       [:div
-        [:h4 "Parameters"]
-        [:pre (str (:params results))]]
-       [:div
-        [:h4 "Control parameters"]
-        [:pre (str (:control-params results))]
-        [:h4 "Comparison parameters"]
-        [:pre (str (:comparison-params results))]])]]])
+  [i resultstype params]
+  (let [id (format "%s-%d" (name resultstype) i)]
+    [:div.paramsmodal
+     [:a {:href "#" :data-controls-modal id
+          :data-keyboard "true" :data-backdrop "true"}
+      "Params"]
+     [:div.modal.hide.fade {:id id}
+      [:div {:style "padding: 10px;"}
+       (if (= resultstype :control)
+         [:div
+          [:h4 "Parameters"]
+          [:pre (str params)]]
+         [:div
+          [:h4 "Control parameters"]
+          [:pre (str (first params))]
+          [:h4 "Comparison parameters"]
+          [:pre (str (second params))]])]]]))
 
+;; A results table with single rows (not paired rows); used for
+;; comparative results or non-comparative runs (i.e. control results)
 (defpartial results-table
   [results on-fields]
   [:div.row
@@ -44,47 +33,55 @@
      [:thead
       [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
      [:tbody
-      (map (fn [r] [:tr
-                    [:td (params-modal r)]
-                    (map (fn [f] [:td (let [val (get r f)]
-                                        (if (= java.lang.Double (type val))
-                                          (format "%.2f" val)
-                                          (str val)))])
-                         on-fields)])
-           results)]]]])
+      (for [i (range (count results))]
+        (let [r (nth results i)]
+          [:tr [:td (if (and (:control-params r) (:comparison-params r))
+                      (params-modal i :comparative
+                                    [(:control-params r) (:comparison-params r)])
+                      (params-modal i :control (:control-params r)))]
+           (map (fn [f] [:td (let [val (get r f)]
+                               (if (= java.lang.Double (type val))
+                                 (format "%.2f" val)
+                                 (str val)))])
+                on-fields)]))]]]])
 
+;; Group results together for a paired table
+(defn build-results-map
+  [control-results comparison-results]
+  (letfn [(make-key [r] [(:Seed r) (:control-params r) (:comparison-params r)])]
+    (reduce (fn [m r] (update-in m [(make-key r)] conj r))
+            (zipmap (map make-key control-results)
+                    (map (fn [r] [r]) control-results))
+            comparison-results)))
+
+;; A paired results table; each cell has either one or two values: one
+;; if control/comparison values are identical, otherwise two values,
+;; the top bold representing comparison value, the bottom regular font
+;; representing control value
 (defpartial paired-results-table
-  [control-results comparison-results on-fields]
-  (let [results-map (reduce (fn [m r] (update-in
-                                       m [[(:Seed r) (:control-params r) (:comparison-params r)]]
-                                       conj r))
-                            (zipmap (map (fn [r] [(:Seed r) (:control-params r) (:comparison-params r)])
-                                         control-results)
-                                    (map (fn [r] [r]) control-results))
-                            comparison-results)]
-    [:div.row
-     [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
-      [:table.tablesorter.zebra-striped
-       [:thead
-        [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
-       [:tbody
-        (map (fn [s]
-               [:tr
-                [:td (params-modal (first (get results-map s)))]
-                (map (fn [f]
-                       [:td (let [control-val (get (first (get results-map s)) f)
-                                  comparison-val (get (second (get results-map s)) f)]
-                              (if (not= control-val comparison-val)
-                                (if (and (= java.lang.Double (type control-val))
-                                         (= java.lang.Double (type comparison-val)))
-                                  (format "<strong>%.2f</strong><br/>%.2f"
-                                          comparison-val control-val)
-                                  (format "<strong>%s</strong><br/>%s"
-                                          (str comparison-val) (str control-val)))
-                                (if (= java.lang.Double (type control-val))
-                                  (format "%.2f" control-val)
-                                  (str control-val))))])
-                     on-fields)])
-             (filter (fn [s] (= 2 (count (get results-map s))))
-                     (sort (keys results-map))))]]]]))
-
+  [paired-results on-fields]
+  [:div.row
+   [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
+    [:table.tablesorter.zebra-striped
+     [:thead
+      [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
+     [:tbody
+      (for [i (range (count paired-results))]
+        (let [[control comparison] (nth paired-results i)]
+          [:tr [:td (params-modal i :paired
+                                  [(:control-params control)
+                                   (:comparison-params comparison)])]
+           (map (fn [f]
+                  [:td (let [control-val (get control f)
+                             comparison-val (get comparison f)]
+                         (if (not= control-val comparison-val)
+                           (if (and (= java.lang.Double (type control-val))
+                                    (= java.lang.Double (type comparison-val)))
+                             (format "<strong>%.2f</strong><br/>%.2f"
+                                     comparison-val control-val)
+                             (format "<strong>%s</strong><br/>%s"
+                                     (str comparison-val) (str control-val)))
+                           (if (= java.lang.Double (type control-val))
+                             (format "%.2f" control-val)
+                             (str control-val))))])
+                on-fields)]))]]]])

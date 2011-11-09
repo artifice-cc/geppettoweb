@@ -64,6 +64,37 @@
                [:div.actions
                 [:input.btn.primary {:value (if (:name graph) "Update" "Save") :type "submit"}]]])]]])
 
+(defpartial graphs
+  [run]
+  (let [all-graphs (filter #(= (:paramstype run) (:resultstype %))
+                           (get (list-graphs) (:problem run)))
+        problem-graphs (set (map get-doc (:graphs run)))]
+    [:section#graphs
+     [:div.page-header
+      [:h2 "Graphs"]]
+     (if (empty? problem-graphs)
+       [:div.row
+        [:div.span16.columns [:p "No graphs."]]]
+       (for [g (sort-by :name problem-graphs)]
+         (show-graph run g)))
+     [:div.row
+      [:div.span4.columns
+       [:h3 "Choose graphs"]]
+      [:div.span12.columns
+       (form-to
+        [:post "/run/set-graphs"]
+        (hidden-field :id (:_id run))
+        [:div.clearfix
+         [:div.input
+          [:ul.inputs-list
+           (for [g all-graphs]
+             [:li [:label
+                   [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
+                            :checked (problem-graphs g)}]
+                   " " (:name g)]])]]
+         [:div.actions
+          [:input.btn.primary {:value "Update" :type "submit"}]]])]]]))
+
 (defpage
   [:post "/graphs/update-graph"] {:as graph}
   (update-graph graph)

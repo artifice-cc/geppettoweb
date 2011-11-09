@@ -3,8 +3,7 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
-  (:use [sisyphus.models.runs :only
-         [get-results get-fields csv-filenames results-to-csv cachedir]])
+  (:use [sisyphus.models.runs :only [csv-filenames results-to-csv cachedir]])
   (:use sisyphus.models.common))
 
 (defn list-analysis

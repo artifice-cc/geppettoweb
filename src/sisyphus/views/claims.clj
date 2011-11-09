@@ -3,7 +3,7 @@
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use sisyphus.models.common)
-  (:use [sisyphus.models.runs :only [get-results get-fields]])
+  (:use [sisyphus.models.runs :only [get-summary-results get-summary-fields]])
   (:use [sisyphus.models.claims :only
          [new-claim update-claim delete-claim list-claims
           add-claim-association remove-claim-association update-claim-association
@@ -13,7 +13,23 @@
   (:use [sisyphus.views.graphs :only [show-graph]])
   (:use [sisyphus.views.analysis :only [show-analysis]])
   (:use [sisyphus.views.results :only
-         [field-checkboxes results-table paired-results-table]]))
+         [results-table paired-results-table]]))
+
+(defpartial field-checkbox
+  [n fieldstype field on-fields]
+  [:li [:label
+        [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
+                 :checked (on-fields (name field))}]
+        " " (name field)]])
+
+(defpartial field-checkboxes
+  [run n fieldstype fields]
+  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)
+        on-fields (set (get run (keyword (format "%s-fields" (name fieldstype)))))]
+    (map (fn [fs]
+           [:div.span4.columns
+            [:ul.inputs-list (map (fn [f] (field-checkbox n fieldstype f on-fields)) fs)]])
+         field-groups)))
 
 (defpartial claim-summary
   [claim]
@@ -85,9 +101,9 @@
          [:p (:comment r)]]]
        (let [run (get-doc (:runid r))
              comparative? (= "comparative" (:paramstype run))
-             comparative-results (get-results (:runid r) :comparative)
+             comparative-results (get-summary-results (:runid r) :comparative)
              [control-results comparison-results]
-             (map (fn [results-type] (get-results (:runid r) results-type))
+             (map (fn [results-type] (get-summary-results (:runid r) results-type))
                   [:control :comparison])]
          [:div
           (if comparative?
@@ -262,13 +278,13 @@
   (let [claim (get-doc id)
         run (get-doc runid)
         comparative? (= "comparative" (:paramstype run))
-        comparative-results (get-results runid :comparative)
-        comparative-fields (get-fields comparative-results)
+        comparative-results (get-summary-results runid :comparative)
+        comparative-fields (get-summary-fields comparative-results)
         [control-results comparison-results]
-        (map (fn [results-type] (get-results runid results-type))
+        (map (fn [results-type] (get-summary-results runid results-type))
              [:control :comparison])
-        control-fields (get-fields control-results)
-        paired-fields (get-fields (concat control-results comparison-results))]
+        control-fields (get-summary-fields control-results)
+        paired-fields (get-summary-fields (concat control-results comparison-results))]
     (common/layout
      (format "Update association for claim: %s" (:title claim))
      (if comparative?

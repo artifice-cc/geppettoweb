@@ -4,6 +4,7 @@
   (:require [clojure.java.io :as io])
   (:require [com.ashafa.clutch :as clutch])
   (:use [sisyphus.models.claims :only [list-claims remove-claim-association]])
+  (:use [sisyphus.models.simulations :only [get-simulation-fields]])
   (:use sisyphus.models.common))
 
 (defn list-runs
@@ -32,23 +33,6 @@
        (get-doc id) {:annotations (concat (take index annotations)
                                           (drop (inc index) annotations))}))))
 
-(def dissoc-fields [:Problem :Step :runid :type :_rev :_id :params :control-params :comparison-params])
-
-(defn get-fields
-  [results & opts]
-  (if (= 0 (count results)) []
-      (sort (apply set/intersection
-                   (map (fn [r] (set (keys r)))
-                        (map (fn [r] (if (some #{:all} opts) r ;; don't remove fields
-                                         (apply dissoc r dissoc-fields))) ;; remove fields
-                             results))))))
-
-(defn set-fields
-  [id fieldstype fields]
-  (clutch/with-db db
-    (clutch/update-document
-     (get-doc id) {(keyword (format "%s-fields" (name fieldstype))) fields})))
-
 (defn set-graphs
   [id graphs]
   (clutch/with-db db
@@ -59,10 +43,17 @@
   (clutch/with-db db
     (clutch/update-document (get-doc id) {:analysis analysis})))
 
-(defn get-results
-  [id results-type]
-  (let [results-ids (get (get-doc id) results-type)]
-    (sort-by :Seed (for [i results-ids] (get-doc i)))))
+(defn get-summary-fields
+  [results & opts]
+  (if (empty? results) []
+      (get-simulation-fields (get-doc (first results)) opts)))
+
+(defn set-summary-fields)
+
+(defn get-summary-results
+  [run results-type]
+  (let [sims-ids (get run results-type)]
+    (sort-by :Seed (for [i sims-ids] (get-doc i)))))
 
 (def cachedir "/tmp")
 
@@ -88,8 +79,8 @@
   (doseq [results-type (keys csv-fnames)]
     (let [outfile (io/file (get csv-fnames results-type))]
       (when (. outfile createNewFile)
-        (let [results (get-results (:_id run) results-type)
-              fields (get-fields results :all)
+        (let [results (get-summary-results (:_id run) results-type)
+              fields (get-summary-fields results :all)
               csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
                                   results))]
           ;; save into cache file

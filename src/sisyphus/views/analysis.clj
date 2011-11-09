@@ -62,6 +62,37 @@
                 (if (:name analysis)
                   [:input.btn.danger {:value "Delete" :name "action" :type "submit"}])]])]]])
 
+(defpartial analysis
+  [run]
+  (let [all-analysis (filter #(= (:paramstype run) (:resultstype %))
+                             (get (list-analysis) (:problem run)))
+        problem-analysis (set (map get-doc (:analysis run)))]
+    [:section#analysis
+     [:div.page-header
+      [:h2 "Analysis"]]
+     (if (empty? problem-analysis)
+       [:div.row
+        [:div.span16.columns [:p "No analysis."]]]
+       (for [a (sort-by :name problem-analysis)]
+         (show-analysis run a)))
+     [:div.row
+      [:div.span4.columns
+       [:h3 "Choose analysis"]]
+      [:div.span12.columns
+       (form-to
+        [:post "/run/set-analysis"]
+        (hidden-field :id (:_id run))
+        [:div.clearfix
+         [:div.input
+          [:ul.inputs-list
+           (for [a all-analysis]
+             [:li [:label
+                   [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
+                            :checked (problem-analysis a)}]
+                   " " (:name a)]])]]
+         [:div.actions
+          [:input.btn.primary {:value "Update" :type "submit"}]]])]]]))
+
 (defpage
   [:post "/analysis/update-analysis"] {:as analysis}
   (cond (= "Update" (:action analysis))
