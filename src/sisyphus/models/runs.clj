@@ -47,11 +47,22 @@
   [run results-type & opts]
   (get-simulation-fields (get-doc (first (:results run))) results-type opts))
 
+(defn get-fields-funcs
+  [run results-type]
+  (let [ffs (get run (keyword (format "%s-fields-funcs" (name results-type))))]
+    (filter #(not= "N/A" (second %))
+            (map (fn [field] [field (get ffs field)]) (keys ffs)))))
+
+(defn set-fields-funcs
+  [id fields results-type]
+  (clutch/with-db db
+    (clutch/update-document (get-doc id)
+                            {(keyword (format "%s-fields-funcs" (name results-type)))
+                             fields})))
+
 (defn format-summary-fields
   [fields-funcs]
   (map (fn [[field func]] (format "%s (%s)" (name field) func)) fields-funcs))
-
-(defn set-summary-fields)
 
 (defn get-summary-results
   [run results-type fields-funcs]
@@ -71,12 +82,17 @@
                [(:control-params (first (get sim results-type)))
                 (:comparison-params (first (get sim results-type)))])
              (for [[field func] fields-funcs]
-               (let [vals (map field (get sim results-type))]
-                 (cond (= func "sum")
-                       (reduce + 0 vals)
-                       (= func "avg")
-                       (double (/ (reduce + 0 vals) (count vals)))
-                       :else (reduce + 0 vals)))))))
+               (let [vals (filter number? (map field (get sim results-type)))]
+                 (if (empty? vals) (get (first (get sim results-type)) field)
+                     (cond (= func "sum")
+                           (reduce + 0 vals)
+                           (= func "avg")
+                           (double (/ (reduce + 0 vals) (count vals)))
+                           (= func "min")
+                           (apply min vals)
+                           (= func "max")
+                           (apply max vals)
+                           :else (reduce + 0 vals))))))))
          sims)))
 
 (def cachedir "/tmp")

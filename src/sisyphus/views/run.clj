@@ -6,7 +6,8 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.runs :only
-         [get-summary-results get-summary-fields set-summary-fields
+         [get-summary-results get-summary-fields
+          get-fields-funcs set-fields-funcs
           format-summary-fields
           add-annotation delete-annotation
           set-graphs set-analysis delete-run]])
@@ -81,36 +82,38 @@
      [:div.page-header [:h2 "Parameters"]]
      (parameters-summary params)]))
 
-(defpartial field-checkbox
-  [n fieldstype field on-fields]
-  [:li [:label
-        [:input {:type "checkbox" :name (format "%s[]" (name n)) :value (name field)
-                 :checked (on-fields (name field))}]
-        " " (name field)]])
+(defpartial field-select
+  [field fields-funcs]
+  [:li
+   [:label
+    [:select.mini {:name field}
+     (for [func ["N/A" "min" "max" "avg" "sum"]]
+       [:option {:value func
+                 :selected (some #(= [field func] %) fields-funcs)}
+        func])]
+    " " (name field)]])
 
-(defpartial field-checkboxes
-  [run n fieldstype fields]
-  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)
-        on-fields (set (get run (keyword (format "%s-fields" (name fieldstype)))))]
+(defpartial field-selects
+  [run results-type fields fields-funcs]
+  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
     (map (fn [fs]
            [:div.span4.columns
-            [:ul.inputs-list (map (fn [f] (field-checkbox n fieldstype f on-fields)) fs)]])
+            [:ul.inputs-list (map (fn [f] (field-select f fields-funcs)) fs)]])
          field-groups)))
 
 (defpartial run-fields-form
-  [run fields fieldstype]
+  [run results-type fields fields-funcs]
   (form-to
    [:post "/run/set-fields"]
    (hidden-field :id (:_id run))
-   (hidden-field :fieldstype fieldstype)
-   (hidden-field :problem (:problem run))
+   (hidden-field :results-type results-type)
    [:div.row
     [:div.span4.columns
      [:p [:b [:a.fields_checkboxes_header "Select active fields..."]]]]]
    [:div.fields_checkboxes
     [:div.row
      [:div.span4.columns "&nbsp;"]
-     (field-checkboxes run :fields fieldstype fields)]
+     (field-selects run results-type fields fields-funcs)]
     [:div.row
      [:div.span4.columns "&nbsp;"]
      [:div.span12.columns
@@ -119,7 +122,7 @@
 
 (defpartial run-comparative-results-table
   [run comparative-results comparative-fields]
-  (let [fields-funcs (map (fn [f] [(keyword f) "avg"]) ["IncPEC" "IncPEW"])
+  (let [fields-funcs (get-fields-funcs run :comparative)
         on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
         results (get-summary-results run :comparative fields-funcs)]
     [:section#comparative-results
@@ -127,11 +130,11 @@
       [:a {:name "comparative-results"}]
       [:h2 "Comparative results"]]
      (results-table results on-fields)
-     (run-fields-form run comparative-fields :comparative)]))
+     (run-fields-form run :comparative comparative-fields fields-funcs)]))
 
 (defpartial run-paired-results-table
   [run control-results comparison-results paired-fields]
-  (let [fields-funcs (map (fn [f] [(keyword f) "avg"]) ["PEC" "PEW"])
+  (let [fields-funcs (get-fields-funcs run :paired)
         on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
         control-results (get-summary-results run :control fields-funcs)
         comparison-results (get-summary-results run :comparison fields-funcs)]
@@ -140,11 +143,11 @@
       [:a {:name "control-comparison-results"}]
       [:h2 "Control/comparison results"]]
      (paired-results-table control-results comparison-results on-fields)
-     (run-fields-form run paired-fields :paired)]))
+     (run-fields-form run :paired paired-fields fields-funcs)]))
 
 (defpartial run-non-comparative-results-table
   [run results fields]
-  (let [fields-funcs (map (fn [f] [(keyword f) "avg"]) ["PEC" "PEW"])
+  (let [fields-funcs (get-fields-funcs run :non-comparative)
         on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
         results (get-summary-results run :control fields-funcs)]
     [:section#non-comparative-results
@@ -152,7 +155,7 @@
       [:a {:name "results"}]
       [:h2 "Results"]]
      (results-table results on-fields)
-     (run-fields-form run fields :non-comparative)]))
+     (run-fields-form run :non-comparative fields fields-funcs)]))
 
 (defpartial run-claims-header
   [run]
@@ -253,9 +256,9 @@
 
 (defpage
   [:post "/run/set-fields"] {:as fields}
-  (set-summary-fields (:id fields) (:fieldstype fields) (:fields fields))
+  (set-fields-funcs (:id fields) (dissoc fields :id :results-type) (:results-type fields))
   (resp/redirect (format "/run/%s#%s" (:id fields)
-                         (format "%s-results" (name (:fieldstype fields))))))
+                         (format "%s-results" (name (:results-type fields))))))
 
 (defpage "/run/:id" {id :id}
   (let [run (get-doc id)
