@@ -12,7 +12,7 @@
   (let [id (:_id run)
         params (get-doc (:paramsid run) (:paramsrev run))]
     [:tr
-     [:td (link-to (format "/details/%s" (:_id run)) (subs id 22))]
+     [:td (link-to (format "/run/%s" (:_id run)) (subs id 22))]
      [:td (common/date-format (:time run))]
      [:td (:username run)]
      [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
