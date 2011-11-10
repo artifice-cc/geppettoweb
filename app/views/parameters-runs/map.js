@@ -8,7 +8,7 @@ function(doc) {
               "username": doc["username"],
               "hostname": doc["hostname"],
               "problem": doc["problem"],
-              "count": doc["comparative"].length,
+              "count": doc["results"].length,
               "paramsid": doc["paramsid"],
               "paramsname": doc["paramsname"],
               "paramsrev": doc["paramsrev"],
