@@ -48,7 +48,8 @@
 
 (defpartial sim-comparative-results-table
   [sim]
-  (let [on-fields (set (map keyword (:comparative-fields sim)))
+  (let [run (get-doc (:runid sim))
+        on-fields (set (map keyword (:simulation-comparative-fields run)))
         results (:comparative sim)]
     [:section#results
      [:div.page-header
@@ -59,7 +60,8 @@
 
 (defpartial sim-paired-results-table
   [sim]
-  (let [on-fields (set (map keyword (:control-fields sim)))
+  (let [run (get-doc (:runid sim))
+        on-fields (set (map keyword (:simulation-control-fields run)))
         control-results (:control sim)
         comparison-results (:comparison sim)]
     [:section#paired-results
@@ -71,7 +73,8 @@
 
 (defpartial sim-non-comparative-results-table
   [sim]
-  (let [on-fields (set (map keyword (:control-fields sim)))
+  (let [run (get-doc (:runid sim))
+        on-fields (set (map keyword (:simulation-control-fields run)))
         results (:control sim)]
     [:section#non-comparative-results
      [:div.page-header

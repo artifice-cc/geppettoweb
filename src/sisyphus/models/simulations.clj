@@ -13,9 +13,13 @@
     (sort (if (some #{:all} opts) fields
               (set/difference fields dissoc-fields)))))
 
+;; Simulation fields are set in the run (so all the run's simulations
+;; can share the fields)
 (defn set-simulation-fields
   [id fieldstype fields]
   (clutch/with-db db
-    (clutch/update-document
-     (get-doc id) {(keyword (format "%s-fields" (name fieldstype))) fields})))
+    (let [sim (get-doc id)
+          run (get-doc (:runid sim))]
+      (clutch/update-document
+       run {(keyword (format "simulation-%s-fields" (name fieldstype))) fields}))))
 
