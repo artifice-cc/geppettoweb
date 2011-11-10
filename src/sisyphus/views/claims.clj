@@ -75,57 +75,57 @@
    (claim-form claim)
    [:section#runs
     (for [r (:runs claim)]
-      [:div
-       [:div.page-header
-        [:a {:name (:runid r)}]
-        [:h2 (:problem r) " run " (link-to (format "/run/%s" (:runid r))
-                                           (subs (:runid r) 22))]]
-       [:div.row
-        [:div.span4.columns
-         [:h3 "Summary"]]
-        [:div.span12.columns
-         [:p (:comment r)]]]
-       (let [run (get-doc (:runid r))
-             comparative? (= "comparative" (:paramstype run))]
-         [:div
-          (if comparative?
-            (let [fields-funcs (get-fields-funcs r :comparative)
-                  on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
-                  results (get-summary-results run :comparative fields-funcs)]
-              [:div.row
-               [:div.span16.columns
-                [:h4 "Comparative results"]
-                (results-table results on-fields)]]))
-          (if comparative?
-            (let [fields-funcs (get-fields-funcs r :paired)
-                  on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
-                  control-results (get-summary-results run :control fields-funcs)
-                  comparison-results (get-summary-results run :comparison fields-funcs)]
-              [:div.row
-               [:div.span16.columns
-                [:h4 "Control/comparison results"]
-                (paired-results-table control-results comparison-results on-fields)]]))
-          (if-not comparative?
-            (let [fields-funcs (get-fields-funcs r :non-comparative)
-                  on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
-                  results (get-summary-results run :control fields-funcs)]
-              [:div.row
-               [:div.span16.columns
-                [:h4 "Results"]
-                (results-table results on-fields)]]))
-          (for [g (map (fn [n] (get-graph (:problem r) n)) (:graphs r))]
-            (show-graph run g))
-          (for [a (map (fn [n] (get-analysis (:problem r) n)) (:analysis r))]
-            (show-analysis run a))
-          [:div.row
-           [:div.span4.columns "&nbsp;"]
-           [:div.span12.columns
-            (form-to [:post "/claims/remove-association"]
-                     (hidden-field :claim (:_id claim))
-                     (hidden-field :runid (:runid r))
-                     [:div.actions
-                      [:input.btn.danger
-                       {:value "Remove" :name "action" :type "submit"}]])]]])])]])
+      (let [run (get-doc (:runid r))
+            comparative? (= "comparative" (:paramstype run))]
+        [:div
+         [:div.page-header
+          [:a {:name (:runid r)}]
+          [:h2 (:problem run) " run " (link-to (format "/run/%s" (:runid r))
+                                               (subs (:runid r) 22))]]
+         [:div.row
+          [:div.span4.columns
+           [:h3 "Comment"]]
+          [:div.span12.columns
+           [:p (:comment r)]]]
+         
+         (if comparative?
+           (let [fields-funcs (get-fields-funcs run :comparative)
+                 on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
+                 results (get-summary-results run :comparative fields-funcs)]
+             [:div.row
+              [:div.span16.columns
+               [:h4 "Comparative results"]
+               (results-table results on-fields)]]))
+         (if comparative?
+           (let [fields-funcs (get-fields-funcs run :paired)
+                 on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
+                 control-results (get-summary-results run :control fields-funcs)
+                 comparison-results (get-summary-results run :comparison fields-funcs)]
+             [:div.row
+              [:div.span16.columns
+               [:h4 "Control/comparison results"]
+               (paired-results-table control-results comparison-results on-fields)]]))
+         (if-not comparative?
+           (let [fields-funcs (get-fields-funcs run :non-comparative)
+                 on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
+                 results (get-summary-results run :control fields-funcs)]
+             [:div.row
+              [:div.span16.columns
+               [:h4 "Results"]
+               (results-table results on-fields)]]))
+         (for [g (map (fn [n] (get-graph (:problem r) n)) (:graphs r))]
+           (show-graph run g))
+         (for [a (map (fn [n] (get-analysis (:problem r) n)) (:analysis r))]
+           (show-analysis run a))
+         [:div.row
+          [:div.span4.columns "&nbsp;"]
+          [:div.span12.columns
+           (form-to [:post "/claims/remove-association"]
+                    (hidden-field :claim (:_id claim))
+                    (hidden-field :runid (:runid r))
+                    [:div.actions
+                     [:input.btn.danger
+                      {:value "Remove" :name "action" :type "submit"}]])]]]))]])
 
 (defpage
   [:post "/claims/new-claim"] {:as claim}
@@ -158,11 +158,6 @@
   [:post "/claims/add-association"] {:as association}
   (add-claim-association association)
   (resp/redirect (format "/run/%s#claims" (:runid association))))
-
-(defpage
-  [:post "/claims/update-association"] {:as association}
-  (update-claim-association association)
-  (resp/redirect (format "/claim/%s#%s" (:claim association) (:runid association))))
 
 (defpage
   [:post "/claims/remove-association"] {:as association}

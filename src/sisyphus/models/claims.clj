@@ -58,13 +58,3 @@
       (clutch/update-document
        claim (fn [runs] (filter (fn [r] (not= (:runid association) (:runid r))) runs))
        [:runs]))))
-
-(defn update-claim-association
-  [association]
-  (let [claim (get-doc (:claim association))
-        association2 (select-keys association [:graphs :analysis :runid :comment])]
-    (clutch/with-db db
-      (clutch/update-document
-       claim (fn [runs] (map (fn [r] (if (not= (:runid r) (:runid association2)) r
-                                         association2)) runs))
-       [:runs]))))
