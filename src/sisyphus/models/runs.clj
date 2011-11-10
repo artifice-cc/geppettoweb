@@ -31,6 +31,16 @@
   (clutch/with-db db
     (clutch/update-document (get-doc id) {:analysis analysis})))
 
+(defn list-projects
+  []
+  (sort (set (filter identity (map (comp :project :value)
+                                   (:rows (view "runs-list")))))))
+
+(defn set-project
+  [id project]
+  (clutch/with-db db
+    (clutch/update-document (get-doc id) {:project project})))
+
 (defn get-summary-fields
   [run results-type & opts]
   (get-simulation-fields (get-doc (first (:results run))) results-type opts))

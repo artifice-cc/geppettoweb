@@ -42,17 +42,28 @@
 
 (defpartial runs
   [problem runs]
-  [:section {:id (format "runs-%s" problem)}
+  [:div
    [:div.page-header
-    [:h1 problem]]
+    [:h2 problem]]
    [:div.row
     [:div.span16.columns
      (runs-table runs problem)]]])
 
 (defpartial runs-by-problem
-  [runs-grouped]
-  (map (fn [problem] (runs problem (get runs-grouped problem)))
-       (sort (keys runs-grouped))))
+  [runs-grouped-problem]
+  (map (fn [problem] (runs problem (get runs-grouped-problem problem)))
+       (sort (keys runs-grouped-problem))))
+
+(defpartial runs-by-project
+  [runs-grouped-project]
+  (map (fn [project]
+         (let [runs-grouped-problem
+               (group-by :problem (get runs-grouped-project project))]
+           [:section {:id (format "runs-project-%s" project)}
+            [:div.page-header
+             [:h1 project]]
+            (runs-by-problem runs-grouped-problem)]))
+       (sort (keys runs-grouped-project))))
 
 (defpage
   [:post "/set-custom"] {:as custom}
@@ -61,5 +72,5 @@
   (resp/redirect "/"))
 
 (defpage "/" []
-  (let [runs-grouped (group-by :problem (list-runs))]
-    (common/layout "Overview" (runs-by-problem runs-grouped))))
+  (let [runs-grouped-project (group-by :project (list-runs))]
+    (common/layout "Overview" (runs-by-project runs-grouped-project))))

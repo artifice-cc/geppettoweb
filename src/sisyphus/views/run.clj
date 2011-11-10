@@ -8,7 +8,7 @@
   (:use [sisyphus.models.runs :only
          [get-summary-results get-summary-fields
           get-fields-funcs set-fields-funcs
-          format-summary-fields
+          format-summary-fields list-projects set-project
           set-graphs set-analysis delete-run]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
@@ -205,6 +205,27 @@
     [:div.span12.columns {:style "max-height: 30em; overflow: auto;"}
      [:p (common/convert-md (:overview run))]]]])
 
+(defpartial run-project
+  [run]
+  (let [projects (list-projects)]
+    [:section#project
+     [:div.page-header
+      [:h2 "Project"]]
+     [:div.row
+      [:div.span4.columns [:p "Choose an existing project, or create a new project."]]
+      [:div.span12.columns
+       (form-to
+        [:post "/run/set-project"]
+        (hidden-field :id (:_id run))
+        [:div.clearfix
+         [:label {:for "project-select"} "Existing project"]
+         [:div.input (drop-down :project-select (concat ["New..."] projects)
+                                (:project run))]]
+        [:div.clearfix
+         [:label {:for "new-project"} "New project"]
+         [:div.input (text-field :new-project)]]
+        [:div.actions [:input.btn.primary {:value "Update" :type "submit"}]])]]]))
+
 (defpartial run-delete-run
   [run]
   [:section#delete
@@ -238,6 +259,15 @@
   [:post "/run/set-analysis"] {:as analysis}
   (set-analysis (:id analysis) (:analysis analysis))
   (resp/redirect (format "/run/%s#analysis" (:id analysis))))
+
+(defpage
+  [:post "/run/set-project"] {:as project}
+  (if (and (= "New..." (:project-select project)) (empty? (:new-project project)))
+    (resp/redirect (format "/run/%s" (:id project)))
+    (do
+      (set-project (:id project) (if (= "New..." (:project-select project))
+                                   (:new-project project) (:project-select project)))
+      (resp/redirect (format "/run/%s#project" (:id project))))))
 
 (defpage
   [:post "/run/delete-run"] {:as run}
@@ -291,5 +321,6 @@
        (run-claims-non-comparative run control-fields))
      (run-parameters run)
      (run-overview-notes run)
+     (run-project run)
      (run-metainfo run)
      (run-delete-run run))))
