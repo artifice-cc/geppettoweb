@@ -139,29 +139,30 @@
      (run-fields-form run :non-comparative control-fields fields-funcs)]))
 
 (defpartial claim-association-form
-  [claim run claim-opts association]
-  [:div
-   (hidden-field :claim (:_id claim))
-   (hidden-field :runid (:_id run))
-   (hidden-field :problem (:problem run))
-   [:div.row
-    [:div.span4.columns
-     [:h2 (if claim "Update association" "New association")]]
-    [:div.span12.columns
-     (if-not claim
-       [:div.clearfix
-        [:label {:for "claim"} "Claim"]
-        [:div.input
-         (drop-down :claim claim-opts (:_id claim))]])
-     [:div.clearfix
-      [:label {:for "comment"} "Comment"]
-      [:div.input
-       [:textarea.xxlarge {:id "comment" :name "comment"} (:comment association)]
-       [:span.help-block "Describe how this run provides support
+  [run]
+  (let [claim-opts (claim-select-options run)]
+    (if (not-empty claim-opts)
+      (form-to
+       [:post "/claims/add-association"]
+       [:div
+        (hidden-field :runid (:_id run))
+        [:div.row
+         [:div.span4.columns
+          [:h3 "New association"]]
+         [:div.span12.columns
+          [:div.clearfix
+           [:label {:for "claim"} "Claim"]
+           [:div.input
+            (drop-down :claim claim-opts)]]
+          [:div.clearfix
+           [:label {:for "comment"} "Comment"]
+           [:div.input
+            [:textarea.xxlarge {:id "comment" :name "comment"}]
+            [:span.help-block "Describe how this run provides support
                           for or against the claim."]]]
-     [:div.clearfix
-      [:div.actions
-       [:input.btn.primary {:value (if claim "Update" "Associate") :type "submit"}]]]]]])
+          [:div.clearfix
+           [:div.actions
+            [:input.btn.primary {:value "Associate" :type "submit"}]]]]]]))))
 
 (defpartial run-claims
   [run]
@@ -172,20 +173,21 @@
        [:h2 "Claims"]]]
      [:div.row
       [:div.span4.columns
-       [:h2 "Associated claims"]]
+       [:h3 "Associated claims"]]
       [:div.span12.columns
        (if (and (empty? (:verified run-claims))
                 (empty? (:unverified run-claims)))
          [:p "No claims."]
          [:div
           (if (not-empty (:unverified run-claims))
-            [:h3 "Unverified"])
+            [:h4 "Unverified"])
           (for [c (:unverified run-claims)]
             (claim-summary c))
           (if (not-empty (:verified run-claims))
-            [:h3 "Verified"])
+            [:h4 "Verified"])
           (for [c (:verified run-claims)]
-            (claim-summary c))])]]]))
+            (claim-summary c))])]]
+     (claim-association-form run)]))
 
 (defpartial run-overview-notes
   [run]
