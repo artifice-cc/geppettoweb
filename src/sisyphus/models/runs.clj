@@ -17,7 +17,7 @@
         claims (apply concat (vals (list-claims run)))]
     (doseq [c claims]
       (remove-claim-association {:claim (:_id c) :runid id}))
-    (doseq [r (concat (:comparative run) (:control run) (:comparison run))]
+    (doseq [r (:results run)]
       (delete-doc (get-doc r)))
     (delete-doc run)))
 
