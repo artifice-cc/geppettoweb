@@ -90,7 +90,11 @@
                            (apply min vals)
                            (= func "max")
                            (apply max vals)
-                           :else (reduce + 0 vals))))))))
+                           (= func "last")
+                           (last vals)
+                           (= func "first")
+                           (first vals)
+                           :else (last vals))))))))
          sims)))
 
 (def cachedir "/tmp")

@@ -14,9 +14,9 @@
   (:use [sisyphus.models.graphs :only [list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
+  (:use [sisyphus.views.fields :only [field-selects]])
   (:use [sisyphus.views.claims :only
-         [claim-summary claim-association-form-non-comparative
-          claim-association-form-comparative]])
+         [claim-summary]])
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analysis :only [analysis]])
   (:use [sisyphus.views.annotations :only [annotations]])
@@ -82,25 +82,6 @@
      [:div.page-header [:h2 "Parameters"]]
      (parameters-summary params)]))
 
-(defpartial field-select
-  [field fields-funcs]
-  [:li
-   [:label
-    [:select.mini {:name field}
-     (for [func ["N/A" "min" "max" "avg" "sum"]]
-       [:option {:value func
-                 :selected (some #(= [field func] %) fields-funcs)}
-        func])]
-    " " (name field)]])
-
-(defpartial field-selects
-  [run results-type fields fields-funcs]
-  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
-    (map (fn [fs]
-           [:div.span4.columns
-            [:ul.inputs-list (map (fn [f] (field-select f fields-funcs)) fs)]])
-         field-groups)))
-
 (defpartial run-fields-form
   [run results-type fields fields-funcs]
   (form-to
@@ -121,7 +102,7 @@
        [:input.btn.primary {:value "Update" :type "submit"}]]]]]))
 
 (defpartial run-comparative-results-table
-  [run comparative-results comparative-fields]
+  [run comparative-fields]
   (let [fields-funcs (get-fields-funcs run :comparative)
         on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
         results (get-summary-results run :comparative fields-funcs)]
@@ -133,7 +114,7 @@
      (run-fields-form run :comparative comparative-fields fields-funcs)]))
 
 (defpartial run-paired-results-table
-  [run control-results comparison-results paired-fields]
+  [run control-fields]
   (let [fields-funcs (get-fields-funcs run :paired)
         on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
         control-results (get-summary-results run :control fields-funcs)
@@ -143,10 +124,10 @@
       [:a {:name "control-comparison-results"}]
       [:h2 "Control/comparison results"]]
      (paired-results-table control-results comparison-results on-fields)
-     (run-fields-form run :paired paired-fields fields-funcs)]))
+     (run-fields-form run :paired control-fields fields-funcs)]))
 
 (defpartial run-non-comparative-results-table
-  [run results fields]
+  [run control-fields]
   (let [fields-funcs (get-fields-funcs run :non-comparative)
         on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
         results (get-summary-results run :control fields-funcs)]
@@ -155,9 +136,34 @@
       [:a {:name "results"}]
       [:h2 "Results"]]
      (results-table results on-fields)
-     (run-fields-form run :non-comparative fields fields-funcs)]))
+     (run-fields-form run :non-comparative control-fields fields-funcs)]))
 
-(defpartial run-claims-header
+(defpartial claim-association-form
+  [claim run claim-opts association]
+  [:div
+   (hidden-field :claim (:_id claim))
+   (hidden-field :runid (:_id run))
+   (hidden-field :problem (:problem run))
+   [:div.row
+    [:div.span4.columns
+     [:h2 (if claim "Update association" "New association")]]
+    [:div.span12.columns
+     (if-not claim
+       [:div.clearfix
+        [:label {:for "claim"} "Claim"]
+        [:div.input
+         (drop-down :claim claim-opts (:_id claim))]])
+     [:div.clearfix
+      [:label {:for "comment"} "Comment"]
+      [:div.input
+       [:textarea.xxlarge {:id "comment" :name "comment"} (:comment association)]
+       [:span.help-block "Describe how this run provides support
+                          for or against the claim."]]]
+     [:div.clearfix
+      [:div.actions
+       [:input.btn.primary {:value (if claim "Update" "Associate") :type "submit"}]]]]]])
+
+(defpartial run-claims
   [run]
   (let [run-claims (list-claims run)]
     [:section#claims
@@ -180,20 +186,6 @@
             [:h3 "Verified"])
           (for [c (:verified run-claims)]
             (claim-summary c))])]]]))
-
-(defpartial run-claims-comparative
-  [run comparative-fields paired-fields]
-  (let [claim-opts (claim-select-options run)]
-    [:div (run-claims-header run)
-     (when (not-empty claim-opts)
-       (claim-association-form-comparative nil run claim-opts comparative-fields paired-fields))]))
-
-(defpartial run-claims-non-comparative
-  [run fields]
-  (let [claim-opts (claim-select-options run)]
-    [:div (run-claims-header run)
-     (when (not-empty claim-opts)
-       (claim-association-form-non-comparative nil run claim-opts fields))]))
 
 (defpartial run-overview-notes
   [run]
@@ -293,13 +285,8 @@
 (defpage "/run/:id" {id :id}
   (let [run (get-doc id)
         comparative? (= "comparative" (:paramstype run))
-        comparative-results (get-summary-results run :comparative [])
         comparative-fields (get-summary-fields run :comparative)
-        [control-results comparison-results]
-        (map (fn [resultstype] (get-summary-results id resultstype []))
-             [:control :comparison])
-        control-fields (get-summary-fields run :control)
-        paired-fields (get-summary-fields run :control)]
+        control-fields (get-summary-fields run :control)]
     (common/layout
      (format "%s run %s" (:problem run) (subs id 22))
      [:div.row [:div.span16.columns
@@ -307,18 +294,15 @@
                              (:problem run) (subs id 22)
                              (:paramstype run))]]]
      (if comparative?
-       (run-comparative-results-table run comparative-results comparative-fields))
+       (run-comparative-results-table run comparative-fields))
      (if comparative?
-       (run-paired-results-table run control-results comparison-results paired-fields))
+       (run-paired-results-table run control-fields))
      (if-not comparative?
-       (run-non-comparative-results-table run control-results control-fields))
+       (run-non-comparative-results-table run control-fields))
      (analysis run)
      (graphs run)
      (annotations run "run")
-     (if comparative?
-       (run-claims-comparative run comparative-fields paired-fields))
-     (if-not comparative?
-       (run-claims-non-comparative run control-fields))
+     (run-claims run)
      (run-parameters run)
      (run-overview-notes run)
      (run-project run)

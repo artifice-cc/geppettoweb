@@ -5,11 +5,13 @@
 (defn list-claims
   ([run]
      (let [all-claims (map :value (:rows (view "claims-list")))]
-       (reduce (fn [m c] (update-in m [(if (= "Unverified" (:verification c)) :unverified :verified)]
+       (reduce (fn [m c] (update-in m [(if (= "Unverified" (:verification c))
+                                         :unverified :verified)]
                                     conj c))
                {:unverified [] :verified []}
                (if-not run all-claims
-                       (filter (fn [c] ((set (map :runid (:runs c))) (:_id run))) all-claims)))))
+                       (filter (fn [c] ((set (map :runid (:runs c))) (:_id run)))
+                               all-claims)))))
   ([] (list-claims nil)))
 
 (defn claim-select-options
@@ -41,7 +43,9 @@
 (defn add-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
-    (clutch/with-db db (clutch/update-document claim #(conj % (dissoc association :claim)) [:runs]))))
+    (clutch/with-db db
+      (clutch/update-document
+       claim #(conj % (dissoc association :claim)) [:runs]))))
 
 (defn get-claim-association
   [claim run]
@@ -52,12 +56,15 @@
   (let [claim (get-doc (:claim association))]
     (clutch/with-db db
       (clutch/update-document
-       claim (fn [runs] (filter (fn [r] (not= (:runid association) (:runid r))) runs)) [:runs]))))
+       claim (fn [runs] (filter (fn [r] (not= (:runid association) (:runid r))) runs))
+       [:runs]))))
 
 (defn update-claim-association
   [association]
-  (let [claim (get-doc (:claim association))]
+  (let [claim (get-doc (:claim association))
+        association2 (select-keys association [:graphs :analysis :runid :comment])]
     (clutch/with-db db
       (clutch/update-document
-       claim (fn [runs] (map (fn [r] (if (not= (:runid r) (:runid association)) r
-                                         (dissoc association :claim))) runs)) [:runs]))))
+       claim (fn [runs] (map (fn [r] (if (not= (:runid r) (:runid association2)) r
+                                         association2)) runs))
+       [:runs]))))

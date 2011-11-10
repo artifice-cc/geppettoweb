@@ -8,24 +8,12 @@
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
+  (:use [sisyphus.views.fields :only [field-checkboxes]])
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analysis :only [analysis]])
   (:use [sisyphus.views.annotations :only [annotations]])
   (:use [sisyphus.views.results :only
          [results-table paired-results-table]]))
-
-(defpartial field-checkbox
-  [field on-fields]
-  [:li [:label [:input {:type "checkbox" :name "fields[]" :value (name field)
-                        :checked (on-fields field)}] " " (name field)]])
-
-(defpartial field-checkboxes
-  [sim fieldstype fields on-fields]
-  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
-    (map (fn [fs]
-           [:div.span4.columns
-            [:ul.inputs-list (map (fn [f] (field-checkbox f on-fields)) fs)]])
-         field-groups)))
 
 (defpartial sim-fields-form
   [sim fieldstype on-fields]
@@ -69,8 +57,13 @@
      [:div.page-header
       [:a {:name "control-comparison-results"}]
       [:h2 "Control/comparison results"]]
-     (paired-results-table control-results comparison-results on-fields)
-     (sim-fields-form sim :control on-fields)]))
+     (if (not= (count control-results) (count comparison-results))
+       [:p "Cannot show paired results table, since control/comparison
+            simulations had different number of decision points
+            (either Steps or StepsBetween parameters differ)."]
+       [:div
+        (paired-results-table control-results comparison-results on-fields)
+        (sim-fields-form sim :control on-fields)])]))
 
 (defpartial sim-non-comparative-results-table
   [sim]
