@@ -5,6 +5,7 @@
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.simulations :only
          [get-simulation-fields set-simulation-fields]])
+  (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.views.graphs :only [graphs]])
@@ -83,16 +84,15 @@
      (results-table results on-fields)
      (sim-fields-form sim :control on-fields)]))
 
-(defpartial sim-parameters
-  [sim]
-  (let [control-params (:control-params sim)
-        comparison-params (:comparison-param sim)]
-    (cond (= "comparative" (:type sim))
-          [:div [:pre control-params] [:pre comparison-params]]
-          (= "control" (:type sim))
-          [:pre control-params]
-          :else
-          [:pre comparison-params])))
+(defpage
+  [:post "/simulation/delete-annotation"] {:as annotation}
+  (delete-annotation (:id annotation) (Integer/parseInt (:index annotation)))
+  (resp/redirect (format "/simulation/%s#annotations" (:id annotation))))
+
+(defpage
+  [:post "/simulation/add-annotation"] {:as annotation}
+  (add-annotation (:id annotation) (:content annotation))
+  (resp/redirect (format "/simulation/%s#annotations" (:id annotation))))
 
 (defpage
   [:post "/simulation/set-fields"] {:as fields}
@@ -122,5 +122,4 @@
        (sim-non-comparative-results-table sim))
      (analysis sim)
      (graphs sim)
-     (annotations sim "simulation")
-     (sim-parameters sim))))
+     (annotations sim "simulation"))))

@@ -9,8 +9,8 @@
          [get-summary-results get-summary-fields
           get-fields-funcs set-fields-funcs
           format-summary-fields
-          add-annotation delete-annotation
           set-graphs set-analysis delete-run]])
+  (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])

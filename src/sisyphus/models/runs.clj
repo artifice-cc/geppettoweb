@@ -21,18 +21,6 @@
       (delete-doc (get-doc r)))
     (delete-doc run)))
 
-(defn add-annotation
-  [id content]
-  (clutch/with-db db (clutch/update-document (get-doc id) #(conj % content) [:annotations])))
-
-(defn delete-annotation
-  [id index]
-  (let [annotations (:annotations (clutch/get-document id))]
-    (clutch/with-db db
-      (clutch/update-document
-       (get-doc id) {:annotations (concat (take index annotations)
-                                          (drop (inc index) annotations))}))))
-
 (defn set-graphs
   [id graphs]
   (clutch/with-db db
