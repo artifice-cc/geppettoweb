@@ -8,11 +8,8 @@
   (:use [sisyphus.models.runs :only
          [get-summary-results get-summary-fields
           get-fields-funcs set-fields-funcs
-          format-summary-fields list-projects set-project
-          set-graphs delete-run]])
+          format-summary-fields list-projects set-project delete-run]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
-  (:use [sisyphus.models.graphs :only [list-graphs]])
-  (:use [sisyphus.models.analysis :only [list-analysis set-analysis]])
   (:use [sisyphus.models.claims :only [claim-select-options list-claims]])
   (:use [sisyphus.views.fields :only [field-selects]])
   (:use [sisyphus.views.claims :only
@@ -243,11 +240,6 @@
   [:post "/run/add-annotation"] {:as annotation}
   (add-annotation (:id annotation) (:content annotation))
   (resp/redirect (format "/run/%s#annotations" (:id annotation))))
-
-(defpage
-  [:post "/run/set-graphs"] {:as graphs}
-  (set-graphs (:id graphs) (:graphs graphs))
-  (resp/redirect (format "/run/%s#graphs" (:id graphs))))
 
 (defpage
   [:post "/run/set-project"] {:as project}

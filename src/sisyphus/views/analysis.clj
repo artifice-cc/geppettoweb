@@ -74,7 +74,7 @@
                    {:value "Delete" :name "action" :type "submit"}])]])]]])
 
 (defpartial analysis
-  [doc]
+  [doc & opts]
   (let [all-analysis (filter #(and (= (:paramstype doc) (:resultstype %))
                                    (= (:type doc) (:run-or-sim %)))
                              (get (list-analysis) (:problem doc)))
@@ -87,24 +87,25 @@
         [:div.span16.columns [:p "No analysis."]]]
        (for [a (sort-by :name active-analysis)]
          (show-analysis doc a)))
-     [:div.row
-      [:div.span4.columns
-       [:h3 "Choose analysis"]]
-      [:div.span12.columns
-       (form-to
-        [:post "/analysis/set-analysis"]
-        (hidden-field :id (:_id doc))
-        (hidden-field :run-or-sim (:type doc))
-        [:div.clearfix
-         [:div.input
-          [:ul.inputs-list
-           (for [a all-analysis]
-             [:li [:label
-                   [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
-                            :checked (active-analysis a)}]
-                   " " (:name a)]])]]
-         [:div.actions
-          [:input.btn.primary {:value "Update" :type "submit"}]]])]]]))
+     (if-not (or (empty? all-analysis) (some #{:no-select} opts))
+       [:div.row
+        [:div.span4.columns
+         [:h3 "Choose analysis"]]
+        [:div.span12.columns
+         (form-to
+          [:post "/analysis/set-analysis"]
+          (hidden-field :id (:_id doc))
+          (hidden-field :run-or-sim (:type doc))
+          [:div.clearfix
+           [:div.input
+            [:ul.inputs-list
+             (for [a all-analysis]
+               [:li [:label
+                     [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
+                              :checked (active-analysis a)}]
+                     " " (:name a)]])]]
+           [:div.actions
+            [:input.btn.primary {:value "Update" :type "submit"}]]])]])]))
 
 (defpage
   [:post "/analysis/set-analysis"] {:as analysis}

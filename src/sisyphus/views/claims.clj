@@ -13,8 +13,8 @@
   (:use [sisyphus.models.graphs :only [get-graph list-graphs]])
   (:use [sisyphus.models.analysis :only [get-analysis list-analysis]])
   (:use [sisyphus.views.fields :only [field-selects]])
-  (:use [sisyphus.views.graphs :only [show-graph]])
-  (:use [sisyphus.views.analysis :only [show-analysis]])
+  (:use [sisyphus.views.graphs :only [graphs]])
+  (:use [sisyphus.views.analysis :only [analysis]])
   (:use [sisyphus.views.results :only
          [results-table paired-results-table]]))
 
@@ -113,10 +113,8 @@
               [:div.span16.columns
                [:h4 "Results"]
                (results-table results on-fields)]]))
-         (for [g (map (fn [n] (get-graph (:problem r) n)) (:graphs r))]
-           (show-graph run g))
-         (for [a (map (fn [n] (get-analysis (:problem r) n)) (:analysis r))]
-           (show-analysis run a))
+         (graphs run :no-select)
+         (analysis run :no-select)
          [:div.row
           [:div.span4.columns "&nbsp;"]
           [:div.span12.columns

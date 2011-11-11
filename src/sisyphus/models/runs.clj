@@ -20,11 +20,6 @@
       (delete-doc (get-doc r)))
     (delete-doc run)))
 
-(defn set-graphs
-  [id graphs]
-  (clutch/with-db db
-    (clutch/update-document (get-doc id) {:graphs graphs})))
-
 (defn list-projects
   []
   (sort (set (filter identity (map (comp :project :value)
