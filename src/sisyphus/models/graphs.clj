@@ -3,7 +3,7 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
-  (:use [sisyphus.models.runs :only [csv-filenames results-to-csv cachedir]])
+  (:use [sisyphus.models.results :only [csv-filenames results-to-csv]])
   (:use sisyphus.models.common))
 
 (defn png-filename

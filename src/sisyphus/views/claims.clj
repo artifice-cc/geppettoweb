@@ -8,7 +8,7 @@
           format-summary-fields]])
   (:use [sisyphus.models.claims :only
          [new-claim update-claim delete-claim list-claims
-          add-claim-association remove-claim-association update-claim-association
+          add-claim-association remove-claim-association
           get-claim-association]])
   (:use [sisyphus.models.graphs :only [get-graph list-graphs]])
   (:use [sisyphus.models.analysis :only [get-analysis list-analysis]])

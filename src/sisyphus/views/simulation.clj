@@ -7,7 +7,7 @@
          [get-simulation-fields set-simulation-fields]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
-  (:use [sisyphus.models.analysis :only [list-analysis]])
+  (:use [sisyphus.models.analysis :only [list-analysis set-analysis]])
   (:use [sisyphus.views.fields :only [field-checkboxes]])
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analysis :only [analysis]])

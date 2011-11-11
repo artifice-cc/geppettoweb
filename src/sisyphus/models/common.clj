@@ -3,6 +3,8 @@
 
 (def db "http://localhost:5984/retrospect")
 
+(def cachedir "/tmp")
+
 (defn view
   ([name] (view name {} {}))
   ([name query] (view name query {}))
@@ -24,3 +26,4 @@
 
 (defn get-attachment
   [id name] (clutch/with-db db (clutch/get-attachment id name)))
+

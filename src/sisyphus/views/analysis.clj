@@ -3,17 +3,19 @@
   (:require [noir.response :as resp])
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.analysis :only
-         [list-analysis new-analysis update-analysis get-analysis-output delete-analysis]])
+         [list-analysis new-analysis update-analysis
+          set-analysis get-analysis-output delete-analysis]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (defpartial show-analysis
-  [run analysis]
+  [doc analysis]
   [:div.row
    [:div.span4.columns
-    [:h3 (:name analysis) [:br] [:small (format " (%s)" (:resultstype analysis))]]
+    [:h3 (:name analysis) [:br]
+     [:small (format " (%s, %s)" (:run-or-sim analysis) (:resultstype analysis))]]
     [:p (:caption analysis)]]
    [:div.span12.columns
-    [:pre (get-analysis-output (:_id run) (:_id analysis) (:_rev analysis))]]])
+    [:pre (get-analysis-output doc analysis)]]])
 
 (defpartial analysis-form
   [analysis]
@@ -25,7 +27,8 @@
     [:div.span4.columns
      [:h2 "Metadata"]]
     [:div.span12.columns
-     (form-to [:post (if (:name analysis) "/analysis/update-analysis" "/analysis/new-analysis")]
+     (form-to [:post (if (:name analysis) "/analysis/update-analysis"
+                         "/analysis/new-analysis")]
               (hidden-field :id (:_id analysis))
               [:fieldset
                [:legend "Metadata"]
@@ -39,6 +42,11 @@
                 [:div.input
                  [:input.xlarge {:id "name" :name "name" :size 30
                                  :type "text" :value (:name analysis)}]]]
+               [:div.clearfix
+                [:label {:for "run-or-sim"} "Run or simulation?"]
+                [:div.input
+                 (drop-down :run-or-sim ["run" "simulation"]
+                            (:run-or-sim analysis))]]
                [:div.clearfix
                 [:label {:for "resultstype"} "Results type"]
                 [:div.input
@@ -57,41 +65,51 @@
                  [:span.help-block "Assume the existence of data tables named 'control',
                                     'comparison', and 'comparative'."]]]
                [:div.actions
-                [:input.btn.primary {:name "action" :value (if (:name analysis) "Update" "Save") :type "submit"}]
+                [:input.btn.primary
+                 {:name "action" :value (if (:name analysis) "Update" "Save")
+                  :type "submit"}]
                 " "
                 (if (:name analysis)
-                  [:input.btn.danger {:value "Delete" :name "action" :type "submit"}])]])]]])
+                  [:input.btn.danger
+                   {:value "Delete" :name "action" :type "submit"}])]])]]])
 
 (defpartial analysis
-  [run]
-  (let [all-analysis (filter #(= (:paramstype run) (:resultstype %))
-                             (get (list-analysis) (:problem run)))
-        problem-analysis (set (map get-doc (:analysis run)))]
+  [doc]
+  (let [all-analysis (filter #(and (= (:paramstype doc) (:resultstype %))
+                                   (= (:type doc) (:run-or-sim %)))
+                             (get (list-analysis) (:problem doc)))
+        active-analysis (set (map get-doc (:analysis doc)))]
     [:section#analysis
      [:div.page-header
       [:h2 "Analysis"]]
-     (if (empty? problem-analysis)
+     (if (empty? active-analysis)
        [:div.row
         [:div.span16.columns [:p "No analysis."]]]
-       (for [a (sort-by :name problem-analysis)]
-         (show-analysis run a)))
+       (for [a (sort-by :name active-analysis)]
+         (show-analysis doc a)))
      [:div.row
       [:div.span4.columns
        [:h3 "Choose analysis"]]
       [:div.span12.columns
        (form-to
-        [:post "/run/set-analysis"]
-        (hidden-field :id (:_id run))
+        [:post "/analysis/set-analysis"]
+        (hidden-field :id (:_id doc))
+        (hidden-field :run-or-sim (:type doc))
         [:div.clearfix
          [:div.input
           [:ul.inputs-list
            (for [a all-analysis]
              [:li [:label
                    [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
-                            :checked (problem-analysis a)}]
+                            :checked (active-analysis a)}]
                    " " (:name a)]])]]
          [:div.actions
           [:input.btn.primary {:value "Update" :type "submit"}]]])]]]))
+
+(defpage
+  [:post "/analysis/set-analysis"] {:as analysis}
+  (set-analysis (:id analysis) (:analysis analysis))
+  (resp/redirect (format "/%s/%s#analysis" (:run-or-sim analysis) (:id analysis))))
 
 (defpage
   [:post "/analysis/update-analysis"] {:as analysis}
@@ -138,9 +156,11 @@
         (for [analysis (get analysis problem)]
           [:div.row
            [:div.span4.columns
-            [:h2 (:name analysis) [:br] [:small (format " (%s)" (:resultstype analysis))]]
+            [:h2 (:name analysis) [:br]
+             [:small (format " (%s, %s)" (:run-or-sim analysis) (:resultstype analysis))]]
             [:p (:caption analysis)]
-            [:p (link-to (format "/analysis/update/%s" (:_id analysis)) "Update analysis")]]
+            [:p (link-to (format "/analysis/update/%s" (:_id analysis))
+                         "Update analysis")]]
            [:div.span12.columns
             [:pre (:code analysis)]]])])
      (analysis-form {}))))
