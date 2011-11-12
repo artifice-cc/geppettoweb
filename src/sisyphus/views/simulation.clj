@@ -12,6 +12,7 @@
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analysis :only [analysis]])
   (:use [sisyphus.views.annotations :only [annotations]])
+  (:use [sisyphus.views.parameters :only [params-diff]])
   (:use [sisyphus.views.results :only
          [results-table paired-results-table]]))
 
@@ -77,6 +78,36 @@
      (results-table results on-fields)
      (sim-fields-form sim :control on-fields)]))
 
+(defpartial sim-comparative-parameters
+  [sim]
+  (let [control-params (read-string (:control-params (first (:control sim))))
+        comparison-params (read-string (:comparison-params (first (:comparison sim))))]
+    [:section#parameters
+     [:div.page-header
+      [:a {:name "parameters"}]
+      [:h2 "Parameters"]]
+     [:div.row
+      [:div.span8.columns
+       [:h3 "Control"]
+       [:div.params
+        (params-diff control-params comparison-params)]]
+      [:div.span8.columns
+       [:h3 "Comparison"]
+       [:div.params
+        (params-diff comparison-params control-params)]]]]))
+
+(defpartial sim-parameters
+  [sim]
+  (let [params (:params (first (:control sim)))]
+    [:section#parameters
+     [:div.page-header
+      [:a {:name "parameters"}]
+      [:h2 "Parameters"]]
+     [:div.row
+      [:div.span8.columns
+       [:div.params
+        [:pre params]]]]]))
+
 (defpage
   [:post "/simulation/delete-annotation"] {:as annotation}
   (delete-annotation (:id annotation) (Integer/parseInt (:index annotation)))
@@ -115,4 +146,7 @@
        (sim-non-comparative-results-table sim))
      (analysis sim)
      (graphs sim)
-     (annotations sim "simulation"))))
+     (annotations sim "simulation")
+     (if comparative?
+       (sim-comparative-parameters sim)
+       (sim-parameters sim)))))
