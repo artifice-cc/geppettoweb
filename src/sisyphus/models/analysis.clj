@@ -20,10 +20,12 @@
   [problem n]
   (:value (first (:rows (view "analysis-list" {:key [problem n]})))))
 
+;; analysis for simulations are set in the run
 (defn set-analysis
-  [id analysis]
+  [runid analysis run-or-sim]
   (clutch/with-db db
-    (clutch/update-document (get-doc id) {:analysis analysis})))
+    (clutch/update-document (get-doc runid) {(if (= "run" run-or-sim) :analysis
+                                                 :simulation-analysis) analysis})))
 
 (defn new-analysis
   [analysis]

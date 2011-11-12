@@ -87,7 +87,9 @@
   (let [all-graphs (filter #(and (= (:paramstype doc) (:resultstype %))
                                  (= (:type doc) (:run-or-sim %)))
                            (get (list-graphs) (:problem doc)))
-        active-graphs (set (map get-doc (:graphs doc)))]
+        run (if (= "run" (:type doc)) doc (get-doc (:runid doc)))
+        active-graphs (set (map get-doc (get run (if (= "run" (:type doc))
+                                                   :graphs :simulation-graphs))))]
     [:section#graphs
      [:div.page-header
       [:h2 "Graphs"]]
@@ -103,7 +105,8 @@
         [:div.span12.columns
          (form-to
           [:post "/graphs/set-graphs"]
-          (hidden-field :id (:_id doc))
+          (hidden-field :docid (:_id doc))
+          (hidden-field :runid (:_id run))
           (hidden-field :run-or-sim (:type doc))
           [:div.clearfix
            [:div.input
@@ -118,8 +121,8 @@
 
 (defpage
   [:post "/graphs/set-graphs"] {:as graphs}
-  (set-graphs (:id graphs) (:graphs graphs))
-  (resp/redirect (format "/%s/%s#graphs" (:run-or-sim graphs) (:id graphs))))
+  (set-graphs (:runid graphs) (:graphs graphs) (:run-or-sim graphs))
+  (resp/redirect (format "/%s/%s#graphs" (:run-or-sim graphs) (:docid graphs))))
 
 (defpage
   [:post "/graphs/update-graph"] {:as graph}

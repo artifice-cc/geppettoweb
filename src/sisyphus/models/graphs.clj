@@ -25,10 +25,12 @@
   [problem n]
   (:value (first (:rows (view "graphs-list" {:key [problem n]})))))
 
+;; graphs for simulations are set in the run
 (defn set-graphs
-  [id graphs]
+  [runid graphs run-or-sim]
   (clutch/with-db db
-    (clutch/update-document (get-doc id) {:graphs graphs})))
+    (clutch/update-document (get-doc runid) {(if (= "run" run-or-sim) :graphs
+                                                 :simulation-graphs) graphs})))
 
 (defn new-graph
   [graph]

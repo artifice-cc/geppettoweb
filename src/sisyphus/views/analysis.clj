@@ -78,7 +78,9 @@
   (let [all-analysis (filter #(and (= (:paramstype doc) (:resultstype %))
                                    (= (:type doc) (:run-or-sim %)))
                              (get (list-analysis) (:problem doc)))
-        active-analysis (set (map get-doc (:analysis doc)))]
+        run (if (= "run" (:type doc)) doc (get-doc (:runid doc)))
+        active-analysis (set (map get-doc (get run (if (= "run" (:type doc))
+                                                     :analysis :simulation-analysis))))]
     [:section#analysis
      [:div.page-header
       [:h2 "Analysis"]]
@@ -94,7 +96,8 @@
         [:div.span12.columns
          (form-to
           [:post "/analysis/set-analysis"]
-          (hidden-field :id (:_id doc))
+          (hidden-field :docid (:_id doc))
+          (hidden-field :runid (:_id run))
           (hidden-field :run-or-sim (:type doc))
           [:div.clearfix
            [:div.input
@@ -109,8 +112,8 @@
 
 (defpage
   [:post "/analysis/set-analysis"] {:as analysis}
-  (set-analysis (:id analysis) (:analysis analysis))
-  (resp/redirect (format "/%s/%s#analysis" (:run-or-sim analysis) (:id analysis))))
+  (set-analysis (:runid analysis) (:analysis analysis) (:run-or-sim analysis))
+  (resp/redirect (format "/%s/%s#analysis" (:run-or-sim analysis) (:docid analysis))))
 
 (defpage
   [:post "/analysis/update-analysis"] {:as analysis}
