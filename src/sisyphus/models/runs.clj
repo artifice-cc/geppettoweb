@@ -47,7 +47,7 @@
     ;; get all possible fields-funcs, not just those activated;
     ;; used by get-summary-results below for CSV output
     (mapcat (fn [field] (map (fn [func] [field (name func)]) (keys funcs)))
-            (get-summary-fields run results-type opts))
+            (get-summary-fields run results-type))
     ;; get only activated fields-funcs
     (let [ffs (get run (keyword (format "%s-fields-funcs" (name results-type))))]
       (filter #(not= "N/A" (second %))
@@ -71,6 +71,7 @@
      [(:params (first (get sim results-type)))]
      [(:control-params (first (get sim results-type)))
       (:comparison-params (first (get sim results-type)))])
+   [(:simulation sim)]
    (for [[field func] fields-funcs]
      (let [vals (filter number? (map field (get sim results-type)))]
        (if (empty? vals) (get (first (get sim results-type)) field)
@@ -85,6 +86,7 @@
            fields-funcs (get-fields-funcs run results-type :all)]
        (map (fn [sim] (zipmap (concat (if (:params (first (get sim results-type)))
                                         [:params] [:control-params :comparison-params])
+                                      [:simulation]
                                       (map (fn [[field func]]
                                              (keyword (format "%s%s" (name field)
                                                               (str/capitalize func))))
@@ -101,7 +103,7 @@
                   [:params] [:control-params :comparison-params])
                 (format-summary-fields fields-funcs))
                (concat
-                [(format "<a href=\"/simulation/%s\">%s</a>"
-                         (:_id sim) (subs (:_id sim) 22))]
+                [(format "%d: <a href=\"/simulation/%s\">%s</a>"
+                         (:simulation sim) (:_id sim) (subs (:_id sim) 22))]
                 (summarize-sim-results sim results-type fields-funcs))))
             sims))))

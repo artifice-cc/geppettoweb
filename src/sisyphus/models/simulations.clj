@@ -5,7 +5,7 @@
   (:use sisyphus.models.common))
 
 (def dissoc-fields #{:Problem :runid :resultsid :type :_rev :_id
-                     :params :control-params :comparison-params})
+                     :params :control-params :comparison-params :simulations})
 
 (defn get-simulation-fields
   [sim results-type & opts]
