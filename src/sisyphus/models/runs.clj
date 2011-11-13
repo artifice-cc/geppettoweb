@@ -71,7 +71,6 @@
      [(:params (first (get sim results-type)))]
      [(:control-params (first (get sim results-type)))
       (:comparison-params (first (get sim results-type)))])
-   [(:simulation sim)]
    (for [[field func] fields-funcs]
      (let [vals (filter number? (map field (get sim results-type)))]
        (if (empty? vals) (get (first (get sim results-type)) field)
@@ -84,14 +83,16 @@
   ([run results-type]
      (let [sims (map get-doc (:results run))
            fields-funcs (get-fields-funcs run results-type :all)]
-       (map (fn [sim] (zipmap (concat (if (:params (first (get sim results-type)))
+       (map (fn [sim] (zipmap (concat [:simulation]
+                                      (if (:params (first (get sim results-type)))
                                         [:params] [:control-params :comparison-params])
-                                      [:simulation]
                                       (map (fn [[field func]]
                                              (keyword (format "%s%s" (name field)
                                                               (str/capitalize func))))
                                            fields-funcs))
-                              (summarize-sim-results sim results-type fields-funcs)))
+                              (concat
+                               [(:simulation (first (get sim results-type)))]
+                               (summarize-sim-results sim results-type fields-funcs))))
             sims)))
   ([run results-type fields-funcs]
      (let [sims (map get-doc (:results run))]
