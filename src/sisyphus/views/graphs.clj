@@ -101,7 +101,7 @@
      (if (empty? active-graphs)
        [:div.row
         [:div.span16.columns [:p "No graphs."]]]
-       (for [g (sort-by :name active-graphs)]
+       (for [g (sort-by :name active-graphs) :when g]
          (show-graph doc g)))
      (if-not (or (empty? all-graphs) (some #{:no-select} opts))
        [:div.row

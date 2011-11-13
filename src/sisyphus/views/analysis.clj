@@ -88,7 +88,7 @@
      (if (empty? active-analysis)
        [:div.row
         [:div.span16.columns [:p "No analysis."]]]
-       (for [a (sort-by :name active-analysis)]
+       (for [a (sort-by :name active-analysis) :when a]
          (show-analysis doc a)))
      (if-not (or (empty? all-analysis) (some #{:no-select} opts))
        [:div.row
