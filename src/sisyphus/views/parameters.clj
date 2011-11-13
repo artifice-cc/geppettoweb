@@ -110,9 +110,9 @@
     [:h2 (format "%s/%s" (:problem params) (:name params))]
     (if (or (nil? (:revs params))
             (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
-      [:p (link-to (format "/parameters/%s" (:_id params)) "Update")]
+      [:p (link-to (format "/parameters/update/%s" (:_id params)) "Update")]
       [:p "This is an old version. "
-       (link-to (format "/parameters/%s" (:_id params)) "View the latest version.")])
+       (link-to (format "/parameters#%s" (:_id params)) "View the latest version.")])
     [:p (:description params)]]]
   (if (= "comparative" (:paramstype params))
     (let [control-params (read-string (:control params))
@@ -165,7 +165,7 @@
   (let [id (:_id (new-parameters params))]
     (resp/redirect (format "/parameters#%s" id))))
 
-(defpage "/parameters/:id" {id :id}
+(defpage "/parameters/update/:id" {id :id}
   (if-let [params (get-doc id)]
     (common/layout
      (format "Parameters: %s/%s" (:problem params) (:name params))

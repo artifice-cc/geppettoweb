@@ -32,7 +32,7 @@
 
 (defn get-summary-fields
   [run results-type & opts]
-  (get-simulation-fields (get-doc (first (:results run))) results-type opts))
+  (get-simulation-fields (get-doc (first (:results run))) results-type))
 
 (def funcs {:sum #(reduce + 0 %)
             :avg #(double (/ (reduce + 0 %) (count %)))
