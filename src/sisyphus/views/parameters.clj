@@ -24,7 +24,6 @@
                          "/parameters/new-parameters")]
               (hidden-field :id (:_id params))
               [:fieldset
-               [:legend "Metadata"]
                [:div.clearfix
                 [:label {:for "problem"} "Problem"]
                 [:div.input
