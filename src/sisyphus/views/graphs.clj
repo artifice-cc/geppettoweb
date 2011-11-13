@@ -6,6 +6,8 @@
          [list-graphs new-graph update-graph set-graphs get-graph-png delete-graph]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
+(def graph-help (.markdown common/mdp (slurp "help/graphs.md")))
+
 (defpartial show-graph
   [doc graph]
   [:div.row
@@ -30,14 +32,12 @@
     [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
              "New graph")]]
    [:div.row
-    [:div.span4.columns
-     [:h2 "Metadata"]]
+    [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
      (form-to [:post (if (:name graph) "/graphs/update-graph"
                          "/graphs/new-graph")]
               (hidden-field :id (:_id graph))
               [:fieldset
-               [:legend "Metadata"]
                [:div.clearfix
                 [:label {:for "problem"} "Problem"]
                 [:div.input
@@ -65,7 +65,8 @@
                [:div.clearfix
                 [:label {:for "code"} "R code"]
                 [:div.input
-                 [:textarea.xxlarge {:id "code" :name "code"}
+                 [:textarea.xxlarge {:id "code" :name "code" :rows 10
+                                     :style "font-family: monospace;"}
                   (if (:code graph) (:code graph)
                       "p <- ggplot(comparative) + geom_point(aes(x=Field1, y=Field2))")]
                  [:span.help-block "Assume the existence of a data table named
@@ -80,7 +81,11 @@
                 " "
                 (if (:name graph)
                   [:input.btn.danger
-                   {:value "Delete" :name "action" :type "submit"}])]])]]])
+                   {:value "Delete" :name "action" :type "submit"}])]])]]
+   [:div.row
+    [:div.span4.columns
+     [:h2 "Help"]]
+    [:div.span12.columns graph-help]]])
 
 (defpartial graphs
   [doc & opts]

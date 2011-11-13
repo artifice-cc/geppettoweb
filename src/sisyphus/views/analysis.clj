@@ -59,7 +59,8 @@
                [:div.clearfix
                 [:label {:for "code"} "R code"]
                 [:div.input
-                 [:textarea.xxlarge {:id "code" :name "code"}
+                 [:textarea.xxlarge {:id "code" :name "code" :rows 10
+                                     :style "font-family: monospace;"}
                   (if (:code analysis) (:code analysis)
                       "xyz")]
                  [:span.help-block "Assume the existence of data tables named 'control',
