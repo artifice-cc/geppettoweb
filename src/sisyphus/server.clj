@@ -15,7 +15,9 @@
   [handler]
   (fn [request]
     (let [resp (handler request)]
-      (assoc-in resp [:headers "Cache-Control"] "public, max-age=600"))))
+      (if (re-matches #".*update.*" (:uri request))
+        (assoc-in resp [:headers "Cache-Control"] "public, max-age=0")
+        (assoc-in resp [:headers "Cache-Control"] "public, max-age=600")))))
 
 (server/add-middleware cache-control)
 

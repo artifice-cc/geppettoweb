@@ -36,10 +36,6 @@
          [:li (link-to "/configure" "Configure")]]]]]
      content]]))
 
-(defpartial strategy-format
-  [strategy]
-  "")
-
 (defpartial date-format
   [ms]
   (let [date (new java.util.Date (long ms))
