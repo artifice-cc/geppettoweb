@@ -113,8 +113,8 @@
               [:div.span16.columns
                [:h4 "Results"]
                (results-table results on-fields)]]))
-         (graphs run :no-select)
          (analysis run :no-select)
+         (graphs run :no-select)
          [:div.row
           [:div.span4.columns "&nbsp;"]
           [:div.span12.columns
