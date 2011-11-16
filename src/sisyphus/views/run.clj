@@ -49,7 +49,11 @@
      [:dl [:dt "User@host"]
       [:dd (format "%s@%s" (:username run) (:hostname run))]]
      [:dl [:dt "Time"]
-      [:dd (common/date-format (:time run))]]
+      (let [mins (if-not (:endtime run) ""
+                         (format "<br/>(~%.0f mins)"
+                                 (double (/ (- (:endtime run) (:time run))
+                                            (* 1000 60)))))]
+        [:dd (format "%s%s" (common/date-format (:time run)) mins)])]
      [:dl [:dt "Simulation type"]
       [:dd (:paramstype run)]]]
     [:div.span4.columns
