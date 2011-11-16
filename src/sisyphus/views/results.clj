@@ -16,12 +16,12 @@
        (if (= resultstype :control)
          [:div
           [:h4 "Parameters"]
-          [:pre (str params)]]
+          [:pre (str (dissoc (read-string params) :simulation))]]
          [:div
           [:h4 "Control parameters"]
-          [:pre (str (first params))]
+          [:pre (str (dissoc (read-string (first params)) :simulation))]
           [:h4 "Comparison parameters"]
-          [:pre (str (second params))]])]]]))
+          [:pre (str (dissoc (read-string (second params)) :simulation))]])]]]))
 
 ;; A results table with single rows (not paired rows); used for
 ;; comparative results or non-comparative runs (i.e. control results)
