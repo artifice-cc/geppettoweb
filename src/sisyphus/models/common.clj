@@ -27,3 +27,7 @@
 (defn get-attachment
   [id name] (clutch/with-db db (clutch/get-attachment id name)))
 
+(defn to-clj
+  [s]
+  (try (read-string s)
+       (catch Exception _)))

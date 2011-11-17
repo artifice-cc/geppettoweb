@@ -5,7 +5,7 @@
   (:require [noir.cookies :as cookies])
   (:require [clojure.set :as set])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.common :only [get-doc]])
+  (:use [sisyphus.models.common :only [get-doc to-clj]])
   (:use [sisyphus.models.parameters :only
          [new-parameters update-parameters list-parameters runs-with-parameters delete-parameters]])
   (:use [sisyphus.views.overview :only [runs-table]]))
@@ -67,9 +67,11 @@
 
 (defn vectorize-params
   [params]
-  (reduce (fn [m k] (let [v (k params)]
-                      (assoc m k (if (vector? v) v [v]))))
-          {} (keys params)))
+  (try
+    (reduce (fn [m k] (let [v (k params)]
+                        (assoc m k (if (vector? v) v [v]))))
+            {} (keys params))
+    (catch Exception _ {})))
 
 (defn explode-params
   "Want {:Xyz [1 2 3], :Abc [3 4]} to become [{:Xyz 1, :Abc 3}, {:Xyz 2, :Abc 4}, ...]"
@@ -84,17 +86,19 @@
 
 (defpartial params-diff
   [ps1 ps2]
-  (let [common-keys (set/intersection (set (keys ps1)) (set (keys ps2)))
-        unique-keys (set/difference (set (keys ps1)) (set (keys ps2)))]
-    [:pre
-     "{\n"
-     (for [k (sort common-keys)]
-       (if (= (ps1 k) (ps2 k))
-         (format "%s %s\n" k (pr-str (ps1 k)))
-         [:b (format "%s %s\n" k (pr-str (ps1 k)))]))
-     (for [k (sort unique-keys)]
-       [:b (format "%s %s\n" k (pr-str (ps1 k)))])
-     "}"]))
+  (try
+    (let [common-keys (set/intersection (set (keys ps1)) (set (keys ps2)))
+          unique-keys (set/difference (set (keys ps1)) (set (keys ps2)))]
+      [:pre
+       "{\n"
+       (for [k (sort common-keys)]
+         (if (= (ps1 k) (ps2 k))
+           (format "%s %s\n" k (pr-str (ps1 k)))
+           [:b (format "%s %s\n" k (pr-str (ps1 k)))]))
+       (for [k (sort unique-keys)]
+         [:b (format "%s %s\n" k (pr-str (ps1 k)))])
+       "}"])
+    (catch Exception _)))
 
 (defpartial paramscount
   [params]
@@ -114,8 +118,8 @@
        (link-to (format "/parameters#%s" (:_id params)) "View the latest version.")])
     [:p (:description params)]]]
   (if (= "comparative" (:paramstype params))
-    (let [control-params (read-string (:control params))
-          comparison-params (read-string (:comparison params))]
+    (let [control-params (to-clj (:control params))
+          comparison-params (to-clj (:comparison params))]
       [:div.row
        [:div.span8.columns
         [:h3 "Control"]
@@ -127,7 +131,7 @@
         [:div.params
          (paramscount comparison-params)
          (params-diff comparison-params control-params)]]])
-    (let [control-params (read-string (:control params))]
+    (let [control-params (to-clj (:control params))]
       [:div.row
        [:div.span8.columns
         [:div.params
