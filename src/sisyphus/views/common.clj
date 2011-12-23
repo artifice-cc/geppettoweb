@@ -35,11 +35,13 @@
            [:li (link-to "/graphs" "Graphs")]
            [:li (link-to "/analysis" "Analysis")]
            [:li (link-to "/configure" "Configure")]]]]]
-       (let [headers (re-seq #"<a name=\"([^\"]+)\"><h\d>([^<]+)" chtml)]
+       (let [headers (re-seq #"<a name=\"([^\"]+)\"><h(\d)>([^<]+)" chtml)]
          [:div.sidebar {:style "position: fixed; top: 50px;"}
-          [:ul
-           (map (fn [[_ anchor title]]
-                  [:li (link-to (format "#%s" anchor) title)]) headers)]])
+          [:p
+           (map (fn [[_ anchor ds title]]
+                  (let [l (link-to (format "#%s" anchor) title)
+                        d (Integer/parseInt ds)]
+                    [:div (if (= d 1) [:b l] l)])) headers)]])
        [:div.content {:style "position: relative; top: 50px;"}
         chtml]]])))
 
