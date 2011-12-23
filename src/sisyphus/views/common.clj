@@ -8,33 +8,40 @@
 
 (defpartial layout
   [title & content]
-  (html5
-   [:head
-    [:title (format "%s | Sisyphus" title)]
-    (include-css "/css/bootstrap-1.3.0.min.css")
-    (include-css "/css/tablesorter/style.css")
-    (include-css "/css/sisyphus.css")
-    (include-js "/js/jquery-1.6.3.min.js")
-    (include-js "/js/jquery.tablesorter.min.js")
-    (include-js "/js/bootstrap-modal.js")
-    (include-js "/js/sisyphus.js")
-    (javascript-tag "$(document).ready(function()
+  (let [chtml (html content)]
+    (html5
+     [:head
+      [:title (format "%s | Sisyphus" title)]
+      (include-css "/css/bootstrap-1.4.0.min.css")
+      (include-css "/css/tablesorter/style.css")
+      (include-css "/css/sisyphus.css")
+      (include-js "/js/jquery-1.6.3.min.js")
+      (include-js "/js/jquery.tablesorter.min.js")
+      (include-js "/js/bootstrap-modal.js")
+      (include-js "/js/sisyphus.js")
+      (javascript-tag "$(document).ready(function()
                      { $(\"table.tablesorter\").each(function(index)
                        { $(this).tablesorter(); }) });")]
-   [:body {:style "padding-top: 50px;"}
-    [:div.container
-     [:div.topbar
-      [:div.topbar-inner
-       [:div.container
-        [:h3 (link-to "/" "Sisyphus")]
-        [:ul.nav
-         [:li (link-to "/" "Runs")]
-         [:li (link-to "/claims" "Claims")]
-         [:li (link-to "/parameters" "Parameters")]
-         [:li (link-to "/graphs" "Graphs")]
-         [:li (link-to "/analysis" "Analysis")]
-         [:li (link-to "/configure" "Configure")]]]]]
-     content]]))
+     [:body
+      [:div.container-fluid
+       [:div.topbar {:style "position: absolute;"}
+        [:div.topbar-inner
+         [:div.container
+          [:h3 (link-to "/" "Sisyphus")]
+          [:ul.nav
+           [:li (link-to "/" "Runs")]
+           [:li (link-to "/claims" "Claims")]
+           [:li (link-to "/parameters" "Parameters")]
+           [:li (link-to "/graphs" "Graphs")]
+           [:li (link-to "/analysis" "Analysis")]
+           [:li (link-to "/configure" "Configure")]]]]]
+       (let [headers (re-seq #"<a name=\"([^\"]+)\"><h\d>([^<]+)" chtml)]
+         [:div.sidebar {:style "position: fixed; top: 50px;"}
+          [:ul
+           (map (fn [[_ anchor title]]
+                  [:li (link-to (format "#%s" anchor) title)]) headers)]])
+       [:div.content {:style "position: relative; top: 50px;"}
+        chtml]]])))
 
 (defpartial date-format
   [ms]

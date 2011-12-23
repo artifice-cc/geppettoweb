@@ -1,6 +1,7 @@
 (ns sisyphus.views.analysis
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
+  (:require [clojure.string :as str])
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.analysis :only
          [list-analysis new-analysis update-analysis
@@ -21,8 +22,9 @@
   [analysis]
   [:section#analysis-form
    [:div.page-header
-    [:h1 (if (:name analysis) (format "Update analysis %s" (:name analysis))
-             "New analysis")]]
+    [:a {:name "form"}
+     [:h1 (if (:name analysis) (format "Update analysis %s" (:name analysis))
+              "New analysis")]]]
    [:div.row
     [:div.span4.columns
      [:h2 "Metadata"]]
@@ -84,7 +86,8 @@
                                                      :analysis :simulation-analysis))))]
     [:section#analysis
      [:div.page-header
-      [:h2 "Analysis"]]
+      [:a {:name "analysis"}
+       [:h2 "Analysis"]]]
      (if (empty? active-analysis)
        [:div.row
         [:div.span16.columns [:p "No analysis."]]]
@@ -157,12 +160,15 @@
        [:section {:id problem}
         [:div.row
          [:div.span16.columns
-          [:div.page-header [:h1 (format "%s analysis" problem)]]]]
+          [:div.page-header
+           [:a {:name (str/replace problem #"\W" "_")}
+            [:h1 (format "%s analysis" problem)]]]]]
         (for [analysis (get analysis problem)]
           [:div.row
            [:div.span4.columns
-            [:h2 (:name analysis) [:br]
-             [:small (format " (%s, %s)" (:run-or-sim analysis) (:resultstype analysis))]]
+            [:a {:name (str/replace (:name analysis) #"\W" "_")}
+             [:h2 (:name analysis) [:br]
+              [:small (format " (%s, %s)" (:run-or-sim analysis) (:resultstype analysis))]]]
             [:p (:caption analysis)]
             [:p (link-to (format "/analysis/update/%s" (:_id analysis))
                          "Update analysis")]]

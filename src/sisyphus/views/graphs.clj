@@ -1,6 +1,7 @@
 (ns sisyphus.views.graphs
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
+  (:require [clojure.string :as str])
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.graphs :only
          [list-graphs new-graph update-graph set-graphs get-graph-png delete-graph]])
@@ -29,8 +30,9 @@
   [graph]
   [:section#graph-form
    [:div.page-header
-    [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
-             "New graph")]]
+    [:a {:name "new"}
+     [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
+              "New graph")]]]
    [:div.row
     [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
@@ -84,7 +86,8 @@
                    {:value "Delete" :name "action" :type "submit"}])]])]]
    [:div.row
     [:div.span4.columns
-     [:h2 "Help"]]
+     [:a {:name "help"}
+      [:h1 "Help"]]]
     [:div.span12.columns graph-help]]])
 
 (defpartial graphs
@@ -97,7 +100,8 @@
                                                    :graphs :simulation-graphs))))]
     [:section#graphs
      [:div.page-header
-      [:h2 "Graphs"]]
+      [:a {:name "graphs"}
+       [:h2 "Graphs"]]]
      (if (empty? active-graphs)
        [:div.row
         [:div.span16.columns [:p "No graphs."]]]
@@ -170,12 +174,15 @@
        [:section {:id problem}
         [:div.row
          [:div.span16.columns
-          [:div.page-header [:h1 (format "%s graphs" problem)]]]]
+          [:div.page-header
+           [:a {:name (str/replace problem #"\W" "_")}
+            [:h1 (format "%s graphs" problem)]]]]]
         (for [graph (get graphs problem)]
           [:div.row
            [:div.span4.columns
-            [:h2 (:name graph) [:br]
-             [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]
+            [:a {:name (str/replace (:name graph) #"\W" "_")}
+             [:h2 (:name graph) [:br]
+              [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]]
             [:p (:caption graph)]
             [:p (link-to (format "/graphs/update/%s" (:_id graph)) "Update graph")]]
            [:div.span12.columns

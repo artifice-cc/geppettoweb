@@ -32,7 +32,8 @@
   [claim]
   [:section#claim-form
    [:div.page-header
-    [:h1 (if (:title claim) (format "Claim: %s" (:title claim)) "New claim")]]
+    [:a {:name "new"}
+     [:h1 (if (:title claim) (format "Claim: %s" (:title claim)) "New claim")]]]
    (form-to
     [:post (if (:title claim) "/claims/update-claim" "/claims/new-claim")]
     (hidden-field :id (:_id claim))
@@ -174,11 +175,13 @@
      "Claims"
      [:section#claims
       [:div.page-header
-       [:h1 "Unverified claims"]]
+       [:a {:name "unverified"}
+        [:h1 "Unverified claims"]]]
       (for [c (:unverified claims)]
         (claim-summary c))]
      [:div.page-header
-      [:h1 "Verified claims"]]
+      [:a {:name "verified"}
+       [:h1 "Verified claims"]]]
      (for [c (:verified claims)]
        (claim-summary c))
      (claim-form {}))))

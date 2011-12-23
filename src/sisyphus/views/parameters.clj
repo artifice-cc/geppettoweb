@@ -14,9 +14,10 @@
   [params]
   [:section#parameters-form
    [:div.page-header
-    [:h1 (if (and (:name params) (:problem params))
-           (format "Update parameters %s/%s" (:problem params) (:name params))
-           "New parameters")]]
+    [:a {:name "form"}
+     [:h1 (if (and (:name params) (:problem params))
+            (format "Update parameters %s/%s" (:problem params) (:name params))
+            "New parameters")]]]
    [:div.row
     [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
@@ -109,8 +110,8 @@
   [params]
   [:div.row
    [:div.span16.columns
-    [:a {:name (:_id params)}]
-    [:h2 (format "%s/%s" (:problem params) (:name params))]
+    [:a {:name (:_id params)}
+     [:h2 (format "%s/%s" (:problem params) (:name params))]]
     (if (or (nil? (:revs params))
             (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
       [:p (link-to (format "/parameters/update/%s" (:_id params)) "Update")]
@@ -188,11 +189,15 @@
      "Parameters"
      [:div
       [:section#comparative-parameters
-       [:div.page-header [:h1 "Comparative parameters"]]
+       [:div.page-header
+        [:a {:name "comparative"}
+         [:h1 "Comparative parameters"]]]
        (for [params comparative]
          (parameters-summary params))]
       [:section#non-comparative-parameters
-       [:div.page-header [:h1 "Non-comparative parameters"]]
+       [:div.page-header
+        [:a {:name "noncomparative"}
+         [:h1 "Non-comparative parameters"]]]
        (for [params non-comparative]
          (parameters-summary params))]
       (parameters-form nil)])))

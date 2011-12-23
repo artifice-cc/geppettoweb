@@ -32,7 +32,8 @@
   [run]
   [:section#metadata
    [:div.page-header
-    [:h2 "Metadata"]]
+    [:a {:name "metadata"}
+     [:h2 "Metadata"]]]
    [:div.row
     [:div.span4.columns
      [:h3 "Commit message"]
@@ -80,7 +81,9 @@
   [run]
   (let [params (get-doc (:paramsid run) (:paramsrev run))]
     [:section#parameters
-     [:div.page-header [:h2 "Parameters"]]
+     [:div.page-header
+      [:a {:name "parameters"}
+       [:h2 "Parameters"]]]
      (if (not= (keys params) [:revs])
        (parameters-summary params)
        [:p "Error in getting parameters."])]))
@@ -111,8 +114,8 @@
         results (get-summary-results run :comparative fields-funcs)]
     [:section#comparative-results
      [:div.page-header
-      [:a {:name "comparative-results"}]
-      [:h2 "Comparative results"]]
+      [:a {:name "comparative-results"}
+       [:h2 "Comparative results"]]]
      (results-table results on-fields)
      (run-fields-form run :comparative comparative-fields fields-funcs)]))
 
@@ -124,8 +127,8 @@
         comparison-results (get-summary-results run :comparison fields-funcs)]
     [:section#paired-results
      [:div.page-header
-      [:a {:name "control-comparison-results"}]
-      [:h2 "Control/comparison results"]]
+      [:a {:name "control-comparison-results"}
+       [:h2 "Control/comparison results"]]]
      (paired-results-table control-results comparison-results on-fields)
      (run-fields-form run :paired control-fields fields-funcs)]))
 
@@ -136,8 +139,8 @@
         results (get-summary-results run :control fields-funcs)]
     [:section#non-comparative-results
      [:div.page-header
-      [:a {:name "results"}]
-      [:h2 "Results"]]
+      [:a {:name "results"}
+       [:h2 "Results"]]]
      (results-table results on-fields)
      (run-fields-form run :non-comparative control-fields fields-funcs)]))
 
@@ -196,7 +199,8 @@
   [run]
   [:section#overview
    [:div.page-header
-    [:h2 "Overview notes"]]
+    [:a {:name "notes"}
+     [:h2 "Overview notes"]]]
    [:div.row
     [:div.span4.columns "&nbsp;"]
     [:div.span12.columns {:style "max-height: 30em; overflow: auto;"}
@@ -207,7 +211,8 @@
   (let [projects (list-projects)]
     [:section#project
      [:div.page-header
-      [:h2 "Project"]]
+      [:a {:name "project"}
+       [:h2 "Project"]]]
      [:div.row
       [:div.span4.columns [:p "Choose an existing project, or create a new project."]]
       [:div.span12.columns

@@ -1,5 +1,6 @@
 (ns sisyphus.views.overview
   (:require [clojure.set :as set])
+  (:require [clojure.string :as str])
   (:require [sisyphus.views.common :as common])
   (:require [noir.cookies :as cookies])
   (:require [noir.response :as resp])
@@ -57,11 +58,13 @@
 (defpartial runs-by-project
   [runs-grouped-project]
   (map (fn [project]
-         (let [runs-grouped-problem
+         (let [project-id (str/replace project #"\W" "_")
+               runs-grouped-problem
                (group-by :problem (get runs-grouped-project project))]
-           [:section {:id (format "runs-project-%s" project)}
+           [:section {:id (format "runs-project-%s" project-id)}
             [:div.page-header
-             [:h1 project]]
+             [:a {:name project-id}
+              [:h1 project]]]
             (runs-by-problem runs-grouped-problem)]))
        (sort (keys runs-grouped-project))))
 
