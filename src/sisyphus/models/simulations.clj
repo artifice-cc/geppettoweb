@@ -9,7 +9,7 @@
 
 (defn get-simulation-fields
   [sim results-type & opts]
-  (let [fields (set (keys (first (results-type sim))))]
+  (let [fields (apply set/union (map #(set (keys %)) (results-type sim)))]
     (sort (if (some #{:all} opts) fields
               (set/difference fields dissoc-fields)))))
 

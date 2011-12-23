@@ -42,18 +42,18 @@
    [:tbody (map run-table-row runs)]])
 
 (defpartial runs
-  [problem runs]
+  [problem runs project]
   [:div
    [:div.page-header
-    [:a {:name (str/replace problem #"\W" "_")}
+    [:a {:name (str (str/replace problem #"\W" "_") (str/replace project #"\W" "_"))}
      [:h2 problem]]]
    [:div.row
     [:div.span16.columns
      (runs-table runs problem)]]])
 
 (defpartial runs-by-problem
-  [runs-grouped-problem]
-  (map (fn [problem] (runs problem (get runs-grouped-problem problem)))
+  [runs-grouped-problem project]
+  (map (fn [problem] (runs problem (get runs-grouped-problem problem) project))
        (sort (keys runs-grouped-problem))))
 
 (defpartial runs-by-project
@@ -66,7 +66,7 @@
             [:div.page-header
              [:a {:name project-id}
               [:h1 project]]]
-            (runs-by-problem runs-grouped-problem)]))
+            (runs-by-problem runs-grouped-problem project)]))
        (sort (keys runs-grouped-project))))
 
 (defpage
