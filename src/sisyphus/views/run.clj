@@ -81,7 +81,9 @@
   (let [params (get-doc (:paramsid run) (:paramsrev run))]
     [:section#parameters
      [:div.page-header [:h2 "Parameters"]]
-     (parameters-summary params)]))
+     (if (not= (keys params) [:revs])
+       (parameters-summary params)
+       [:p "Error in getting parameters."])]))
 
 (defpartial run-fields-form
   [run results-type fields fields-funcs]

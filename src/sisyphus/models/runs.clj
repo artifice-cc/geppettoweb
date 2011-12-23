@@ -17,7 +17,8 @@
     (doseq [c claims]
       (remove-claim-association {:claim (:_id c) :runid id}))
     (doseq [r (:results run)]
-      (delete-doc (get-doc r)))
+      (let [doc (get-doc r)]
+        (delete-doc doc)))
     (delete-doc run)))
 
 (defn list-projects
@@ -27,8 +28,10 @@
 
 (defn set-project
   [id project]
-  (clutch/with-db db
-    (clutch/update-document (get-doc id) {:project project})))
+  (let [doc (get-doc id)]
+    (reset-doc-cache id)
+    (clutch/with-db db
+      (clutch/update-document doc {:project project}))))
 
 (defn get-summary-fields
   [run results-type & opts]
@@ -55,10 +58,11 @@
 
 (defn set-fields-funcs
   [id fields results-type]
-  (clutch/with-db db
-    (clutch/update-document (get-doc id)
-                            {(keyword (format "%s-fields-funcs" (name results-type)))
-                             fields})))
+  (let [doc (get-doc id)]
+    (reset-doc-cache id)
+    (clutch/with-db db
+      (clutch/update-document doc {(keyword (format "%s-fields-funcs" (name results-type)))
+                                   fields}))))
 
 (defn format-summary-fields
   [fields-funcs]

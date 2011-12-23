@@ -32,9 +32,10 @@
 
 (defn update-claim
   [claim]
-  (clutch/with-db db
-    (clutch/update-document (get-doc (:id claim))
-                            (dissoc claim :_id :_rev :id :runs))))
+  (let [doc (get-doc (:id claim))]
+    (reset-doc-cache (:id claim))
+    (clutch/with-db db
+      (clutch/update-document doc (dissoc claim :_id :_rev :id :runs)))))
 
 (defn delete-claim
   [id]
@@ -43,6 +44,7 @@
 (defn add-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
+    (reset-doc-cache (:claim association))
     (clutch/with-db db
       (clutch/update-document
        claim #(conj % (dissoc association :claim)) [:runs]))))
@@ -54,6 +56,7 @@
 (defn remove-claim-association
   [association]
   (let [claim (get-doc (:claim association))]
+    (reset-doc-cache (:claim association))
     (clutch/with-db db
       (clutch/update-document
        claim (fn [runs] (filter (fn [r] (not= (:runid association) (:runid r))) runs))

@@ -9,9 +9,10 @@
 
 (defn update-parameters
   [params]
-  (clutch/with-db db
-    (clutch/update-document (get-doc (:id params))
-                            (dissoc params :id :_id :_rev :action))))
+  (let [doc (get-doc (:id params))]
+    (reset-doc-cache (:id params))
+    (clutch/with-db db
+      (clutch/update-document doc (dissoc params :id :_id :_rev :action)))))
 
 (defn list-parameters
   []

@@ -9,8 +9,10 @@
 
 (defn update-configuration
   [config]
-  (clutch/with-db db
-    (clutch/update-document (get-configuration) config)))
+  (let [c (get-configuration)]
+    (reset-doc-cache (:_id c))
+    (clutch/with-db db
+      (clutch/update-document c config))))
 
 (defn build-remote
   [config]

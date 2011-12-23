@@ -4,13 +4,17 @@
 
 (defn add-annotation
   [id content]
-  (clutch/with-db db
-    (clutch/update-document (get-doc id) #(conj % content) [:annotations])))
+  (let [doc (get-doc id)]
+    (reset-doc-cache id)
+    (clutch/with-db db
+      (clutch/update-document doc #(conj % content) [:annotations]))))
 
 (defn delete-annotation
   [id index]
   (clutch/with-db db
-    (let [annotations (:annotations (clutch/get-document id))]
+    (let [annotations (:annotations (clutch/get-document id))
+          doc (get-doc id)]
+      (reset-doc-cache id)
       (clutch/update-document
-       (get-doc id) {:annotations (concat (take index annotations)
-                                          (drop (inc index) annotations))}))))
+       doc {:annotations (concat (take index annotations)
+                                 (drop (inc index) annotations))}))))

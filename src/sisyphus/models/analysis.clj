@@ -23,9 +23,11 @@
 ;; analysis for simulations are set in the run
 (defn set-analysis
   [runid analysis run-or-sim]
-  (clutch/with-db db
-    (clutch/update-document (get-doc runid) {(if (= "run" run-or-sim) :analysis
-                                                 :simulation-analysis) analysis})))
+  (let [doc (get-doc runid)]
+    (reset-doc-cache runid)
+    (clutch/with-db db
+      (clutch/update-document doc {(if (= "run" run-or-sim) :analysis
+                                       :simulation-analysis) analysis}))))
 
 (defn new-analysis
   [analysis]
@@ -33,11 +35,14 @@
 
 (defn update-analysis
   [analysis]
-  (clutch/with-db db
-    (clutch/update-document (get-doc (:id analysis)) (dissoc analysis :id :_id :_rev))))
+  (let [doc (get-doc (:id analysis))]
+    (reset-doc-cache (:id analysis))
+    (clutch/with-db db
+      (clutch/update-document doc (dissoc analysis :id :_id :_rev)))))
 
 (defn update-analysis-attachment
   [doc output-fname analysis]
+  (reset-doc-cache (:id doc))
   (try
     (clutch/with-db db
       (clutch/update-attachment doc output-fname
@@ -47,6 +52,7 @@
 
 (defn get-analysis-output
   [doc analysis]
+  (reset-doc-cache (:id doc))
   (if-let [output (get-attachment
                    (:_id doc) (format "%s-%s" (:_id analysis) (:_rev analysis)))]
     (slurp output)

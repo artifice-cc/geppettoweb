@@ -28,9 +28,11 @@
 ;; graphs for simulations are set in the run
 (defn set-graphs
   [runid graphs run-or-sim]
-  (clutch/with-db db
-    (clutch/update-document (get-doc runid) {(if (= "run" run-or-sim) :graphs
-                                                 :simulation-graphs) graphs})))
+  (let [doc (get-doc runid)]
+    (reset-doc-cache runid)
+    (clutch/with-db db
+      (clutch/update-document doc {(if (= "run" run-or-sim) :graphs
+                                       :simulation-graphs) graphs}))))
 
 (defn new-graph
   [graph]
@@ -38,11 +40,14 @@
 
 (defn update-graph
   [graph]
-  (clutch/with-db db
-    (clutch/update-document (get-doc (:id graph)) (dissoc graph :id :_id :_rev))))
+  (let [doc (get-doc (:id graph))]
+    (reset-doc-cache (:id graph))
+    (clutch/with-db db
+      (clutch/update-document doc (dissoc graph :id :_id :_rev)))))
 
 (defn update-graph-attachment
   [doc png-fname graph]
+  (reset-doc-cache (:_id doc))
   (try
     (clutch/with-db db
       (clutch/update-attachment doc png-fname
@@ -52,6 +57,7 @@
 
 (defn get-graph-png
   [doc graph]
+  (reset-doc-cache (:_id doc))
   (if-let [png (get-attachment (:_id doc) (format "%s-%s" (:_id graph) (:_rev graph)))]
     png
     (let [csv-fnames (csv-filenames doc)

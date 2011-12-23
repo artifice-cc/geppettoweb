@@ -20,6 +20,7 @@
   (clutch/with-db db
     (let [sim (get-doc id)
           run (get-doc (:runid sim))]
+      (reset-doc-cache (:runid sim))
       (clutch/update-document
        run {(keyword (format "simulation-%s-fields" (name fieldstype))) fields}))))
 
