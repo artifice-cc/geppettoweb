@@ -80,9 +80,9 @@
             comparative? (= "comparative" (:paramstype run))]
         [:div
          [:div.page-header
-          [:a {:name (:runid r)}]
-          [:h2 (:problem run) " run " (link-to (format "/run/%s" (:runid r))
-                                               (subs (:runid r) 22))]]
+          [:a {:name (:runid r)}
+           [:h2 (:problem run) " run " (link-to (format "/run/%s" (:runid r))
+                                                (subs (:runid r) 22))]]]
          [:div.row
           [:div.span4.columns
            [:h3 "Comment"]]
