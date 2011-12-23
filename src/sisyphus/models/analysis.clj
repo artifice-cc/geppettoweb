@@ -43,7 +43,7 @@
       (clutch/update-attachment doc output-fname
                                 (format "%s-%s" (:_id analysis) (:_rev analysis))
                                 "text/plain"))
-    (catch Exception e (update-analysis-attachment doc output-fname analysis))))
+    (catch Exception e)))
 
 (defn get-analysis-output
   [doc analysis]

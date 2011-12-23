@@ -48,7 +48,7 @@
       (clutch/update-attachment doc png-fname
                                 (format "%s-%s" (:_id graph) (:_rev graph))
                                 "image/png"))
-    (catch Exception e (update-graph-attachment doc png-fname graph))))
+    (catch Exception e)))
 
 (defn get-graph-png
   [doc graph]
