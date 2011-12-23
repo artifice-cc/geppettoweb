@@ -45,7 +45,8 @@
   [problem runs]
   [:div
    [:div.page-header
-    [:h2 problem]]
+    [:a {:name (str/replace problem #"\W" "_")}
+     [:h2 problem]]]
    [:div.row
     [:div.span16.columns
      (runs-table runs problem)]]])
