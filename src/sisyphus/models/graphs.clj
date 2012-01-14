@@ -57,12 +57,11 @@
                                       :else "application/octet-stream")))
     (catch Exception e)))
 
-(defn get-graph-file
+(defn render-graph-file
   [doc graph ftype]
   (reset-doc-cache (:_id doc))
-  (if-let [f (get-attachment (:_id doc)
-                             (format "%s-%s-%s" (:_id graph) (:_rev graph) ftype))]
-    f
+  (if (get-attachment (:_id doc) (format "%s-%s-%s" (:_id graph) (:_rev graph) ftype))
+    {:success true}
     (let [csv-fnames (csv-filenames doc)
           ftype-fname (type-filename doc graph ftype)
           tmp-fname (format "%s/%s-%s-%s.rscript"
@@ -80,19 +79,26 @@
       ;; run Rscript
       (let [status (sh "/usr/bin/Rscript" tmp-fname)]
         (cond (not= 0 (:exit status))
-              status
+              {:err (:err status)}
               (not (. (io/file ftype-fname) exists))
               {:err "Resulting file does not exist."}
-              :else (do (update-graph-attachment doc ftype-fname graph ftype)
-                        (io/input-stream (io/file ftype-fname))))))))
+              :else
+              (do (update-graph-attachment doc ftype-fname graph ftype)
+                  {:success true}))))))
 
 (defn get-graph-png
   [doc graph]
-  (get-graph-file doc graph "png"))
+  (render-graph-file doc graph "png")
+  (if-let [f (get-attachment (:_id doc)
+                             (format "%s-%s-%s" (:_id graph) (:_rev graph) "png"))]
+    (try (io/input-stream f) (catch Exception _))))
 
 (defn get-graph-pdf
   [doc graph]
-  (get-graph-file doc graph "pdf"))
+  (render-graph-file doc graph "pdf")
+  (if-let [f (get-attachment (:_id doc)
+                             (format "%s-%s-%s" (:_id graph) (:_rev graph) "pdf"))]
+    (try (io/input-stream f) (catch Exception _))))
 
 (defn delete-graph
   [id]

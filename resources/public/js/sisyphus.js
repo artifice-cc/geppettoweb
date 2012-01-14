@@ -6,3 +6,12 @@ jQuery(document).ready(function() {
             jQuery(this).parent().parent().parent().parent().next().slideToggle(500);
         });
 });
+
+jQuery(document).ready(function() {
+    jQuery(".code").hide();
+    jQuery(".code_header").click(
+        function()
+        {
+            jQuery(this).parent().next().slideToggle(500);
+        });
+});

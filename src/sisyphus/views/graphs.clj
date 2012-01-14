@@ -5,7 +5,7 @@
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.graphs :only
          [list-graphs new-graph update-graph set-graphs delete-graph
-          get-graph-png get-graph-pdf]])
+          render-graph-file get-graph-png get-graph-pdf]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (def graph-help (.markdown common/mdp (slurp "help/graphs.md")))
@@ -19,10 +19,22 @@
     [:p (:caption graph)]]
    [:div.span8.columns
     [:p
-     [:img {:src (format "/graph/%s/%s/%s" (:_id doc) (:_id graph) (:_rev graph))
-            :width 700 :height 400}]
-     (link-to (format "/graph/%s/%s/%s/pdf" (:_id doc) (:_id graph) (:_rev graph))
-              "Download PDF")]]])
+     (if-let [err (:err (render-graph-file doc graph "png"))]
+       [:div
+        [:pre err]
+        [:p
+         [:a.code_header "Code"] " / "
+         (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
+        [:pre.code {:style "width: 700px;"} (:code graph)]]
+       [:div
+        [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
+               :width 700 :height 400}]
+        [:p
+         [:a.code_header "Code"] " / "
+         (link-to (format "/graphs/update/%s" (:_id graph)) "Update") " / "
+         (link-to (format "/graph/%s/%s/%s/pdf" (:_id doc) (:_id graph) (:_rev graph))
+                  "Download PDF")]
+        [:pre.code {:style "width: 700px;"} (:code graph)]])]]])
 
 (comment [:div.row
           [:div.span16.columns
@@ -192,7 +204,7 @@
             [:pre (:code graph)]]])])
      (graph-form {}))))
 
-(defpage "/graph/:docid/:graphid/:graphrev"
+(defpage "/graph/:docid/:graphid/:graphrev/png"
   {docid :docid graphid :graphid graphrev :graphrev}
   (resp/content-type "image/png"
                      (get-graph-png (get-doc docid) (get-doc graphid graphrev))))
