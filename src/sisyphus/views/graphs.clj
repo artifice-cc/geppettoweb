@@ -4,7 +4,8 @@
   (:require [clojure.string :as str])
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.graphs :only
-         [list-graphs new-graph update-graph set-graphs get-graph-png delete-graph]])
+         [list-graphs new-graph update-graph set-graphs delete-graph
+          get-graph-png get-graph-pdf]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (def graph-help (.markdown common/mdp (slurp "help/graphs.md")))
@@ -19,7 +20,9 @@
    [:div.span8.columns
     [:p
      [:img {:src (format "/graph/%s/%s/%s" (:_id doc) (:_id graph) (:_rev graph))
-            :width 700 :height 400}]]]])
+            :width 700 :height 400}]
+     (link-to (format "/graph/%s/%s/%s/pdf" (:_id doc) (:_id graph) (:_rev graph))
+              "Download PDF")]]])
 
 (comment [:div.row
           [:div.span16.columns
@@ -191,5 +194,11 @@
 
 (defpage "/graph/:docid/:graphid/:graphrev"
   {docid :docid graphid :graphid graphrev :graphrev}
-  (resp/content-type "image/png" (get-graph-png (get-doc docid)
-                                                (get-doc graphid graphrev))))
+  (resp/content-type "image/png"
+                     (get-graph-png (get-doc docid) (get-doc graphid graphrev))))
+
+(defpage "/graph/:docid/:graphid/:graphrev/pdf"
+  {docid :docid graphid :graphid graphrev :graphrev}
+  (resp/content-type "application/pdf"
+                     (get-graph-pdf (get-doc docid) (get-doc graphid graphrev))))
+

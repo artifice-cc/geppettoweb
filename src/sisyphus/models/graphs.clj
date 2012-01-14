@@ -6,10 +6,10 @@
   (:use [sisyphus.models.results :only [csv-filenames results-to-csv]])
   (:use sisyphus.models.common))
 
-(defn png-filename
-  [doc graph]
-  (format "%s/%s-%s-%s.png" cachedir
-          (:_id doc) (:_id graph) (:_rev graph)))
+(defn type-filename
+  [doc graph ftype]
+  (format "%s/%s-%s-%s.%s" cachedir
+          (:_id doc) (:_id graph) (:_rev graph) ftype))
 
 (defn list-graphs
   []
@@ -46,22 +46,25 @@
       (clutch/update-document doc (dissoc graph :id :_id :_rev)))))
 
 (defn update-graph-attachment
-  [doc png-fname graph]
+  [doc fname graph ftype]
   (reset-doc-cache (:_id doc))
   (try
     (clutch/with-db db
-      (clutch/update-attachment doc png-fname
-                                (format "%s-%s" (:_id graph) (:_rev graph))
-                                "image/png"))
+      (clutch/update-attachment doc fname
+                                (format "%s-%s-%s" (:_id graph) (:_rev graph) ftype)
+                                (cond (= "png" ftype) "image/png"
+                                      (= "pdf" ftype) "application/pdf"
+                                      :else "application/octet-stream")))
     (catch Exception e)))
 
-(defn get-graph-png
-  [doc graph]
+(defn get-graph-file
+  [doc graph ftype]
   (reset-doc-cache (:_id doc))
-  (if-let [png (get-attachment (:_id doc) (format "%s-%s" (:_id graph) (:_rev graph)))]
-    png
+  (if-let [f (get-attachment (:_id doc)
+                             (format "%s-%s-%s" (:_id graph) (:_rev graph) ftype))]
+    f
     (let [csv-fnames (csv-filenames doc)
-          png-fname (png-filename doc graph)
+          ftype-fname (type-filename doc graph ftype)
           tmp-fname (format "%s/%s-%s-%s.rscript"
                             cachedir (:_id doc) (:_id graph) (:_rev graph))
           rcode (format "library(ggplot2)\n%s\n%s\n
@@ -69,7 +72,7 @@
                         (apply str (map #(format "%s <- read.csv(\"%s\")\n"
                                                  (name %) (get csv-fnames %))
                                         (keys csv-fnames)))
-                        (:code graph) png-fname)]
+                        (:code graph) ftype-fname)]
       (results-to-csv doc csv-fnames)
       ;; save rcode to file
       (with-open [writer (io/writer tmp-fname)]
@@ -78,10 +81,18 @@
       (let [status (sh "/usr/bin/Rscript" tmp-fname)]
         (cond (not= 0 (:exit status))
               status
-              (not (. (io/file png-fname) exists))
+              (not (. (io/file ftype-fname) exists))
               {:err "Resulting file does not exist."}
-              :else (do (update-graph-attachment doc png-fname graph)
-                        (io/input-stream (io/file png-fname))))))))
+              :else (do (update-graph-attachment doc ftype-fname graph ftype)
+                        (io/input-stream (io/file ftype-fname))))))))
+
+(defn get-graph-png
+  [doc graph]
+  (get-graph-file doc graph "png"))
+
+(defn get-graph-pdf
+  [doc graph]
+  (get-graph-file doc graph "pdf"))
 
 (defn delete-graph
   [id]
