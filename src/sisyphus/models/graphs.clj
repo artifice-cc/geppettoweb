@@ -57,6 +57,44 @@
                                       :else "application/octet-stream")))
     (catch Exception e)))
 
+(def theme_minimal
+  "theme_minimal <- function (base_size = 12, base_family = \"\") 
+   {
+       structure(list(axis.line = theme_blank(),
+           axis.text.x = theme_text(family = base_family, size = base_size * 0.7, lineheight = 0.9, vjust = 1, colour = \"grey50\"), 
+           axis.text.y = theme_text(family = base_family, size = base_size * 0.7, lineheight = 0.9, hjust = 1, colour = \"grey50\"),
+           axis.ticks = theme_segment(colour = \"grey50\", size = 0.2),
+           axis.title.x = theme_text(family = base_family, size = base_size, vjust = 0.25, colour = \"black\"),
+           axis.title.y = theme_text(family = base_family, size = base_size, angle = 90, vjust = 0.5, colour = \"black\"),
+           axis.ticks.length = unit(0.2, \"lines\"),
+           axis.ticks.margin = unit(0.2, \"lines\"), 
+           legend.background = theme_rect(colour = NA),
+           legend.key = theme_rect(colour = NA), 
+           legend.key.size = unit(1.2, \"lines\"),
+           legend.key.height = NA, 
+           legend.key.width = NA,
+           legend.text = theme_text(family = base_family, size = base_size * 0.8),
+           legend.text.align = NA, 
+           legend.title = theme_text(family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
+           legend.title.align = NA, 
+           legend.position = \"right\",
+           legend.direction = \"vertical\", 
+           legend.box = NA,
+           panel.background = theme_rect(fill = \"white\", colour = NA),
+           panel.border = theme_rect(fill = NA, colour = \"grey80\"),
+           panel.grid.major = theme_line(colour = \"grey90\", size = 0.2),
+           panel.grid.minor = theme_line(colour = \"grey98\", size = 0.5),
+           panel.margin = unit(0.25, \"lines\"), 
+           strip.background = theme_rect(fill = NA, colour = NA), 
+           strip.text.x = theme_text(family = base_family, size = base_size * 0.8),
+           strip.text.y = theme_text(family = base_family, size = base_size * 0.8, angle = -90),
+           plot.background = theme_rect(colour = NA), 
+           plot.title = theme_text(family = base_family, size = base_size * 1.2),
+           plot.margin = unit(c(1, 1, 1, 1), \"lines\")),
+           panel.border = theme_rect(fill = NA, colour = \"grey50\"),
+           class = \"options\")
+   }")
+
 (defn render-graph-file
   [doc graph ftype]
   (reset-doc-cache (:_id doc))
@@ -66,8 +104,9 @@
           ftype-fname (type-filename doc graph ftype)
           tmp-fname (format "%s/%s-%s-%s.rscript"
                             cachedir (:_id doc) (:_id graph) (:_rev graph))
-          rcode (format "library(ggplot2)\n%s\n%s\n
+          rcode (format "library(ggplot2)\n%s\n%s\n%s\np <- p + theme_minimal()\n
                          ggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
+                        theme_minimal
                         (apply str (map #(format "%s <- read.csv(\"%s\")\n"
                                                  (name %) (get csv-fnames %))
                                         (keys csv-fnames)))
