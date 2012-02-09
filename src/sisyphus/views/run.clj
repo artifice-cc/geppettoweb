@@ -293,12 +293,6 @@
                 [:h1 (format "%s run %s <small>(%s)</small>"
                              (:problem run) (subs id 22)
                              (:paramstype run))]]]
-     (if comparative?
-       (run-comparative-results-table run comparative-fields))
-     (if comparative?
-       (run-paired-results-table run control-fields))
-     (if-not comparative?
-       (run-non-comparative-results-table run control-fields))
      (analysis run)
      (graphs run)
      (annotations run "run")
@@ -308,3 +302,12 @@
      (run-project run)
      (run-metainfo run)
      (run-delete-run run))))
+
+(comment
+  (if comparative?
+    (run-comparative-results-table run comparative-fields))
+  (if comparative?
+    (run-paired-results-table run control-fields))
+  (if-not comparative?
+    (run-non-comparative-results-table run control-fields))
+  )
