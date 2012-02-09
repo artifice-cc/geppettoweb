@@ -3,6 +3,7 @@
   (:require [sisyphus.views.claims]
             [sisyphus.views.configure]
             [sisyphus.views.run]
+            [sisyphus.views.run-tables]
             [sisyphus.views.simulation]
             [sisyphus.views.graphs]
             [sisyphus.views.overview]
