@@ -222,7 +222,6 @@
                              (:problem run) (subs id 22)
                              (:paramstype run))]]]
      [:div.row [:div.span16.columns
-                [:h2 "Tables"]
                 [:p (link-to (format "/run/tables/%s" id)
                              "View tables...")]]]
      (analysis run)
