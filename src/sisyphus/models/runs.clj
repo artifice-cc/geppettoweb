@@ -85,7 +85,7 @@
 (defn get-summary-results
   "Get results with all funcs applied or only those requested."
   ([run results-type]
-     (let [sims (map get-doc (:results run))
+     (let [sims (get-many-docs (:results run))
            fields-funcs (get-fields-funcs run results-type :all)]
        (map (fn [sim] (zipmap (concat [:simulation]
                                       (if (:params (first (get sim results-type)))
@@ -99,7 +99,7 @@
                                (summarize-sim-results sim results-type fields-funcs))))
             sims)))
   ([run results-type fields-funcs]
-     (let [sims (map get-doc (:results run))]
+     (let [sims (get-many-docs (:results run))]
        (map (fn [sim]
               (zipmap
                (concat

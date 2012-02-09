@@ -25,16 +25,17 @@
   [doc csv-fnames]
   (doseq [results-type (keys csv-fnames)]
     (let [outfile (io/file (get csv-fnames results-type))]
-      (when (. outfile createNewFile)
-        (let [results (if (= "run" (:type doc))
-                        ;; for a run
-                        (get-summary-results doc results-type)
-                        ;; for a simulation
-                        (get doc results-type))
-              fields (sort (keys (first results)))
-              csv (apply str (map (fn [r] (format-csv-row (map (fn [f] (get r f)) fields)))
-                                  results))]
-          ;; save into cache file
-          (with-open [writer (io/writer outfile)]
-            (.write writer (format-csv-row (map name fields)))
-            (.write writer csv)))))))
+      (when (and (not (. outfile exists))) (. outfile createNewFile)
+            (let [results (if (= "run" (:type doc))
+                            ;; for a run
+                            (get-summary-results doc results-type)
+                            ;; for a simulation
+                            (get doc results-type))
+                  fields (sort (keys (first results)))
+                  csv (apply str (map (fn [r] (format-csv-row
+                                               (map (fn [f] (get r f)) fields)))
+                                      results))]
+              ;; save into cache file
+              (with-open [writer (io/writer outfile)]
+                (.write writer (format-csv-row (map name fields)))
+                (.write writer csv)))))))

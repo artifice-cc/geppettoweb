@@ -10,31 +10,39 @@
   ([name query] (view name query {}))
   ([name query post] (clutch/with-db db (clutch/get-view "app" name query post))))
 
-(def get-doc-cache (atom {}))
+(def get-doc-cache (ref {}))
 
 (defn reset-doc-cache
   [id]
-  (swap! get-doc-cache dissoc [id]))
+  (dosync (alter get-doc-cache dissoc [id])))
 
 (defn this-memoize [cache f]
   (fn [& args]
-    (when (<= 1000 (count @cache))
+    (when (<= 10000 (count @cache))
       (println "Resetting cache.")
-      (reset! cache {}))
+      (dosync (alter cache (constantly {}))))
     (if-let [e (find @cache args)]
       (val e)
       (let [ret (apply f args)]
-        (swap! cache assoc args ret)
+        (dosync (alter cache assoc args ret))
         ret))))
 
 (def get-doc
-  (this-memoize get-doc-cache
+  (this-memoize
+   get-doc-cache
    (fn
      ([id] (clutch/with-db db (clutch/get-document id)))
      ([id rev]
         (clutch/with-db db
           (let [revs (:_revisions (clutch/get-document id {:revs true}))]
             (assoc (clutch/get-document id {:rev rev} (constantly true)) :revs revs)))))))
+
+(def get-many-docs
+  (this-memoize
+   get-doc-cache
+   (fn [ids]
+     (map :doc (:rows (clutch/with-db db (clutch/get-all-documents-meta
+                                          {:include_docs true} {:keys ids})))))))
 
 (defn create-doc
   ([data] (clutch/with-db db (clutch/create-document data)))
