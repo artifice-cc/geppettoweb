@@ -23,6 +23,7 @@
                      { $(\"table.tablesorter\").each(function(index)
                        { $(this).tablesorter(); }) });")]
      [:body
+      [:a {:name "top"}]
       [:div.container-fluid
        [:div.topbar {:style "position: absolute;"}
         [:div.topbar-inner
@@ -36,7 +37,9 @@
            [:li (link-to "/analysis" "Analysis")]
            [:li (link-to "/configure" "Configure")]]]]]
        (let [headers (re-seq #"<a name=\"([^\"]+)\"><h(\d)>([^<]+)" chtml)]
-         [:div.sidebar {:style "position: fixed; top: 50px;"}
+         [:div.sidebar {:style "position: fixed; top: 0; height: 100%; overflow: auto;"}
+          [:p {:style "height: 40px; padding-top: 10px;"}
+           [:b (link-to "#top" "Top")]]
           [:p
            (map (fn [[_ anchor ds title]]
                   (let [l (link-to (format "#%s" anchor) title)
