@@ -78,7 +78,8 @@
 
 (defpartial analysis
   [doc & opts]
-  (let [all-analysis (filter #(and (= (:paramstype doc) (:resultstype %))
+  (let [all-analysis (filter #(and (or (= "comparative" (:paramstype doc))
+                                       (= (:paramstype doc) (:resultstype %)))
                                    (= (:type doc) (:run-or-sim %)))
                              (get (list-analysis) (:problem doc)))
         run (if (= "run" (:type doc)) doc (get-doc (:runid doc)))

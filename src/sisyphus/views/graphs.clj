@@ -107,7 +107,8 @@
 
 (defpartial graphs
   [doc & opts]
-  (let [all-graphs (filter #(and (= (:paramstype doc) (:resultstype %))
+  (let [all-graphs (filter #(and (or (= "comparative" (:paramstype doc))
+                                     (= (:paramstype doc) (:resultstype %)))
                                  (= (:type doc) (:run-or-sim %)))
                            (get (list-graphs) (:problem doc)))
         run (if (= "run" (:type doc)) doc (get-doc (:runid doc)))
