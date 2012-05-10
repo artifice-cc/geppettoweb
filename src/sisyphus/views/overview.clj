@@ -45,7 +45,7 @@
   [problem runs project]
   [:div
    [:div.page-header
-    [:a {:name (str (str/replace problem #"\W" "_") (str/replace project #"\W" "_"))}
+    [:a {:name (if (and problem project) (str (str/replace problem #"\W" "_") (str/replace project #"\W" "_")) "")}
      [:h2 problem]]]
    [:div.row
     [:div.span16.columns

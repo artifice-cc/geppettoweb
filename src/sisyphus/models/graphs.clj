@@ -61,8 +61,8 @@
   "theme_minimal <- function (base_size = 12, base_family = \"\") 
    {
        structure(list(axis.line = theme_blank(),
-           axis.text.x = theme_text(family = base_family, size = base_size * 0.7, lineheight = 0.9, vjust = 1, colour = \"grey50\"), 
-           axis.text.y = theme_text(family = base_family, size = base_size * 0.7, lineheight = 0.9, hjust = 1, colour = \"grey50\"),
+           axis.text.x = theme_text(family = base_family, size = base_size, lineheight = 0.9, vjust = 1, colour = \"black\"), 
+           axis.text.y = theme_text(family = base_family, size = base_size, lineheight = 0.9, hjust = 1, colour = \"black\"),
            axis.ticks = theme_segment(colour = \"white\", size = 0.2),
            axis.title.x = theme_text(family = base_family, size = base_size, vjust = 0, colour = \"black\"),
            axis.title.y = theme_text(family = base_family, size = base_size, angle = 90, vjust = 0.25, colour = \"black\"),
@@ -73,20 +73,20 @@
            legend.key.size = unit(1.2, \"lines\"),
            legend.key.height = NA, 
            legend.key.width = NA,
-           legend.text = theme_text(family = base_family, size = base_size * 0.8),
+           legend.text = theme_text(family = base_family, size = base_size),
            legend.text.align = NA, 
-           legend.title = theme_text(family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
+           legend.title = theme_text(family = base_family, size = base_size, face = \"bold\", hjust = 0),
            legend.title.align = NA, 
            legend.direction = \"vertical\", 
            legend.box = NA,
            panel.background = theme_rect(fill = \"white\", colour = NA),
-           panel.border = theme_rect(fill = NA, colour = \"grey90\"),
+           panel.border = theme_rect(fill = NA, colour = \"black\"),
            panel.grid.major = theme_line(colour = \"white\", size = 0.2),
            panel.grid.minor = theme_line(colour = \"white\", size = 0.5),
            panel.margin = unit(0.25, \"lines\"), 
            strip.background = theme_rect(fill = NA, colour = NA), 
-           strip.text.x = theme_text(family = base_family, size = base_size * 0.8),
-           strip.text.y = theme_text(family = base_family, size = base_size * 0.8, angle = -90),
+           strip.text.x = theme_text(family = base_family, size = base_size),
+           strip.text.y = theme_text(family = base_family, size = base_size, angle = -90),
            plot.background = theme_rect(colour = NA), 
            plot.title = theme_text(family = base_family, size = base_size * 1.2),
            plot.margin = unit(c(1, 1, 1, 1), \"lines\")),
@@ -104,7 +104,7 @@
           tmp-fname (format "%s/%s-%s-%s.rscript"
                             cachedir (:_id doc) (:_id graph) (:_rev graph))
           rcode (format "library(ggplot2)\n%s\n%s\n%s\np <- p + theme_minimal()\n
-                         ggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 4)"
+                         ggsave(\"%s\", plot = p, dpi = 100, width = 7, height = 5)"
                         theme_minimal
                         (apply str (map #(format "%s <- read.csv(\"%s\")\n"
                                                  (name %) (get csv-fnames %))

@@ -8,7 +8,7 @@
           render-graph-file get-graph-png get-graph-pdf]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
-(def graph-help (.markdown common/mdp (slurp "help/graphs.md")))
+(def graph-help (.markdown common/mdp (slurp "/home/josh/research/sisyphus/help/graphs.md")))
 
 (defpartial show-graph
   [doc graph]
@@ -28,7 +28,7 @@
         [:pre.code {:style "width: 700px;"} (:code graph)]]
        [:div
         [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
-               :width 700 :height 400}]
+               :width 700 :height 500}]
         [:p
          [:a.code_header "Code"] " / "
          (link-to (format "/graphs/update/%s" (:_id graph)) "Update") " / "

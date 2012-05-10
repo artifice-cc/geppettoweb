@@ -13,8 +13,8 @@
 
 (defn format-csv-row
   [row]
-  ;; add quotes around string data
-  (let [fmt (fn [s] (format "\"%s\"" (str/replace s "\"" "\\\"")))]
+  ;; add quotes around string data (with "" as per CSV standard, RFC 4180)
+  (let [fmt (fn [s] (format "\"%s\"" (str/replace s "\"" "\"\"")))]
     (apply str (concat (interpose "," (map #(cond (= String (type %)) (fmt %)
                                                   (map? %) (fmt (pr-str %))
                                                   :else %)
