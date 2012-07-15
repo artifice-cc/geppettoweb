@@ -10,13 +10,15 @@
 
 (defpartial show-analysis
   [doc analysis]
-  [:div.row
-   [:div.span4.columns
-    [:h3 (:name analysis) [:br]
-     [:small (format " (%s, %s)" (:run-or-sim analysis) (:resultstype analysis))]]
-    [:p (:caption analysis)]]
-   [:div.span12.columns
-    [:pre (get-analysis-output doc analysis)]]])
+  [:div
+   [:div.row
+    [:div.span12.columns
+     [:h3 (:name analysis) [:br]
+      [:small (format " (%s, %s)" (:run-or-sim analysis) (:resultstype analysis))]]
+     [:p (:caption analysis)]]]
+   [:div.row
+    [:div.span12.columns
+     [:pre (get-analysis-output doc analysis)]]]])
 
 (defpartial analysis-form
   [analysis]
@@ -95,25 +97,28 @@
        (for [a (sort-by :name active-analysis) :when a]
          (show-analysis doc a)))
      (if-not (or (empty? all-analysis) (some #{:no-select} opts))
-       [:div.row
-        [:div.span4.columns
-         [:h3 "Choose analysis"]]
-        [:div.span12.columns
-         (form-to
-          [:post "/analysis/set-analysis"]
-          (hidden-field :docid (:_id doc))
-          (hidden-field :runid (:_id run))
-          (hidden-field :run-or-sim (:type doc))
-          [:div.clearfix
-           [:div.input
-            [:ul.inputs-list
-             (for [a all-analysis]
-               [:li [:label
-                     [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
-                              :checked (active-analysis a)}]
-                     " " (:name a)]])]]
-           [:div.actions
-            [:input.btn.primary {:value "Update" :type "submit"}]]])]])]))
+       [:div
+        [:div.row
+         [:div.span4.columns
+          [:p [:b [:a.fields_checkboxes_header "Choose analysis..."]]]]]
+        [:div.fields_checkboxes
+         [:div.row
+          [:div.span12.columns
+           (form-to
+            [:post "/analysis/set-analysis"]
+            (hidden-field :docid (:_id doc))
+            (hidden-field :runid (:_id run))
+            (hidden-field :run-or-sim (:type doc))
+            [:div.clearfix
+             [:div.input
+              [:ul.inputs-list
+               (for [a all-analysis]
+                 [:li [:label
+                       [:input {:type "checkbox" :name "analysis[]" :value (:_id a)
+                                :checked (active-analysis a)}]
+                       " " (:name a)]])]]
+             [:div.actions
+              [:input.btn.primary {:value "Update" :type "submit"}]]])]]]])]))
 
 (defpage
   [:post "/analysis/set-analysis"] {:as analysis}

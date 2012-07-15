@@ -12,29 +12,31 @@
 
 (defpartial show-graph
   [doc graph]
-  [:div.row
-   [:div.span4.columns
-    [:h3 (:name graph) [:br]
-     [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]
-    [:p (:caption graph)]]
-   [:div.span8.columns
-    [:p
-     (if-let [err (:err (render-graph-file doc graph "png"))]
-       [:div
-        [:pre err]
-        [:p
-         [:a.code_header "Code"] " / "
-         (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
-        [:pre.code {:style "width: 700px;"} (:code graph)]]
-       [:div
-        [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
-               :width 700 :height 400}]
-        [:p
-         [:a.code_header "Code"] " / "
-         (link-to (format "/graphs/update/%s" (:_id graph)) "Update") " / "
-         (link-to (format "/graph/%s/%s/%s/pdf" (:_id doc) (:_id graph) (:_rev graph))
-                  "Download PDF")]
-        [:pre.code {:style "width: 700px;"} (:code graph)]])]]])
+  [:div
+   [:div.row
+    [:div.span12.columns
+     [:h3 (:name graph) [:br]
+      [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]
+     [:p (:caption graph)]]]
+   [:div.row
+    [:div.span12.columns
+     [:p
+      (if-let [err (:err (render-graph-file doc graph "png"))]
+        [:div
+         [:pre err]
+         [:p
+          [:a.code_header "Code"] " / "
+          (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
+         [:pre.code {:style "width: 700px;"} (:code graph)]]
+        [:div
+         [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
+                :width 700 :height 400}]
+         [:p
+          [:a.code_header "Code"] " / "
+          (link-to (format "/graphs/update/%s" (:_id graph)) "Update") " / "
+          (link-to (format "/graph/%s/%s/%s/pdf" (:_id doc) (:_id graph) (:_rev graph))
+                   "Download PDF")]
+         [:pre.code {:style "width: 700px;"} (:code graph)]])]]]])
 
 (comment [:div.row
           [:div.span16.columns
@@ -124,25 +126,28 @@
        (for [g (sort-by :name active-graphs) :when g]
          (show-graph doc g)))
      (if-not (or (empty? all-graphs) (some #{:no-select} opts))
-       [:div.row
-        [:div.span4.columns
-         [:h3 "Choose graphs"]]
-        [:div.span12.columns
-         (form-to
-          [:post "/graphs/set-graphs"]
-          (hidden-field :docid (:_id doc))
-          (hidden-field :runid (:_id run))
-          (hidden-field :run-or-sim (:type doc))
-          [:div.clearfix
-           [:div.input
-            [:ul.inputs-list
-             (for [g all-graphs]
-               [:li [:label
-                     [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
-                              :checked (active-graphs g)}]
-                     " " (:name g)]])]]
-           [:div.actions
-            [:input.btn.primary {:value "Update" :type "submit"}]]])]])]))
+       [:div
+        [:div.row
+         [:div.span4.columns
+          [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
+        [:div.fields_checkboxes
+         [:div.row
+          [:div.span12.columns
+           (form-to
+            [:post "/graphs/set-graphs"]
+            (hidden-field :docid (:_id doc))
+            (hidden-field :runid (:_id run))
+            (hidden-field :run-or-sim (:type doc))
+            [:div.clearfix
+             [:div.input
+              [:ul.inputs-list
+               (for [g all-graphs]
+                 [:li [:label
+                       [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
+                                :checked (active-graphs g)}]
+                       " " (:name g)]])]]
+             [:div.actions
+              [:input.btn.primary {:value "Update" :type "submit"}]]])]]]])]))
 
 (defpage
   [:post "/graphs/set-graphs"] {:as graphs}
