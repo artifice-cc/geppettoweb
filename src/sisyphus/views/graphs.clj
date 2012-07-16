@@ -21,7 +21,7 @@
    [:div.row
     [:div.span12.columns
      [:p
-      (if-let [err (:err (render-graph-file doc graph "png"))]
+      (if-let [err (:err (render-graph-file doc graph "png" "minimal" 7 4))]
         [:div
          [:pre err]
          [:p
@@ -33,10 +33,28 @@
                 :width 700 :height 400}]
          [:p
           [:a.code_header "Code"] " / "
-          (link-to (format "/graphs/update/%s" (:_id graph)) "Update") " / "
-          (link-to (format "/graph/%s/%s/%s/pdf" (:_id doc) (:_id graph) (:_rev graph))
-                   "Download PDF")]
-         [:pre.code {:style "width: 700px;"} (:code graph)]])]]]])
+          (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
+         [:pre.code {:style "width: 700px;"} (:code graph)]
+         [:p (form-to [:post "/graph/pdf"]
+                      (hidden-field :docid (:_id doc))
+                      (hidden-field :graphid (:_id graph))
+                      (hidden-field :graphrev (:_rev graph))
+                      [:fieldset
+                       [:div.clearfix
+                        [:label {:for "theme"} "Theme"]
+                        [:div.input
+                         (drop-down :theme ["minimal" "poster"])]]
+                       [:div.clearfix
+                        [:label {:for "width"} "Width (in)"]
+                        [:div.input
+                         [:input.xlarge {:id "width" :name "width" :size 3 :type "text" :value "7"}]]]
+                       [:div.clearfix
+                        [:label {:for "height"} "Height (in)"]
+                        [:div.input
+                         [:input.xlarge {:id "height" :name "height" :size 3 :type "text" :value "4"}]]]
+                       [:div.actions
+                        [:input.btn.primary
+                         {:name "action" :value "PDF" :type "submit"}]]])]])]]]])
 
 (comment [:div.row
           [:div.span16.columns
@@ -215,8 +233,9 @@
   (resp/content-type "image/png"
                      (get-graph-png (get-doc docid) (get-doc graphid graphrev))))
 
-(defpage "/graph/:docid/:graphid/:graphrev/pdf"
-  {docid :docid graphid :graphid graphrev :graphrev}
+(defpage [:post "/graph/pdf"] {:as graph}
   (resp/content-type "application/pdf"
-                     (get-graph-pdf (get-doc docid) (get-doc graphid graphrev))))
+                     (get-graph-pdf (get-doc (:docid graph))
+                                    (get-doc (:graphid graph) (:graphrev graph))
+                                    (:theme graph) (:width graph) (:height graph))))
 
