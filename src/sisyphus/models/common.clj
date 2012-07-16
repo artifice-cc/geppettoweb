@@ -1,7 +1,7 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def db "http://localhost:5984/retrospect")
+(def db "http://localhost:5984/retrospect-new")
 
 (def cachedir "/tmp")
 
@@ -18,7 +18,7 @@
 
 (defn this-memoize [cache f]
   (fn [& args]
-    (when (<= 10000 (count @cache))
+    (when (<= 100 (count @cache))
       (println "Resetting cache.")
       (dosync (alter cache (constantly {}))))
     (if-let [e (find @cache args)]
