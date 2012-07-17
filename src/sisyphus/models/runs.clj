@@ -18,7 +18,7 @@
       (remove-claim-association {:claim (:_id c) :runid id}))
     (doseq [r (:results run)]
       (let [doc (get-doc r)]
-        (delete-doc doc)))
+        (when doc (delete-doc doc))))
     (delete-doc run)))
 
 (defn list-projects
