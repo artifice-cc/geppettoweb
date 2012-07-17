@@ -177,7 +177,8 @@
   (cond (= "Update" (:action graph))
         (do
           (update-graph graph)
-          (resp/redirect "/graphs"))
+          (resp/redirect (format "/graphs#%s" (str (str/replace (:problem graph) #"\W" "_")
+                                              (str/replace (:name graph) #"\W" "_")))))
         (= "Delete" (:action graph))
         (common/layout
          "Confirm deletion"
@@ -219,11 +220,14 @@
         (for [graph (get graphs problem)]
           [:div.row
            [:div.span4.columns
-            [:a {:name (str/replace (:name graph) #"\W" "_")}
+            [:a {:name (if (and problem graph)
+                         (str (str/replace problem #"\W" "_")
+                              (str/replace (:name graph) #"\W" "_")) "")}
              [:h2 (:name graph) [:br]
               [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]]
             [:p (:caption graph)]
-            [:p (link-to (format "/graphs/update/%s" (:_id graph)) "Update graph")]]
+            [:p (link-to (format "/graphs/update/%s" (:_id graph))
+                         "Update graph")]]
            [:div.span12.columns
             [:pre (:code graph)]]])])
      (graph-form {}))))
