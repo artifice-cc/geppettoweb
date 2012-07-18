@@ -80,7 +80,6 @@
        legend.text.align = NULL, 
        legend.title = theme_text(family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
        legend.title.align = NULL, 
-       legend.position = \"right\",
        legend.direction = \"vertical\",
        legend.justification = \"center\",
        legend.box = NULL,
@@ -99,16 +98,15 @@
    }")
 
 (def theme_poster
-  "tango_text <- theme_text(colour = \"#2e3436\")
-   my_palette <- c(\"#3465a4\", \"#2e3436\", \"#f57900\")
+  "my_palette <- c(\"#3465a4\", \"#2e3436\", \"#f57900\")
    theme_poster <- function (base_size = 12, base_family = \"\") {
    structure(list(
        axis.line = theme_blank(),
-       axis.text.x = tango_text,
-       axis.text.y = tango_text,
-       axis.ticks = theme_segment(colour = \"black\", size = 0.2),
-       axis.title.x = tango_text,
-       axis.title.y = theme_text(angle = 90),
+       axis.text.x = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8, lineheight = 0.9, vjust = 1), 
+       axis.text.y = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8, lineheight = 0.9, hjust = 1),
+       axis.ticks = theme_segment(colour = \"#2e3436\", size = 0.2),
+       axis.title.x = theme_text(colour = \"#2e3436\", family = base_family, size = base_size, vjust = 0),
+       axis.title.y = theme_text(colour = \"#2e3436\", family = base_family, size = base_size, angle = 90, vjust = 0.5),
        axis.ticks.length = unit(0.3, \"lines\"),
        axis.ticks.margin = unit(0.5, \"lines\"),
        legend.background = theme_rect(colour = NA), 
@@ -117,11 +115,10 @@
        legend.key.size = unit(1.2, \"lines\"),
        legend.key.height = NULL, 
        legend.key.width = NULL,
-       legend.text = tango_text,
+       legend.text = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8),
        legend.text.align = NULL, 
-       legend.title = tango_text,
+       legend.title = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
        legend.title.align = NULL, 
-       legend.position = \"bottom\",
        legend.direction = \"vertical\",
        legend.justification = \"center\",
        legend.box = NULL,
@@ -130,11 +127,11 @@
        panel.grid.major = theme_line(colour = \"#d3d7cf\", size = 0.2),
        panel.grid.minor = theme_line(colour = \"#eeeeec\", size = 0.5),
        panel.margin = unit(0.25, \"lines\"), 
-       strip.background = theme_rect(fill = NA, colour = NA), 
-       strip.text.x = tango_text,
-       strip.text.y = tango_text,
+       strip.background = theme_rect(fill = NA, colour = NA),
+       strip.text.x = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8),
+       strip.text.y = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8, angle = -90),
        plot.background = theme_rect(colour = NA), 
-       plot.title = theme_text(family = base_family, size = base_size * 1.2),
+       plot.title = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 1.2),
        plot.margin = unit(c(1, 1, 0.5, 0.5), \"lines\")),
      class = \"options\")
    }")
@@ -149,9 +146,12 @@
           ftype-fname (type-filename doc graph ftype)
           tmp-fname (format "%s/%s-%s-%s.rscript"
                        cachedir (:_id doc) (:_id graph) (:_rev graph))
-          rcode (format "library(ggplot2)\nlibrary(grid)\n%s\n%s\n%s\n
+          rcode (format "library(ggplot2)\nlibrary(grid)\n%s\n%s\n
+                         p <- ggplot()\n
+                         %s\n
                          p <- p + theme_%s()\n
                          p <- p + scale_colour_manual(values=my_palette)\n
+                         p <- p + scale_fill_manual(values=my_palette)\n
                          ggsave(\"%s\", plot = p, dpi = %d, width = %s, height = %s)"
                    (format "%s\n%s\n" theme_minimal theme_poster)
                    (apply str (map #(format "%s <- read.csv(\"%s\")\n"
