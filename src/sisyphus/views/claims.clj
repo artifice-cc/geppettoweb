@@ -94,7 +94,7 @@
                  on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
                  results (get-summary-results run :comparative fields-funcs)]
              [:div.row
-              [:div.span16.columns
+              [:div.span12.columns
                [:h4 "Comparative results"]
                (results-table results on-fields)]]))
          (if comparative?
@@ -103,7 +103,7 @@
                  control-results (get-summary-results run :control fields-funcs)
                  comparison-results (get-summary-results run :comparison fields-funcs)]
              [:div.row
-              [:div.span16.columns
+              [:div.span12.columns
                [:h4 "Control/comparison results"]
                (paired-results-table control-results comparison-results on-fields)]]))
          (if-not comparative?
@@ -111,14 +111,14 @@
                  on-fields (concat ["Simulation"] (format-summary-fields fields-funcs))
                  results (get-summary-results run :control fields-funcs)]
              [:div.row
-              [:div.span16.columns
+              [:div.span12.columns
                [:h4 "Results"]
                (results-table results on-fields)]]))
          (analysis run :no-select)
          (graphs run :no-select)
          [:div.row
           [:div.span4.columns "&nbsp;"]
-          [:div.span12.columns
+          [:div.span8.columns
            (form-to [:post "/claims/remove-association"]
                     (hidden-field :claim (:_id claim))
                     (hidden-field :runid (:runid r))

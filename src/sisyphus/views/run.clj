@@ -217,11 +217,11 @@
   (let [run (get-doc id)]
     (common/layout
      (format "%s run %s" (:problem run) (subs id 22))
-     [:div.row [:div.span16.columns
+     [:div.row [:div.span12.columns
                 [:h1 (format "%s run %s <small>(%s)</small>"
                              (:problem run) (subs id 22)
                              (:paramstype run))]]]
-     [:div.row [:div.span16.columns
+     [:div.row [:div.span12.columns
                 [:p (link-to (format "/run/tables/%s" id)
                              "View tables...")]]]
      (analysis run)

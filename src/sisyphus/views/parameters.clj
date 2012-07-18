@@ -20,7 +20,7 @@
             "New parameters")]]]
    [:div.row
     [:div.span4.columns "&nbsp;"]
-    [:div.span12.columns
+    [:div.span8.columns
      (form-to [:post (if (:name params) "/parameters/update-parameters"
                          "/parameters/new-parameters")]
               (hidden-field :id (:_id params))
@@ -109,7 +109,7 @@
 (defpartial parameters-summary
   [params]
   [:div.row
-   [:div.span16.columns
+   [:div.span12.columns
     [:a {:name (:_id params)}
      [:h2 (format "%s/%s" (:problem params) (:name params))]]
     (if (or (nil? (:revs params))
@@ -122,19 +122,19 @@
     (let [control-params (to-clj (:control params))
           comparison-params (to-clj (:comparison params))]
       [:div.row
-       [:div.span8.columns
+       [:div.span6.columns
         [:h3 "Control"]
         [:div.params
          (paramscount control-params)
          (params-diff control-params comparison-params)]]
-       [:div.span8.columns
+       [:div.span6.columns
         [:h3 "Comparison"]
         [:div.params
          (paramscount comparison-params)
          (params-diff comparison-params control-params)]]])
     (let [control-params (to-clj (:control params))]
       [:div.row
-       [:div.span8.columns
+       [:div.span6.columns
         [:div.params
          (paramscount control-params)
          [:pre (:control params)]]]]))

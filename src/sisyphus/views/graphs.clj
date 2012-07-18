@@ -57,7 +57,7 @@
                          {:name "action" :value "PDF" :type "submit"}]]])]])]]]])
 
 (comment [:div.row
-          [:div.span16.columns
+          [:div.span12.columns
            [:p (format "Failed to produce graph %s" (:name graph))]
            [:pre (:err png)]]])
 
@@ -140,7 +140,7 @@
        [:h2 "Graphs"]]]
      (if (empty? active-graphs)
        [:div.row
-        [:div.span16.columns [:p "No graphs."]]]
+        [:div.span12.columns [:p "No graphs."]]]
        (for [g (sort-by :name active-graphs) :when g]
          (show-graph doc g)))
      (if-not (or (empty? all-graphs) (some #{:no-select} opts))
@@ -150,7 +150,7 @@
           [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
         [:div.fields_checkboxes
          [:div.row
-          [:div.span12.columns
+          [:div.span8.columns
            (form-to
             [:post "/graphs/set-graphs"]
             (hidden-field :docid (:_id doc))
@@ -213,7 +213,7 @@
      (for [problem (sort (keys graphs))]
        [:section {:id problem}
         [:div.row
-         [:div.span16.columns
+         [:div.span12.columns
           [:div.page-header
            [:a {:name (str/replace problem #"\W" "_")}
             [:h1 (format "%s graphs" problem)]]]]]
@@ -228,7 +228,7 @@
             [:p (:caption graph)]
             [:p (link-to (format "/graphs/update/%s" (:_id graph))
                          "Update graph")]]
-           [:div.span12.columns
+           [:div.span8.columns
             [:pre (:code graph)]]])])
      (graph-form {}))))
 

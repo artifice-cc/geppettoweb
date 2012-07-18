@@ -32,7 +32,7 @@
        (field-checkboxes sim fieldstype fields on-fields)]
       [:div.row
        [:div.span4.columns "&nbsp;"]
-       [:div.span12.columns
+       [:div.span8.columns
         [:div.actions
          [:input.btn.primary {:value "Update" :type "submit"}]]]]])))
 
@@ -87,11 +87,11 @@
       [:a {:name "parameters"}]
       [:h2 "Parameters"]]
      [:div.row
-      [:div.span8.columns
+      [:div.span6.columns
        [:h3 "Control"]
        [:div.params
         (params-diff control-params comparison-params)]]
-      [:div.span8.columns
+      [:div.span6.columns
        [:h3 "Comparison"]
        [:div.params
         (params-diff comparison-params control-params)]]]]))
@@ -130,7 +130,7 @@
         comparative? (= "comparative" (:paramstype run))]
     (common/layout
      (format "%s simulation %s" (:problem run) (subs id 22))
-     [:div.row [:div.span16.columns
+     [:div.row [:div.span12.columns
                 [:h1 (format "%s simluation %s"
                              (:problem run) (subs id 22) (:paramstype run)
                              (subs (:runid sim) 22))

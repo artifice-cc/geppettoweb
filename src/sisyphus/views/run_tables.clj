@@ -28,7 +28,7 @@
      (field-selects run results-type fields fields-funcs)]
     [:div.row
      [:div.span4.columns "&nbsp;"]
-     [:div.span12.columns
+     [:div.span8.columns
       [:div.actions
        [:input.btn.primary {:value "Update" :type "submit"}]]]]]))
 
@@ -82,10 +82,10 @@
         control-fields (get-summary-fields run :control)]
     (common/layout
      (format "%s run %s" (:problem run) (subs id 22))
-     [:div.row [:div.span16.columns
+     [:div.row [:div.span12.columns
                 [:h1 (format "%s run %s <small>(%s)</small>"
-                             (:problem run) (subs id 22)
-                             (:paramstype run))]]]
+                        (:problem run) (format "<a href=\"/run/%s\">%s</a>" id (subs id 22))
+                        (:paramstype run))]]]
      (if comparative?
        (run-comparative-results-table run comparative-fields))
      (if comparative?

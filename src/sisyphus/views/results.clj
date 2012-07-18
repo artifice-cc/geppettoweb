@@ -28,7 +28,7 @@
 (defpartial results-table
   [results on-fields]
   [:div.row
-   [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
+   [:div.span12.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
     [:table.tablesorter.zebra-striped
      [:thead
       [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
@@ -53,7 +53,7 @@
   [control-results comparison-results on-fields]
   (let [paired-results (partition 2 (interleave control-results comparison-results))]
     [:div.row
-     [:div.span16.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
+     [:div.span12.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
       [:table.tablesorter.zebra-striped
        [:thead
         [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]

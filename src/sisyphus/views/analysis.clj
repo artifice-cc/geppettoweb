@@ -93,7 +93,7 @@
        [:h2 "Analysis"]]]
      (if (empty? active-analysis)
        [:div.row
-        [:div.span16.columns [:p "No analysis."]]]
+        [:div.span12.columns [:p "No analysis."]]]
        (for [a (sort-by :name active-analysis) :when a]
          (show-analysis doc a)))
      (if-not (or (empty? all-analysis) (some #{:no-select} opts))
@@ -165,7 +165,7 @@
      (for [problem (sort (keys analysis))]
        [:section {:id problem}
         [:div.row
-         [:div.span16.columns
+         [:div.span112.columns
           [:div.page-header
            [:a {:name (str/replace problem #"\W" "_")}
             [:h1 (format "%s analysis" problem)]]]]]

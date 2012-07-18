@@ -6,7 +6,7 @@
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.runs :only [list-runs]]))
+  (:use [sisyphus.models.runs :only [list-runs delete-run]]))
 
 (defpartial run-table-row
   [run]
@@ -24,7 +24,8 @@
      [:td (:analysis-count run)]
      [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s" (:commit run))
                    (subs (:commit run) 0 10))
-      " @ " (:branch run)]]))
+      " @ " (:branch run)]
+     [:td (check-box "delete[]" false id)]]))
 
 (defpartial runs-table
   [runs problem]
@@ -38,7 +39,8 @@
      [:th "Sims"]
      [:th "Graphs"]
      [:th "Analysis"]
-     [:th "Commit"]]]
+     [:th "Commit"]
+     [:th "Delete?"]]]
    [:tbody (map run-table-row runs)]])
 
 (defpartial runs
@@ -50,7 +52,7 @@
                       (str/replace project #"\W" "_")) "")}
      [:h2 problem]]]
    [:div.row
-    [:div.span16.columns
+    [:div.span12.columns
      (runs-table runs problem)]]])
 
 (defpartial runs-by-problem
@@ -72,11 +74,19 @@
        (sort (keys runs-grouped-project))))
 
 (defpage
-  [:post "/set-custom"] {:as custom}
-  (cookies/put! (keyword (format "%s-field" (:problem custom))) (:field custom))
-  (cookies/put! (keyword (format "%s-func" (:problem custom))) (:func custom))
+  [:post "/delete-runs"] {:as runs}
+  (doseq [id (:delete runs)]
+    (println "Deleting" id)
+    (delete-run id))
   (resp/redirect "/"))
 
 (defpage "/" []
   (let [runs-grouped-project (group-by :project (list-runs))]
-    (common/layout "Overview" (runs-by-project runs-grouped-project))))
+    (common/layout "Overview"
+                   (form-to [:post "/delete-runs"]
+                            (runs-by-project runs-grouped-project)
+                            [:div.row
+                             [:div.span12.columns
+                              [:div.actions
+                               [:input.btn.danger
+                                {:value "Delete runs" :name "action" :type "submit"}]]]]))))
