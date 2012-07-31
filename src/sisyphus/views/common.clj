@@ -44,7 +44,9 @@
            (map (fn [[_ anchor ds title]]
                   (let [l (link-to (format "#%s" anchor) title)
                         d (Integer/parseInt ds)]
-                    [:div (cond (= d 1) [:b [:i l]] (= d 2) [:b l] :else l)])) headers)]])
+                    [:div (cond (= d 1) [:b [:i l]]
+                                (= d 2) [:b [:span "&nbsp;" l]]
+                                :else [:span "&nbsp;&nbsp;" l])])) headers)]])
        [:div.content {:style "position: relative; top: 50px;"}
         chtml]]])))
 
