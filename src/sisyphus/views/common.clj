@@ -44,7 +44,7 @@
            (map (fn [[_ anchor ds title]]
                   (let [l (link-to (format "#%s" anchor) title)
                         d (Integer/parseInt ds)]
-                    [:div (if (= d 1) [:b l] l)])) headers)]])
+                    [:div (if (= d 2) [:b l] l)])) headers)]])
        [:div.content {:style "position: relative; top: 50px;"}
         chtml]]])))
 

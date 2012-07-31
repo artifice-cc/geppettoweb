@@ -107,11 +107,11 @@
    [:br [:small "params"]]])
 
 (defpartial parameters-summary
-  [params]
+  [params embedded?]
   [:div.row
    [:div.span12.columns
     [:a {:name (:_id params)}
-     [:h2 (format "%s/%s" (:problem params) (:name params))]]
+     [(if embedded? :h3 :h2) (format "%s/%s" (:problem params) (:name params))]]
     (if (or (nil? (:revs params))
             (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
       [:p (link-to (format "/parameters/update/%s" (:_id params)) "Update")]
@@ -180,7 +180,7 @@
   (if-let [params (get-doc id rev)]
     (common/layout
      (format "Parameters: %s/%s" (:problem params) (:name params))
-     (parameters-summary params))
+     (parameters-summary params false))
     (resp/redirect "/parameters")))
 
 (defpage "/parameters" {}
@@ -193,11 +193,11 @@
         [:a {:name "comparative"}
          [:h1 "Comparative parameters"]]]
        (for [params comparative]
-         (parameters-summary params))]
+         (parameters-summary params false))]
       [:section#non-comparative-parameters
        [:div.page-header
         [:a {:name "noncomparative"}
          [:h1 "Non-comparative parameters"]]]
        (for [params non-comparative]
-         (parameters-summary params))]
+         (parameters-summary params false))]
       (parameters-form nil)])))

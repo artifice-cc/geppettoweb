@@ -78,7 +78,7 @@
       [:a {:name "parameters"}
        [:h2 "Parameters"]]]
      (if (not= (keys params) [:revs])
-       (parameters-summary params)
+       (parameters-summary params true)
        [:p "Error in getting parameters."])]))
 
 (defpartial claim-association-form
