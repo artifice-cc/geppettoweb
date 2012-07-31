@@ -58,9 +58,9 @@
                                       :else "application/octet-stream")))
     (catch Exception e)))
 
-(def theme_minimal
-  "my_palette <- c(\"#3465a4\", \"#2e3436\", \"#f57900\")
-   theme_minimal <- function (base_size = 12, base_family = \"\") {
+(def theme_website
+  "website_palette <- c(\"#3465a4\", \"#2e3436\", \"#f57900\")
+   theme_website <- function (base_size = 12, base_family = \"\") {
    structure(list(
        axis.line = theme_blank(),
        axis.text.x = theme_text(family = base_family, size = base_size * 0.8, lineheight = 0.9, vjust = 1), 
@@ -80,7 +80,44 @@
        legend.text.align = NULL, 
        legend.title = theme_text(family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
        legend.title.align = NULL, 
-       legend.direction = \"vertical\",
+       legend.justification = \"center\",
+       legend.box = NULL,
+       panel.background = theme_rect(fill = \"white\", colour = NA),
+       panel.border = theme_rect(fill = NA, colour = \"grey90\"),
+       panel.grid.major = theme_line(colour = \"grey90\", size = 0.2),
+       panel.grid.minor = theme_line(colour = \"grey98\", size = 0.5),
+       panel.margin = unit(0.25, \"lines\"), 
+       strip.background = theme_rect(fill = NA, colour = NA), 
+       strip.text.x = theme_text(family = base_family, size = base_size * 0.8),
+       strip.text.y = theme_text(family = base_family, size = base_size * 0.8, angle = -90),
+       plot.background = theme_rect(colour = NA), 
+       plot.title = theme_text(family = base_family, size = base_size * 1.2),
+       plot.margin = unit(c(1, 1, 0.5, 0.5), \"lines\")),
+     class = \"options\")
+   }")
+
+(def theme_paper
+  "paper_palette <- c(\"#000000\", \"#555555\", \"#999999\")
+   theme_paper <- function (base_size = 12, base_family = \"\") {
+   structure(list(
+       axis.line = theme_blank(),
+       axis.text.x = theme_text(family = base_family, size = base_size * 0.8, lineheight = 0.9, vjust = 1), 
+       axis.text.y = theme_text(family = base_family, size = base_size * 0.8, lineheight = 0.9, hjust = 1),
+       axis.ticks = theme_segment(colour = \"black\", size = 0.2),
+       axis.title.x = theme_text(family = base_family, size = base_size, vjust = 0),
+       axis.title.y = theme_text(family = base_family, size = base_size, angle = 90, vjust = 0.5),
+       axis.ticks.length = unit(0.3, \"lines\"),
+       axis.ticks.margin = unit(0.5, \"lines\"),
+       legend.background = theme_rect(colour = NA), 
+       legend.margin = unit(0.2, \"cm\"),
+       legend.key = theme_rect(colour = NA), 
+       legend.key.size = unit(1.2, \"lines\"),
+       legend.key.height = NULL, 
+       legend.key.width = NULL,
+       legend.text = theme_text(family = base_family, size = base_size * 0.8),
+       legend.text.align = NULL, 
+       legend.title = theme_text(family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
+       legend.title.align = NULL, 
        legend.justification = \"center\",
        legend.box = NULL,
        panel.background = theme_rect(fill = \"white\", colour = NA),
@@ -98,7 +135,7 @@
    }")
 
 (def theme_poster
-  "my_palette <- c(\"#3465a4\", \"#2e3436\", \"#f57900\")
+  "poster_palette <- c(\"#3465a4\",  \"#2e3436\", \"#f57900\")
    theme_poster <- function (base_size = 12, base_family = \"\") {
    structure(list(
        axis.line = theme_blank(),
@@ -119,7 +156,6 @@
        legend.text.align = NULL, 
        legend.title = theme_text(colour = \"#2e3436\", family = base_family, size = base_size * 0.8, face = \"bold\", hjust = 0),
        legend.title.align = NULL, 
-       legend.direction = \"vertical\",
        legend.justification = \"center\",
        legend.box = NULL,
        panel.background = theme_rect(fill = \"white\", colour = NA),
@@ -150,15 +186,15 @@
                          p <- ggplot()\n
                          %s\n
                          p <- p + theme_%s()\n
-                         p <- p + scale_colour_manual(values=my_palette)\n
-                         p <- p + scale_fill_manual(values=my_palette)\n
+                         p <- p + scale_colour_manual(values=%s_palette)\n
+                         p <- p + scale_fill_manual(values=%s_palette)\n
                          ggsave(\"%s\", plot = p, dpi = %d, width = %s, height = %s)"
-                   (format "%s\n%s\n" theme_minimal theme_poster)
+                   (format "%s\n%s\n%s\n" theme_website theme_paper theme_poster)
                    (apply str (map #(format "%s <- read.csv(\"%s\")\n"
                                      (name %) (get csv-fnames %))
                                  (keys csv-fnames)))
-                   (:code graph) theme ftype-fname
-                   (if (= "pdf" ftype) 300 100) width height)]
+                   (:code graph) theme theme theme ftype-fname
+                   (if (= "png" ftype) 100 600) width height)]
       (results-to-csv doc csv-fnames)
       ;; save rcode to file
       (with-open [writer (io/writer tmp-fname)]
@@ -175,17 +211,17 @@
 
 (defn get-graph-png
   [doc graph]
-  (render-graph-file doc graph "png" "minimal" 7 4)
+  (render-graph-file doc graph "png" "website" 7 4)
   (if-let [f (get-attachment (:_id doc)
                              (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) "png"
-                                "minimal" 7 4))]
+                                "website" 7 4))]
     (try (io/input-stream f) (catch Exception _))))
 
-(defn get-graph-pdf
-  [doc graph theme width height]
-  (render-graph-file doc graph "pdf" theme width height)
+(defn get-graph-download
+  [doc graph theme width height ftype]
+  (render-graph-file doc graph ftype theme width height)
   (if-let [f (get-attachment (:_id doc)
-                             (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) "pdf"
+                             (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) ftype
                                 theme width height))]
     (try (io/input-stream f) (catch Exception _))))
 

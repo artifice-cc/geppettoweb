@@ -1,5 +1,7 @@
+
 .fields_checkboxes_header,
-.code_header {
+.code_header,
+.download_header {
     cursor: pointer;
 }
 

@@ -1,11 +1,12 @@
 (ns sisyphus.views.graphs
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
+  (:use [ring.util.response :only [header]])
   (:require [clojure.string :as str])
   (:use [sisyphus.models.common :only [get-doc]])
   (:use [sisyphus.models.graphs :only
          [list-graphs new-graph update-graph set-graphs delete-graph
-          render-graph-file get-graph-png get-graph-pdf]])
+          render-graph-file get-graph-png get-graph-download]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (def graph-help (.markdown common/mdp (slurp "/home/josh/research/sisyphus/help/graphs.md")))
@@ -15,13 +16,14 @@
   [:div
    [:div.row
     [:div.span12.columns
-     [:h3 (:name graph) [:br]
-      [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]
+     [:a {:name (:name graph)}
+      [:h3 (:name graph) [:br]
+       [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]]
      [:p (:caption graph)]]]
    [:div.row
     [:div.span12.columns
      [:p
-      (if-let [err (:err (render-graph-file doc graph "png" "minimal" 7 4))]
+      (if-let [err (:err (render-graph-file doc graph "png" "website" 7 4))]
         [:div
          [:pre err]
          [:p
@@ -33,28 +35,38 @@
                 :width 700 :height 400}]
          [:p
           [:a.code_header "Code"] " / "
-          (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
+          (link-to (format "/graphs/update/%s" (:_id graph)) "Update")
+          " / "
+          [:a.download_header "Download"]]
          [:pre.code {:style "width: 700px;"} (:code graph)]
-         [:p (form-to [:post "/graph/pdf"]
-                      (hidden-field :docid (:_id doc))
-                      (hidden-field :graphid (:_id graph))
-                      (hidden-field :graphrev (:_rev graph))
-                      [:fieldset
-                       [:div.clearfix
-                        [:label {:for "theme"} "Theme"]
-                        [:div.input
-                         (drop-down :theme ["minimal" "poster"])]]
-                       [:div.clearfix
-                        [:label {:for "width"} "Width (in)"]
-                        [:div.input
-                         [:input.xlarge {:id "width" :name "width" :size 3 :type "text" :value "7"}]]]
-                       [:div.clearfix
-                        [:label {:for "height"} "Height (in)"]
-                        [:div.input
-                         [:input.xlarge {:id "height" :name "height" :size 3 :type "text" :value "4"}]]]
-                       [:div.actions
-                        [:input.btn.primary
-                         {:name "action" :value "PDF" :type "submit"}]]])]])]]]])
+         [:div.download
+          (form-to [:post "/graph/download"]
+                   (hidden-field :docid (:_id doc))
+                   (hidden-field :graphid (:_id graph))
+                   (hidden-field :graphrev (:_rev graph))
+                   [:fieldset
+                    [:div.clearfix
+                     [:label {:for "theme"} "Theme"]
+                     [:div.input
+                      (drop-down :theme ["website" "paper" "poster"])]]
+                    [:div.clearfix
+                     [:label {:for "width"} "Width (in)"]
+                     [:div.input
+                      [:input.xlarge {:id "width" :name "width" :size 3 :type "text" :value "7"}]]]
+                    [:div.clearfix
+                     [:label {:for "height"} "Height (in)"]
+                     [:div.input
+                      [:input.xlarge {:id "height" :name "height" :size 3 :type "text" :value "4"}]]]
+                    [:div.clearfix
+                     [:label {:for "filename"} "File name (without extension)"]
+                     [:div.input
+                      [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text" :value ""}]]]
+                    [:div.actions
+                     [:input.btn
+                      {:name "ftype" :value "pdf" :type "submit"}]
+                     " "
+                     [:input.btn
+                      {:name "ftype" :value "svg" :type "submit"}]]])]])]]]])
 
 (comment [:div.row
           [:div.span12.columns
@@ -237,9 +249,16 @@
   (resp/content-type "image/png"
                      (get-graph-png (get-doc docid) (get-doc graphid graphrev))))
 
-(defpage [:post "/graph/pdf"] {:as graph}
-  (resp/content-type "application/pdf"
-                     (get-graph-pdf (get-doc (:docid graph))
-                                    (get-doc (:graphid graph) (:graphrev graph))
-                                    (:theme graph) (:width graph) (:height graph))))
+(defpage [:post "/graph/download"] {:as graph}
+  (->
+   (resp/content-type (if (= "pdf" (:ftype graph))
+                        "application/pdf"
+                        "image/svg+xml")
+                      (get-graph-download (get-doc (:docid graph))
+                                          (get-doc (:graphid graph) (:graphrev graph))
+                                          (:theme graph) (:width graph) (:height graph)
+                                          (:ftype graph)))
+   (header "Content-Disposition"
+           (format "attachment; filename=\"%s.%s\"" (:filename graph) (:ftype graph)))))
+
 
