@@ -42,7 +42,8 @@
            [:b (link-to "#top" "Top")]]
           [:p
            (map (fn [[_ anchor ds title]]
-                  (let [l (link-to (format "#%s" anchor) title)
+                  (let [a (str/replace anchor #"\W" "_")
+                        l (link-to (format "#%s" a) title)
                         d (Integer/parseInt ds)]
                     [:div (cond (= d 1) [:b [:i l]]
                                 (= d 2) [:b [:span "&nbsp;" l]]

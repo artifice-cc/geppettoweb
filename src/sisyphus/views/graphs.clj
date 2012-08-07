@@ -16,7 +16,7 @@
   [:div
    [:div.row
     [:div.span12.columns
-     [:a {:name (:name graph)}
+     [:a {:name (str/replace (:name graph) #"\W" "_")}
       [:h3 (:name graph) [:br]
        [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]]
      [:p (:caption graph)]]]
