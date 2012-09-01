@@ -3,7 +3,6 @@
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
   (:use [sisyphus.models.claims :only [list-claims remove-claim-association]])
-  (:use [sisyphus.models.simulations :only [get-simulation-fields]])
   (:use sisyphus.models.common))
 
 (defn list-runs
@@ -33,82 +32,65 @@
     (clutch/with-db db
       (clutch/update-document doc {:project project}))))
 
+(def dissoc-fields #{:Problem :runid :resultsid :type :_rev :_id
+                     :params :control-params :comparison-params :simulation})
+
+(defn get-simulation-fields
+  [sim results-type & opts]
+  (let [fields (apply set/union (map #(set (keys %)) (results-type sim)))]
+    (sort (if (some #{:all} opts) fields
+              (set/difference fields dissoc-fields)))))
+
 (defn get-summary-fields
   [run results-type & opts]
+  ;; the first map of results should have the same fields as all the others
   (get-simulation-fields (get-doc (first (:results run))) results-type))
 
-(def funcs {:sum #(reduce + 0 %)
-            :avg #(double (/ (reduce + 0 %) (count %)))
-            :min #(apply min %)
-            :max #(apply max %)
-            :last last
-            :first first})
-
-(defn get-fields-funcs
+(defn get-fields
   [run results-type & opts]
   (if (some #{:all} opts)
-    ;; get all possible fields-funcs, not just those activated;
-    ;; used by get-summary-results below for CSV output
-    (mapcat (fn [field] (map (fn [func] [field (name func)]) (keys funcs)))
-            (get-summary-fields run results-type))
-    ;; get only activated fields-funcs
-    (let [ffs (get run (keyword (format "%s-fields-funcs" (name results-type))))]
-      (filter #(not= "N/A" (second %))
-              (map (fn [field] [field (get ffs field)]) (keys ffs))))))
+    ;; get all possible fields, not just those activated; used by
+    ;; get-summary-results below for CSV output
+    (set (map keyword (get-summary-fields run results-type)))
+    ;; get only activated fields
+    (set (map keyword (get run (keyword (format "%s-fields" (name results-type))) #{})))))
 
-(defn set-fields-funcs
+(defn set-fields
   [id fields results-type]
   (let [doc (get-doc id)]
     (reset-doc-cache id)
     (clutch/with-db db
-      (clutch/update-document doc {(keyword (format "%s-fields-funcs" (name results-type)))
-                                   fields}))))
-
-(defn format-summary-fields
-  [fields-funcs]
-  (map (fn [[field func]] (format "%s (%s)" (name field) func)) fields-funcs))
+      (clutch/update-document doc {(keyword (format "%s-fields" (name results-type)))
+                                   (map keyword fields)}))))
 
 (defn summarize-sim-results
-  [sim results-type fields-funcs]
+  [sim results-type fields]
   (concat
-   (if (:params (first (get sim results-type)))
-     [(:params (first (get sim results-type)))]
-     [(:control-params (first (get sim results-type)))
-      (:comparison-params (first (get sim results-type)))])
-   (for [[field func] fields-funcs]
-     (let [vals (filter number? (map field (get sim results-type)))]
-       (if (empty? vals) (get (first (get sim results-type)) field)
-           (if-let [f (get funcs (keyword func))]
-             (f vals)
-             (last vals)))))))
+   (if (:params (last (get sim results-type)))
+     [(:params (last (get sim results-type)))]
+     [(:control-params (last (get sim results-type)))
+      (:comparison-params (last (get sim results-type)))])
+   (map #(get (last (get sim results-type)) %) fields)))
 
 (defn get-summary-results
-  "Get results with all funcs applied or only those requested."
+  "Get results with all fields or only those requested."
   ([run results-type]
      (let [sims (get-many-docs (:results run))
-           fields-funcs (get-fields-funcs run results-type :all)]
+           fields (get-fields run results-type :all)]
        (map (fn [sim] (zipmap (concat [:simulation]
-                                      (if (:params (first (get sim results-type)))
-                                        [:params] [:control-params :comparison-params])
-                                      (map (fn [[field func]]
-                                             (keyword (format "%s%s" (name field)
-                                                              (str/capitalize func))))
-                                           fields-funcs))
-                              (concat
-                               [(:simulation (first (get sim results-type)))]
-                               (summarize-sim-results sim results-type fields-funcs))))
-            sims)))
-  ([run results-type fields-funcs]
+                                   (if (:params (first (get sim results-type)))
+                                     [:params] [:control-params :comparison-params])
+                                   fields)
+                           (concat [(:simulation (first (get sim results-type)))]
+                                   (summarize-sim-results sim results-type fields))))
+          sims)))
+  ([run results-type fields]
      (let [sims (get-many-docs (:results run))]
        (map (fn [sim]
-              (zipmap
-               (concat
-                ["Simulation"]
-                (if (:params (first (get sim results-type)))
-                  [:params] [:control-params :comparison-params])
-                (format-summary-fields fields-funcs))
-               (concat
-                [(format "%d: <a href=\"/simulation/%s\">%s</a>"
-                         (:simulation sim) (:_id sim) (subs (:_id sim) 22))]
-                (summarize-sim-results sim results-type fields-funcs))))
-            sims))))
+            (zipmap
+             (concat
+              (if (:params (first (get sim results-type)))
+                [:params] [:control-params :comparison-params])
+              fields)
+             (summarize-sim-results sim results-type fields)))
+          sims))))

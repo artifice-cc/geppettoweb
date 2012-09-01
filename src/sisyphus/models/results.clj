@@ -34,7 +34,7 @@
                   fields (sort (keys (first results)))
                   csv (apply str (map (fn [r] (format-csv-row
                                                (map (fn [f] (get r f)) fields)))
-                                      results))]
+                                    results))]
               ;; save into cache file
               (with-open [writer (io/writer outfile)]
                 (.write writer (format-csv-row (map name fields)))

@@ -10,5 +10,6 @@
                      [lein-marginalia "0.6.0"]
                      [lein-ring "0.4.5"]]
   :ring {:handler sisyphus.server/handler}
-  :main sisyphus.server)
+  :main sisyphus.server
+  :jvm-opts ["-Xmx1500m"])
 

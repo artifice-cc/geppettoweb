@@ -1,7 +1,7 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def db "http://localhost:5984/retrospect")
+(def db "http://localhost:5984/retrospect-new")
 
 (def cachedir "/tmp")
 
@@ -51,7 +51,7 @@
 (defn delete-doc
   [doc]
   (reset-doc-cache (:_id doc))
-  (clutch/with-db db (clutch/delete-document doc)))
+  (try (clutch/with-db db (clutch/delete-document doc)) (catch Exception _)))
 
 (defn get-attachment
   [id name] (clutch/with-db db (clutch/get-attachment id name)))

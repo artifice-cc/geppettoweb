@@ -12,13 +12,12 @@
 (def graph-help (.markdown common/mdp (slurp "/home/josh/research/sisyphus/help/graphs.md")))
 
 (defpartial show-graph
-  [doc graph]
+  [doc graph & opts]
   [:div
    [:div.row
     [:div.span12.columns
      [:a {:name (str/replace (:name graph) #"\W" "_")}
-      [:h3 (:name graph) [:br]
-       [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]]
+      [:h3 (:name graph)]]
      [:p (:caption graph)]]]
    [:div.row
     [:div.span12.columns
@@ -29,44 +28,46 @@
          [:p
           [:a.code_header "Code"] " / "
           (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
-         [:pre.code {:style "width: 700px;"} (:code graph)]]
+         [:pre.code {:style "width: 700px;"} (:code graph)]]        
         [:div
          [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
                 :width 700 :height 400}]
-         [:p
-          [:a.code_header "Code"] " / "
-          (link-to (format "/graphs/update/%s" (:_id graph)) "Update")
-          " / "
-          [:a.download_header "Download"]]
-         [:pre.code {:style "width: 700px;"} (:code graph)]
-         [:div.download
-          (form-to [:post "/graph/download"]
-                   (hidden-field :docid (:_id doc))
-                   (hidden-field :graphid (:_id graph))
-                   (hidden-field :graphrev (:_rev graph))
-                   [:fieldset
-                    [:div.clearfix
-                     [:label {:for "theme"} "Theme"]
-                     [:div.input
-                      (drop-down :theme ["website" "paper" "poster"])]]
-                    [:div.clearfix
-                     [:label {:for "width"} "Width (in)"]
-                     [:div.input
-                      [:input.xlarge {:id "width" :name "width" :size 3 :type "text" :value "7"}]]]
-                    [:div.clearfix
-                     [:label {:for "height"} "Height (in)"]
-                     [:div.input
-                      [:input.xlarge {:id "height" :name "height" :size 3 :type "text" :value "4"}]]]
-                    [:div.clearfix
-                     [:label {:for "filename"} "File name (without extension)"]
-                     [:div.input
-                      [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text" :value ""}]]]
-                    [:div.actions
-                     [:input.btn
-                      {:name "ftype" :value "pdf" :type "submit"}]
-                     " "
-                     [:input.btn
-                      {:name "ftype" :value "svg" :type "submit"}]]])]])]]]])
+         (if (not (some #{:no-select} opts))
+           [:div
+            [:p
+             [:a.code_header "Code"] " / "
+             (link-to (format "/graphs/update/%s" (:_id graph)) "Update")
+             " / "
+             [:a.download_header "Download"]]
+            [:pre.code {:style "width: 700px;"} (:code graph)]
+            [:div.download
+             (form-to [:post "/graph/download"]
+                      (hidden-field :docid (:_id doc))
+                      (hidden-field :graphid (:_id graph))
+                      (hidden-field :graphrev (:_rev graph))
+                      [:fieldset
+                       [:div.clearfix
+                        [:label {:for "theme"} "Theme"]
+                        [:div.input
+                         (drop-down :theme ["website" "paper" "poster"])]]
+                       [:div.clearfix
+                        [:label {:for "width"} "Width (in)"]
+                        [:div.input
+                         [:input.xlarge {:id "width" :name "width" :size 3 :type "text" :value "7"}]]]
+                       [:div.clearfix
+                        [:label {:for "height"} "Height (in)"]
+                        [:div.input
+                         [:input.xlarge {:id "height" :name "height" :size 3 :type "text" :value "4"}]]]
+                       [:div.clearfix
+                        [:label {:for "filename"} "File name (without extension)"]
+                        [:div.input
+                         [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text" :value ""}]]]
+                       [:div.actions
+                        [:input.btn
+                         {:name "ftype" :value "pdf" :type "submit"}]
+                        " "
+                        [:input.btn
+                         {:name "ftype" :value "svg" :type "submit"}]]])]])])]]]])
 
 (comment [:div.row
           [:div.span12.columns
@@ -81,7 +82,6 @@
      [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
               "New graph")]]]
    [:div.row
-    [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
      (form-to [:post (if (:name graph) "/graphs/update-graph"
                          "/graphs/new-graph")]
@@ -132,9 +132,10 @@
                   [:input.btn.danger
                    {:value "Delete" :name "action" :type "submit"}])]])]]
    [:div.row
-    [:div.span4.columns
+    [:div.span12.columns
      [:a {:name "help"}
-      [:h1 "Help"]]]
+      [:h1 "Help"]]]]
+   [:div.row
     [:div.span12.columns graph-help]]])
 
 (defpartial graphs
@@ -145,39 +146,40 @@
                            (get (list-graphs) (:problem doc)))
         run (if (= "run" (:type doc)) doc (get-doc (:runid doc)))
         active-graphs (set (map get-doc (get run (if (= "run" (:type doc))
-                                                   :graphs :simulation-graphs))))]
-    [:section#graphs
-     [:div.page-header
-      [:a {:name "graphs"}
-       [:h2 "Graphs"]]]
-     (if (empty? active-graphs)
-       [:div.row
-        [:div.span12.columns [:p "No graphs."]]]
-       (for [g (sort-by :name active-graphs) :when g]
-         (show-graph doc g)))
-     (if-not (or (empty? all-graphs) (some #{:no-select} opts))
-       [:div
-        [:div.row
-         [:div.span4.columns
-          [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
-        [:div.fields_checkboxes
+                                                 :graphs :simulation-graphs))))]
+    (if (or (not-empty active-graphs) (not (some #{:no-select} opts)))
+      [:section#graphs
+       [:div.page-header
+        [:a {:name "graphs"}
+         [:h2 "Graphs"]]]
+       (if (empty? active-graphs)
          [:div.row
-          [:div.span8.columns
-           (form-to
-            [:post "/graphs/set-graphs"]
-            (hidden-field :docid (:_id doc))
-            (hidden-field :runid (:_id run))
-            (hidden-field :run-or-sim (:type doc))
-            [:div.clearfix
-             [:div.input
-              [:ul.inputs-list
-               (for [g all-graphs]
-                 [:li [:label
-                       [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
-                                :checked (active-graphs g)}]
-                       " " (:name g)]])]]
-             [:div.actions
-              [:input.btn.primary {:value "Update" :type "submit"}]]])]]]])]))
+          [:div.span12.columns [:p "No graphs."]]]
+         (for [g (sort-by :name active-graphs) :when g]
+           (apply show-graph doc g opts)))
+       (if-not (or (empty? all-graphs) (some #{:no-select} opts))
+         [:div
+          [:div.row
+           [:div.span4.columns
+            [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
+          [:div.fields_checkboxes
+           [:div.row
+            [:div.span8.columns
+             (form-to
+              [:post "/graphs/set-graphs"]
+              (hidden-field :docid (:_id doc))
+              (hidden-field :runid (:_id run))
+              (hidden-field :run-or-sim (:type doc))
+              [:div.clearfix
+               [:div.input
+                [:ul.inputs-list
+                 (for [g all-graphs]
+                   [:li [:label
+                         [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
+                                  :checked (active-graphs g)}]
+                         " " (:name g)]])]]
+               [:div.actions
+                [:input.btn.primary {:value "Update" :type "submit"}]]])]]]])])))
 
 (defpage
   [:post "/graphs/set-graphs"] {:as graphs}

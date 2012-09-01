@@ -159,6 +159,19 @@
      class = \"options\")
    }")
 
+(def r-error-prefix
+  "Loading required package: reshape
+Loading required package: plyr
+
+Attaching package: ‘reshape’
+
+The following object(s) are masked from ‘package:plyr’:
+
+    rename, round_any
+
+Loading required package: grid
+Loading required package: proto")
+
 (defn render-graph-file
   [doc graph ftype theme width height]
   (reset-doc-cache (:_id doc))
@@ -171,16 +184,16 @@
                        cachedir (:_id doc) (:_id graph) (:_rev graph))
           rcode (format "library(ggplot2)\nlibrary(grid)\n%s\n%s\n
                          p <- ggplot()\n
-                         %s\n
                          p <- p + theme_%s()\n
                          p <- p + scale_colour_manual(values=%s_palette)\n
                          p <- p + scale_fill_manual(values=%s_palette)\n
+                         %s\n
                          ggsave(\"%s\", plot = p, dpi = %d, width = %s, height = %s)"
                    (format "%s\n%s\n%s\n" theme_website theme_paper theme_poster)
                    (apply str (map #(format "%s <- read.csv(\"%s\")\n"
                                      (name %) (get csv-fnames %))
                                  (keys csv-fnames)))
-                   (:code graph) theme theme theme ftype-fname
+                   theme theme theme (:code graph) ftype-fname
                    (if (= "png" ftype) 100 600) width height)]
       (results-to-csv doc csv-fnames)
       ;; save rcode to file
@@ -189,7 +202,7 @@
       ;; run Rscript
       (let [status (sh "/usr/bin/Rscript" tmp-fname)]
         (cond (not= 0 (:exit status))
-              {:err (:err status)}
+              {:err (str/replace (:err status) r-error-prefix "")}
               (not (. (io/file ftype-fname) exists))
               {:err "Resulting file does not exist."}
               :else

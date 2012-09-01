@@ -8,8 +8,7 @@
     [:a {:name "annotations"}
      [:h2 "Annotations"]]]]
   [:div.row
-   [:div.span4.columns "&nbsp;"]
-   [:div.span8.columns
+   [:div.span12.columns.columns
     (if (or (nil? (:annotations doc)) (empty? (:annotations doc)))
       [:p "No annotations."]
       (map (fn [i]
@@ -20,8 +19,9 @@
                       [:p {:style "text-align: right;"} (submit-button "Delete")]))
            (range (count (:annotations doc)))))]]
   [:div.row
-   [:div.span4.columns
-    [:h3 "New annotation"]]
+   [:div.span12.columns
+    [:h3 "New annotation"]]]
+  [:div.row
    [:div.span12.columns
     (form-to
      [:post (format "/%s/add-annotation" type)]

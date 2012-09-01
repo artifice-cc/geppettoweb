@@ -46,8 +46,8 @@
                         l (link-to (format "#%s" a) title)
                         d (Integer/parseInt ds)]
                     [:div (cond (= d 1) [:b [:i l]]
-                                (= d 2) [:b [:span "&nbsp;" l]]
-                                :else [:span "&nbsp;&nbsp;" l])])) headers)]])
+                                (= d 2) [:i [:span "&nbsp;&nbsp;" l]]
+                                :else [:span "&nbsp;&nbsp;&nbsp;&nbsp;" l])])) headers)]])
        [:div.content {:style "position: relative; top: 50px;"}
         chtml]]])))
 
@@ -55,7 +55,8 @@
   [ms]
   (let [date (new java.util.Date (long ms))
         dateinstance (. java.text.DateFormat getDateTimeInstance
-                        java.text.DateFormat/MEDIUM java.text.DateFormat/SHORT)]
+                        ;; date format, time format
+                        java.text.DateFormat/SHORT java.text.DateFormat/SHORT)]
     (. dateinstance format date)))
 
 (def mdp (com.petebevin.markdown.MarkdownProcessor.))

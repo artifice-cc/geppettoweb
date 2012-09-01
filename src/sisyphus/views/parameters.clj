@@ -19,8 +19,7 @@
             (format "Update parameters %s/%s" (:problem params) (:name params))
             "New parameters")]]]
    [:div.row
-    [:div.span4.columns "&nbsp;"]
-    [:div.span8.columns
+    [:div.span12.columns
      (form-to [:post (if (:name params) "/parameters/update-parameters"
                          "/parameters/new-parameters")]
               (hidden-field :id (:_id params))

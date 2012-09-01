@@ -27,3 +27,6 @@ div.paramsmodal div.modal {
     display: none;
 }
 
+table, table.tablesorter {
+    width: 700px;
+}

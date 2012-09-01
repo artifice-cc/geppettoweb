@@ -28,25 +28,27 @@
     [:a {:name "metadata"}
      [:h2 "Metadata"]]]
    [:div.row
-    [:div.span4.columns
+    [:div.span12.columns
      [:h3 "Commit message"]
      [:p (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"
-                          (:commit run))
+                     (:commit run))
                   (subs (:commit run) 0 10))
-      " @ " (:branch run)]]
+      " @ " (:branch run)]]]
+   [:div.row
     [:div.span12.columns
      [:pre (:commit-msg run)]]]
    [:div.row
-    [:div.span4.columns
-     [:h3 "Simulation properties"]]
+    [:div.span12.columns
+     [:h3 "Simulation properties"]]]
+   [:div.row
     [:div.span4.columns
      [:dl [:dt "User@host"]
       [:dd (format "%s@%s" (:username run) (:hostname run))]]
      [:dl [:dt "Time"]
       (let [mins (if-not (:endtime run) ""
                          (format "<br/>(~%.0f mins)"
-                                 (double (/ (- (:endtime run) (:time run))
-                                            (* 1000 60)))))]
+                            (double (/ (- (:endtime run) (:time run))
+                                       (* 1000 60)))))]
         [:dd (format "%s%s" (common/date-format (:time run)) mins)])]
      [:dl [:dt "Simulation type"]
       [:dd (:paramstype run)]]]
@@ -65,10 +67,11 @@
      [:dl [:dt "Record directory"]
       [:dd (:recorddir run)]]]]
    [:div.row
-    [:div.span4.columns
-     [:h3 "Run command"]]
     [:div.span12.columns
-     [:pre (make-run-command run)]]]])
+     [:h3 "Run command"]]]]
+  [:div.row
+   [:div.span12.columns
+    [:pre (make-run-command run)]]])
 
 (defpartial run-parameters
   [run]
@@ -90,8 +93,9 @@
        [:div
         (hidden-field :runid (:_id run))
         [:div.row
-         [:div.span4.columns
-          [:h3 "New association"]]
+         [:div.span12.columns
+          [:h3 "New association"]]]
+        [:div.row
          [:div.span12.columns
           [:div.clearfix
            [:label {:for "claim"} "Claim"]
@@ -139,7 +143,6 @@
     [:a {:name "notes"}
      [:h2 "Overview notes"]]]
    [:div.row
-    [:div.span4.columns "&nbsp;"]
     [:div.span12.columns {:style "max-height: 30em; overflow: auto;"}
      [:p (common/convert-md (:overview run))]]]])
 
@@ -151,7 +154,8 @@
       [:a {:name "project"}
        [:h2 "Project"]]]
      [:div.row
-      [:div.span4.columns [:p "Choose an existing project, or create a new project."]]
+      [:div.span12.columns [:p "Choose an existing project, or create a new project."]]]
+     [:div.row
       [:div.span12.columns
        (form-to
         [:post "/run/set-project"]
@@ -171,7 +175,6 @@
    [:div.page-header
     [:h2 "Delete"]]
    [:div.row
-    [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
      [:p "Delete run and all associated results?"]
      (form-to [:post "/run/delete-run"]
@@ -226,10 +229,10 @@
                              "View tables...")]]]
      (analysis run)
      (graphs run)
+     (run-parameters run)
      (annotations run "run")
      (run-claims run)
      (run-project run)
-     (run-parameters run)
-     (run-overview-notes run)
+     #_(run-overview-notes run)
      (run-metainfo run)
      (run-delete-run run))))
