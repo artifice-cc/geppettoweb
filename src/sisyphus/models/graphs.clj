@@ -14,16 +14,17 @@
 (defn list-graphs
   []
   (let [all-graphs (:rows (view "graphs-list"))
-        problems (set (map (comp first :key) all-graphs))]
+        problems (set (mapcat #(str/split (first (:key %)) #"\s*,\s*") all-graphs))]
     (reduce (fn [m problem]
               (assoc m problem
-                     (map :value (filter (fn [g] (= problem (first (:key g))))
+                     (map :value (filter (fn [g] (some #{problem}
+                                            (str/split (first (:key g)) #"\s*,\s*")))
                                          all-graphs))))
             {} problems)))
 
 (defn get-graph
   [problem n]
-  (:value (first (:rows (view "graphs-list" {:key [problem n]})))))
+  (first #(= n (:name %)) (get (list-graphs) problem)))
 
 ;; graphs for simulations are set in the run
 (defn set-graphs

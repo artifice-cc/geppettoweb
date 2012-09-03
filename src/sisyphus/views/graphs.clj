@@ -173,7 +173,7 @@
               [:div.clearfix
                [:div.input
                 [:ul.inputs-list
-                 (for [g all-graphs]
+                 (for [g (sort-by :name all-graphs)]
                    [:li [:label
                          [:input {:type "checkbox" :name "graphs[]" :value (:_id g)
                                   :checked (active-graphs g)}]
@@ -231,7 +231,7 @@
           [:div.page-header
            [:a {:name (str/replace problem #"\W" "_")}
             [:h1 (format "%s graphs" problem)]]]]]
-        (for [graph (get graphs problem)]
+        (for [graph (sort-by :name (get graphs problem))]
           [:div.row
            [:div.span4.columns
             [:a {:name (if (and problem graph)
