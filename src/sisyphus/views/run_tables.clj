@@ -22,7 +22,6 @@
      [:p [:b [:a.fields_checkboxes_header "Select active fields..."]]]]]
    [:div.fields_checkboxes
     [:div.row
-     [:div.span12.columns "&nbsp;"]
      (field-checkboxes on-fields fields)]
     [:div.row
      [:div.span12.columns
