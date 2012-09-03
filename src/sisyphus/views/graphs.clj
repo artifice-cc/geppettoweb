@@ -61,7 +61,7 @@
                        [:div.clearfix
                         [:label {:for "filename"} "File name (without extension)"]
                         [:div.input
-                         [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text" :value ""}]]]
+                         [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text" :value (format "%s-%s-%s" (:problem doc) (:name graph) (subs (:_id doc) 22))}]]]
                        [:div.actions
                         [:input.btn
                          {:name "ftype" :value "pdf" :type "submit"}]
