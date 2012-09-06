@@ -61,18 +61,17 @@
                        [:div.clearfix
                         [:label {:for "filename"} "File name (without extension)"]
                         [:div.input
-                         [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text" :value (format "%s-%s-%s" (:problem doc) (:name graph) (subs (:_id doc) 22))}]]]
+                         [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text"
+                                         :value (format "%s-%s-%s" (:problem doc) (:name graph) (subs (:_id doc) 22))}]]]
                        [:div.actions
+                        [:input.btn
+                         {:name "ftype" :value "png" :type "submit"}]
+                        " "
                         [:input.btn
                          {:name "ftype" :value "pdf" :type "submit"}]
                         " "
                         [:input.btn
                          {:name "ftype" :value "svg" :type "submit"}]]])]])])]]]])
-
-(comment [:div.row
-          [:div.span12.columns
-           [:p (format "Failed to produce graph %s" (:name graph))]
-           [:pre (:err png)]]])
 
 (defpartial graph-form
   [graph]
@@ -253,9 +252,12 @@
 
 (defpage [:post "/graph/download"] {:as graph}
   (->
-   (resp/content-type (if (= "pdf" (:ftype graph))
-                        "application/pdf"
-                        "image/svg+xml")
+   (resp/content-type (cond (= "pdf" (:ftype graph))
+                            "application/pdf"
+                            (= "svg" (:ftype graph))
+                            "image/svg+xml"
+                            (= "png" (:ftype graph))
+                            "image/png")
                       (get-graph-download (get-doc (:docid graph))
                                           (get-doc (:graphid graph) (:graphrev graph))
                                           (:theme graph) (:width graph) (:height graph)
