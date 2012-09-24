@@ -137,7 +137,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
    }")
 
 (def theme_paper
-  "paper_palette <- c(\"#000000\", \"#555555\", \"#999999\")
+  "paper_palette <- c(\"#555555\", \"#999999\", \"#aaaaaa\")
    theme_paper <- function (base_size = 12, base_family = \"\") {
    structure(list(
        axis.line = theme_blank(),
@@ -229,9 +229,9 @@ Loading required package: proto")
                        cachedir (:_id doc) (:_id graph) (:_rev graph))
           rcode (format "library(ggplot2)\nlibrary(grid)\n%s\n%s\n%s\n
                          p <- ggplot()\n
+                         %s\n
                          p <- p + theme_%s()\n
-                         p <- p + scale_colour_manual(values=%s_palette)\n
-                         p <- p + scale_fill_manual(values=%s_palette)\n
+                         %s\n
                          %s\n
                          ggsave(\"%s\", plot = p, dpi = %d, width = %s, height = %s)"
                    extra-funcs
@@ -239,7 +239,12 @@ Loading required package: proto")
                    (apply str (map #(format "%s <- read.csv(\"%s\")\n"
                                      (name %) (get csv-fnames %))
                                  (keys csv-fnames)))
-                   theme theme theme (:code graph) ftype-fname
+                   (:code graph) theme
+                   (if (not (re-find #"scale_colour" (:code graph)))
+                      (format "p <- p + scale_colour_manual(values=%s_palette)" theme) "")
+                   (if (not (re-find #"scale_fill" (:code graph)))
+                      (format "p <- p + scale_fill_manual(values=%s_palette)" theme) "" )
+                   ftype-fname
                    (if (= "png" ftype) 100 600) width height)]
       (results-to-csv doc csv-fnames)
       ;; save rcode to file
