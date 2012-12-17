@@ -3,8 +3,9 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
-  (:use [sisyphus.models.results :only [csv-filenames results-to-csv]])
-  (:use sisyphus.models.common))
+  (:use [sisyphus.models.results :only [rbin-filenames results-to-rbin]])
+  (:use sisyphus.models.common)
+  (:use sisyphus.models.commonr))
 
 (defn list-analysis
   []
@@ -56,17 +57,17 @@
   (if-let [output (get-attachment
                    (:_id doc) (format "%s-%s" (:_id analysis) (:_rev analysis)))]
     (slurp output)
-    (let [csv-fnames (csv-filenames doc)
+    (let [rbin-fnames (rbin-filenames doc)
           tmp-fname (format "%s/%s-%s-%s.rscript"
-                            cachedir (:_id doc) (:_id analysis) (:_rev analysis))
+                       cachedir (:_id doc) (:_id analysis) (:_rev analysis))
           output-fname (format "%s/%s-%s-%s.output"
-                               cachedir (:_id doc) (:_id analysis) (:_rev analysis))
-          rcode (format "%s\n%s\n"
-                        (apply str (map #(format "%s <- read.csv(\"%s\")\n"
-                                                 (name %) (get csv-fnames %))
-                                        (keys csv-fnames)))
-                        (:code analysis))]
-      (results-to-csv doc csv-fnames)
+                          cachedir (:_id doc) (:_id analysis) (:_rev analysis))
+          rcode (format "%s\n%s\n%s\n"
+                   extra-funcs
+                   (apply str (map #(format "load(\"%s\")\n" (get rbin-fnames %))
+                                 (keys rbin-fnames)))
+                   (:code analysis))]
+      (results-to-rbin doc)
       ;; save rcode to file
       (with-open [writer (io/writer tmp-fname)]
         (.write writer rcode))

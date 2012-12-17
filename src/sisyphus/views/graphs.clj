@@ -13,65 +13,76 @@
 
 (defpartial show-graph
   [doc graph & opts]
-  [:div
-   [:div.row
-    [:div.span12.columns
-     [:a {:name (str/replace (:name graph) #"\W" "_")}
-      [:h3 (:name graph)]]
-     [:p (:caption graph)]]]
-   [:div.row
-    [:div.span12.columns
-     [:p
-      (if-let [err (:err (render-graph-file doc graph "png" "website" 7 4))]
-        [:div
-         [:pre err]
-         [:p
-          [:a.code_header "Code"] " / "
-          (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
-         [:pre.code {:style "width: 700px;"} (:code graph)]]        
-        [:div
-         [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
-                :width 700 :height 400}]
-         (if (not (some #{:no-select} opts))
-           [:div
-            [:p
-             [:a.code_header "Code"] " / "
-             (link-to (format "/graphs/update/%s" (:_id graph)) "Update")
-             " / "
-             [:a.download_header "Download"]]
-            [:pre.code {:style "width: 700px;"} (:code graph)]
-            [:div.download
-             (form-to [:post "/graph/download"]
-                      (hidden-field :docid (:_id doc))
-                      (hidden-field :graphid (:_id graph))
-                      (hidden-field :graphrev (:_rev graph))
-                      [:fieldset
-                       [:div.clearfix
-                        [:label {:for "theme"} "Theme"]
-                        [:div.input
-                         (drop-down :theme ["website" "paper" "poster"])]]
-                       [:div.clearfix
-                        [:label {:for "width"} "Width (in)"]
-                        [:div.input
-                         [:input.xlarge {:id "width" :name "width" :size 3 :type "text" :value "7"}]]]
-                       [:div.clearfix
-                        [:label {:for "height"} "Height (in)"]
-                        [:div.input
-                         [:input.xlarge {:id "height" :name "height" :size 3 :type "text" :value "4"}]]]
-                       [:div.clearfix
-                        [:label {:for "filename"} "File name (without extension)"]
-                        [:div.input
-                         [:input.xlarge {:id "filename" :name "filename" :size 30 :type "text"
-                                         :value (format "%s-%s-%s" (:problem doc) (:name graph) (subs (:_id doc) 22))}]]]
-                       [:div.actions
-                        [:input.btn
-                         {:name "ftype" :value "png" :type "submit"}]
-                        " "
-                        [:input.btn
-                         {:name "ftype" :value "pdf" :type "submit"}]
-                        " "
-                        [:input.btn
-                         {:name "ftype" :value "svg" :type "submit"}]]])]])])]]]])
+  (let [params (get-doc (:paramsid doc) (:paramsrev doc))
+        width (:width graph "7")
+        height (:height graph "4")
+        widthpx (* 100 (Integer/parseInt width))
+        heightpx (* 100 (Integer/parseInt height))]
+    [:div
+     [:div.row
+      [:div.span12.columns
+       [:a {:name (str/replace (:name graph) #"\W" "_")}
+        [:h3 (:name graph)]]
+       [:p (:caption graph)]]]
+     [:div.row
+      [:div.span12.columns
+       [:p
+        (if-let [err (:err (render-graph-file doc graph "png" "website" width height))]
+          [:div
+           [:pre err]
+           [:p
+            [:a.code_header "Code"] " / "
+            (link-to (format "/graphs/update/%s" (:_id graph)) "Update")]
+           [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]]        
+          [:div
+           [:img {:src (format "/graph/%s/%s/%s/png" (:_id doc) (:_id graph) (:_rev graph))
+                  :width widthpx
+                  :height heightpx}]
+           (if (not (some #{:no-select} opts))
+             [:div
+              [:p
+               [:a.code_header "Code"] " / "
+               (link-to (format "/graphs/update/%s" (:_id graph)) "Update")
+               " / "
+               [:a.download_header "Download"]]
+              [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
+              [:div.download
+               (form-to [:post "/graph/download"]
+                        (hidden-field :docid (:_id doc))
+                        (hidden-field :graphid (:_id graph))
+                        (hidden-field :graphrev (:_rev graph))
+                        [:fieldset
+                         [:div.clearfix
+                          [:label {:for "theme"} "Theme"]
+                          [:div.input
+                           (drop-down :theme ["paper" "poster" "website"])]]
+                         [:div.clearfix
+                          [:label {:for "width"} "Width (in)"]
+                          [:div.input
+                           [:input.xlarge {:id "width" :name "width"
+                                           :size 3 :type "text" :value width}]]]
+                         [:div.clearfix
+                          [:label {:for "height"} "Height (in)"]
+                          [:div.input
+                           [:input.xlarge {:id "height" :name "height"
+                                           :size 3 :type "text" :value (str height)}]]]
+                         [:div.clearfix
+                          [:label {:for "filename"} "File name (without extension)"]
+                          [:div.input
+                           [:input.xlarge
+                            {:id "filename" :name "filename" :size 30 :type "text"
+                             :value (format "%s-%s--%s--%s"
+                                       (:problem doc) (:name params) (:name graph)
+                                       (subs (:_id doc) 22))}]]]
+                         [:div.actions
+                          [:input.btn
+                           {:name "ftype" :value "png" :type "submit"}]
+                          " "
+                          [:input.btn
+                           {:name "ftype" :value "pdf" :type "submit"}]
+                          " "
+                          [:input.btn
+                           {:name "ftype" :value "svg" :type "submit"}]]])]])])]]]]))
 
 (defpartial graph-form
   [graph]
@@ -97,6 +108,16 @@
                  [:input.xlarge {:id "name" :name "name" :size 30
                                  :type "text" :value (:name graph)}]]]
                [:div.clearfix
+                [:label {:for "width"} "Width (inches)"]
+                [:div.input
+                 [:input.xlarge {:id "width" :name "width" :size 30
+                                 :type "text" :value (:width graph "7")}]]]
+               [:div.clearfix
+                [:label {:for "height"} "Height (inches)"]
+                [:div.input
+                 [:input.xlarge {:id "height" :name "height" :size 30
+                                 :type "text" :value (:height graph "4")}]]]
+               [:div.clearfix
                 [:label {:for "run-or-sim"} "Run or simulation?"]
                 [:div.input
                  (drop-down :run-or-sim ["run" "simulation"]
@@ -113,7 +134,7 @@
                [:div.clearfix
                 [:label {:for "code"} "R code"]
                 [:div.input
-                 [:textarea.xxlarge {:id "code" :name "code" :rows 10
+                 [:textarea.xxlarge {:id "code" :name "code" :rows 30
                                      :style "font-family: monospace;"}
                   (if (:code graph) (:code graph)
                       "p <- ggplot(comparative) + geom_point(aes(x=Field1, y=Field2))")]
@@ -185,13 +206,18 @@
   (set-graphs (:runid graphs) (:graphs graphs) (:run-or-sim graphs))
   (resp/redirect (format "/%s/%s#graphs" (:run-or-sim graphs) (:docid graphs))))
 
+(defn get-graph-anchor
+  [graph]
+  (let [problems (str/split (:problem graph) #",")]
+    (format "%s%s" (str/replace (first problems) #"\W" "_")
+       (str/replace (:name graph) #"\W" "_"))))
+
 (defpage
   [:post "/graphs/update-graph"] {:as graph}
   (cond (= "Update" (:action graph))
         (do
           (update-graph graph)
-          (resp/redirect (format "/graphs#%s" (str (str/replace (:problem graph) #"\W" "_")
-                                              (str/replace (:name graph) #"\W" "_")))))
+          (resp/redirect (format "/graphs#%s" (get-graph-anchor graph))))
         (= "Delete" (:action graph))
         (common/layout
          "Confirm deletion"
@@ -211,7 +237,7 @@
 (defpage
   [:post "/graphs/new-graph"] {:as graph}
   (new-graph graph)
-  (resp/redirect "/graphs"))
+  (resp/redirect (format "/graphs#%s" (get-graph-anchor graph))))
 
 (defpage "/graphs/update/:id" {id :id}
   (let [graph (get-doc id)]
@@ -233,11 +259,12 @@
         (for [graph (sort-by :name (get graphs problem))]
           [:div.row
            [:div.span4.columns
-            [:a {:name (if (and problem graph)
-                         (str (str/replace problem #"\W" "_")
-                              (str/replace (:name graph) #"\W" "_")) "")}
+            [:a {:name (get-graph-anchor graph)}
              [:h2 (:name graph) [:br]
-              [:small (format " (%s, %s)" (:run-or-sim graph) (:resultstype graph))]]]
+              [:small (format "%s<br/>(%s by %s inches)<br/>(%s, %s)"
+                         (:problem graph)
+                         (:width graph "7") (:height graph "4")
+                         (:run-or-sim graph) (:resultstype graph))]]]
             [:p (:caption graph)]
             [:p (link-to (format "/graphs/update/%s" (:_id graph))
                          "Update graph")]]

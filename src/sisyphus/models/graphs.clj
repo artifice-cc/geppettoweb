@@ -3,8 +3,9 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:require [com.ashafa.clutch :as clutch])
-  (:use [sisyphus.models.results :only [csv-filenames results-to-csv]])
-  (:use sisyphus.models.common))
+  (:use [sisyphus.models.results :only [rbin-filenames results-to-rbin]])
+  (:use sisyphus.models.common)
+  (:use sisyphus.models.commonr))
 
 (defn type-filename
   [doc graph ftype]
@@ -59,54 +60,11 @@
                                       :else "application/octet-stream")))
     (catch Exception e)))
 
-(def extra-funcs
-  "## Summarizes data.
-## Gives count, mean, standard deviation, standard error of the mean, and confidence interval (default 95%).
-##   data: a data frame.
-##   measurevar: the name of a column that contains the variable to be summariezed
-##   groupvars: a vector containing names of columns that contain grouping variables
-##   na.rm: a boolean that indicates whether to ignore NA's
-##   conf.interval: the percent range of the confidence interval (default is 95%)
-summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.interval=.95, .drop=TRUE) {
-    require(plyr)
-
-    # New version of length which can handle NA's: if na.rm==T, don't count them
-    length2 <- function (x, na.rm=FALSE) {
-        if (na.rm) sum(!is.na(x))
-        else       length(x)
-    }
-
-    # This is does the summary; it's not easy to understand...
-    datac <- ddply(data, groupvars, .drop=.drop,
-                   .fun= function(xx, col, na.rm) {
-                           c( N    = length2(xx[,col], na.rm=na.rm),
-                              mean = mean   (xx[,col], na.rm=na.rm),
-                              sd   = sd     (xx[,col], na.rm=na.rm)
-                              )
-                          },
-                    measurevar,
-                    na.rm
-             )
-
-    # Rename the \"mean\" column    
-    datac <- rename(datac, c(\"mean\"=measurevar))
-
-    datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
-
-    # Confidence interval multiplier for standard error
-    # Calculate t-statistic for confidence interval: 
-    # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
-    ciMult <- qt(conf.interval/2 + .5, datac$N-1)
-    datac$ci <- datac$se * ciMult
-
-    return(datac)
-}
-")
-
 (def theme_website
   "website_palette <- c(\"#3465a4\", \"#2e3436\", \"#f57900\")
    theme_website <- function (base_size = 12, base_family = \"\") {
-   structure(list(
+   theme_grey(base_size=base_size, base_family=base_family) %+replace%
+     theme(
        axis.line = theme_blank(),
        axis.text.x = theme_text(family = base_family, size = base_size * 0.8, lineheight = 0.9, vjust = 1), 
        axis.text.y = theme_text(family = base_family, size = base_size * 0.8, lineheight = 0.9, hjust = 1),
@@ -132,8 +90,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
        strip.text.y = theme_text(family = base_family, size = base_size * 0.8, angle = -90),
        plot.background = theme_rect(colour = NA), 
        plot.title = theme_text(family = base_family, size = base_size * 1.2),
-       plot.margin = unit(c(1, 1, 0.5, 0.5), \"lines\")),
-     class = \"options\")
+       plot.margin = unit(c(1, 1, 0.5, 0.5), \"lines\"))
    }")
 
 (def theme_paper
@@ -223,30 +180,32 @@ Loading required package: proto")
   (if (get-attachment (:_id doc) (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) ftype
                                     theme width height))
     {:success true}
-    (let [csv-fnames (csv-filenames doc)
+    (let [rbin-fnames (rbin-filenames doc)
           ftype-fname (type-filename doc graph ftype)
           tmp-fname (format "%s/%s-%s-%s.rscript"
                        cachedir (:_id doc) (:_id graph) (:_rev graph))
           rcode (format "library(ggplot2)\nlibrary(grid)\n%s\n%s\n%s\n
                          p <- ggplot()\n
                          %s\n
-                         p <- p + theme_%s()\n
+                         # see: https://github.com/wch/ggplot2/wiki/New-theme-system
+                         #p <- p + theme_%s()\n 
                          %s\n
                          %s\n
-                         ggsave(\"%s\", plot = p, dpi = %d, width = %s, height = %s)"
+                         ggsave(\"%s\", plot = p, dpi = %d, width = %d, height = %d)"
                    extra-funcs
                    (format "%s\n%s\n%s\n" theme_website theme_paper theme_poster)
-                   (apply str (map #(format "%s <- read.csv(\"%s\")\n"
-                                     (name %) (get csv-fnames %))
-                                 (keys csv-fnames)))
+                   (apply str (map #(format "load(\"%s\")\n" (get rbin-fnames %))
+                                 (keys rbin-fnames)))
                    (:code graph) theme
                    (if (not (re-find #"scale_colour" (:code graph)))
-                      (format "p <- p + scale_colour_manual(values=%s_palette)" theme) "")
+                     (format "p <- p + scale_colour_manual(values=%s_palette)" theme) "")
                    (if (not (re-find #"scale_fill" (:code graph)))
-                      (format "p <- p + scale_fill_manual(values=%s_palette)" theme) "" )
+                     (format "p <- p + scale_fill_manual(values=%s_palette)" theme) "" )
                    ftype-fname
-                   (if (= "png" ftype) 100 600) width height)]
-      (results-to-csv doc csv-fnames)
+                   (if (= "png" ftype) 100 600)
+                   (Integer/parseInt width)
+                   (Integer/parseInt height))]
+      (results-to-rbin doc)
       ;; save rcode to file
       (with-open [writer (io/writer tmp-fname)]
         (.write writer rcode))
@@ -262,10 +221,10 @@ Loading required package: proto")
 
 (defn get-graph-png
   [doc graph]
-  (render-graph-file doc graph "png" "website" 7 4)
+  (render-graph-file doc graph "png" "website" (:width graph "7") (:height graph "4"))
   (if-let [f (get-attachment (:_id doc)
                              (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) "png"
-                                "website" 7 4))]
+                                "website" (:width graph "7") (:height graph "4")))]
     (try (io/input-stream f) (catch Exception _))))
 
 (defn get-graph-download
