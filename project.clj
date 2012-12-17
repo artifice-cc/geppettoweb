@@ -11,5 +11,5 @@
                      [lein-ring "0.4.5"]]
   :ring {:handler sisyphus.server/handler}
   :main sisyphus.server
-  :jvm-opts ["-Xmx1500m"])
+  :jvm-opts ["-Xmx1200m"])
 
