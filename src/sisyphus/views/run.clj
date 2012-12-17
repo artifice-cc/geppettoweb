@@ -217,12 +217,13 @@
     (resp/redirect (format "/run/%s" (:id confirm)))))
 
 (defpage "/run/:id" {id :id}
-  (let [run (get-doc id)]
+  (let [run (get-doc id)
+        params (get-doc (:paramsid run) (:paramsrev run))]
     (common/layout
-     (format "%s run %s" (:problem run) (subs id 22))
+     (format "%s/%s run %s" (:problem params) (:name params) (subs id 22))
      [:div.row [:div.span12.columns
-                [:h1 (format "%s run %s <small>(%s)</small>"
-                             (:problem run) (subs id 22)
+                [:h1 (format "%s/%s run %s <small>(%s)</small>"
+                             (:problem params) (:name params) (subs id 22)
                              (:paramstype run))]]]
      [:div.row [:div.span12.columns
                 [:p (link-to (format "/run/tables/%s" id)
