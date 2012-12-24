@@ -9,7 +9,7 @@
           render-graph-file get-graph-png get-graph-download]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
-(def graph-help (.markdown common/mdp (slurp "/home/josh/research/sisyphus/help/graphs.md")))
+(def graph-help (.markdown common/mdp (slurp "/home/josh/git/research/sisyphus/help/graphs.md")))
 
 (defpartial show-graph
   [doc graph & opts]

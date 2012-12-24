@@ -1,7 +1,7 @@
 (ns sisyphus.models.common
   (:require [com.ashafa.clutch :as clutch]))
 
-(def db "http://localhost:5984/retrospect-new")
+(def db "http://localhost:5984/retrospect")
 
 (def cachedir "/tmp")
 
