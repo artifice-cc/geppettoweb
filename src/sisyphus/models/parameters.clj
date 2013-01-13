@@ -20,6 +20,10 @@
           {:comparative [] :non-comparative []}
           (map :value (:rows (view "parameters-list")))))
 
+(defn get-parameters-by-problem-name
+  [problem name]
+  (:value (first (:rows (view "parameters-list" {:key [problem name]})))))
+
 (defn runs-with-parameters
   [params]
   (map :value (:rows (view "parameters-runs" {:key [(:_id params) (:_rev params)]}))))

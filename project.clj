@@ -3,6 +3,8 @@
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [noir "1.2.0"]
                  [com.ashafa/clutch "0.2.4"]
+                 [korma "0.3.0-beta14"]
+                 [mysql/mysql-connector-java "5.1.6"]
                  [org.markdownj/markdownj "0.3.0-1.0.2b4"]]
   :dev-dependencies [[swank-clojure "1.3.0"]
                      [midje "1.1"]

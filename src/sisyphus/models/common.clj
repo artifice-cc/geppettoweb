@@ -1,7 +1,46 @@
 (ns sisyphus.models.common
-  (:require [com.ashafa.clutch :as clutch]))
+  (:require [com.ashafa.clutch :as clutch])
+  (:require [korma.db :as kormadb])
+  (:require [korma.core :as korma]))
 
 (def db "http://localhost:5984/retrospect")
+
+(kormadb/defdb sqldb (kormadb/mysql {:db "sisyphus_retrospect"
+                                     :user "root" :password "IuRF9NyahiyVO"}))
+
+(korma/defentity parameters
+  (korma/pk :paramid))
+
+(korma/defentity results-fields
+  (korma/table :results_fields)
+  (korma/pk :rfid))
+
+(korma/defentity simulations
+  (korma/pk :simid)
+  (korma/has-many results-fields))
+
+(korma/defentity runs
+  (korma/pk :runid)
+  (korma/has-one parameters)
+  (korma/has-many simulations))
+
+(korma/defentity graphs
+  (korma/pk :graphid))
+
+(korma/defentity run-graphs
+  (korma/table :run_graphs)
+  (korma/pk :rungraphid)
+  (korma/has-one runs)
+  (korma/has-one graphs))
+
+(korma/defentity analyses
+  (korma/pk :analysisid))
+
+(korma/defentity run-analyses
+  (korma/table :run_analyses)
+  (korma/pk :runanalysisid)
+  (korma/has-one runs)
+  (korma/has-one analyses))
 
 (def cachedir "/tmp")
 
@@ -31,7 +70,7 @@
   (this-memoize
    get-doc-cache
    (fn
-     ([id] (clutch/with-db db (clutch/get-document id)))
+     ([id] (clutch/with-db db (clutch/get-document id {:revs true})))
      ([id rev]
         (clutch/with-db db
           (let [revs (:_revisions (clutch/get-document id {:revs true}))]
