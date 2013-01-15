@@ -31,20 +31,18 @@
 
 (defn list-graphs
   []
-  (comment
-    (let [all-graphs (:rows (view "graphs-list"))
-          problems (set (mapcat #(str/split (first (:key %)) #"\s*,\s*") all-graphs))]
+  (with-db @sisyphus-db
+    (let [all-graphs (select graphs)
+          problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-graphs))]
       (reduce (fn [m problem]
-           (assoc m problem
-                  (map :value (filter (fn [g] (some #{problem}
-                                         (str/split (first (:key g)) #"\s*,\s*")))
-                               all-graphs))))
+           (assoc m problem (filter (fn [g] (some #{problem}
+                                         (str/split (:problems g) #"\s*,\s*")))
+                               all-graphs)))
          {} problems))))
 
 (defn get-graph
-  [problem n]
-  (comment
-    (first #(= n (:name %)) (get (list-graphs) problem))))
+  [graphid]
+  (first (with-db @sisyphus-db (select graphs (where {:graphid graphid})))))
 
 ;; graphs for simulations are set in the run
 (defn set-graphs
@@ -56,10 +54,17 @@
         (clutch/update-document doc {(if (= "run" run-or-sim) :graphs
                                          :simulation-graphs) graphs})))))
 
+(defn update-graph
+  [graph]
+  (with-db @sisyphus-db
+    (update graphs (set-fields (dissoc graph :graphid :action))
+            (where {:graphid (:graphid graph)}))))
+
 (defn new-graph
   [graph]
-  (comment
-    (create-doc (assoc graph :type "graph"))))
+  (:generated_key
+   (with-db @sisyphus-db
+     (insert graphs (values [(dissoc graph :graphid :action)])))))
 
 (defn new-template-graph
   [template-graph]
@@ -71,14 +76,6 @@
         (clutch/update-document doc {:template-graphs
                                      ;; TODO: use conj or something here
                                      [(:_id tg)]})))))
-
-(defn update-graph
-  [graph]
-  (comment
-    (let [doc (get-doc (:id graph))]
-      (reset-doc-cache (:id graph))
-      (clutch/with-db db
-        (clutch/update-document doc (dissoc graph :id :_id :_rev))))))
 
 (defn update-graph-attachment
   [doc fname graph ftype theme width height]
@@ -369,6 +366,7 @@ Loading required package: proto")
       (try (io/input-stream f) (catch Exception _)))))
 
 (defn delete-graph
-  [id]
-  (comment
-    (delete-doc (get-doc id))))
+  [graphid]
+  (with-db @sisyphus-db
+    (delete run-graphs (where {:graphid graphid}))
+    (delete graphs (where {:graphid graphid}))))

@@ -4,7 +4,8 @@
   (:use [ring.util.response :only [header]])
   (:require [clojure.string :as str])
   (:use [sisyphus.models.graphs :only
-         [list-graphs new-graph new-template-graph update-graph set-graphs delete-graph
+         [list-graphs get-graph
+          new-graph new-template-graph update-graph set-graphs delete-graph
           render-graph-file get-graph-png get-graph-download]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
@@ -87,78 +88,71 @@
 
 (defpartial graph-form
   [graph]
-  (comment
-    [:section#graph-form
-     [:div.page-header
-      [:a {:name "new"}
-       [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
-                "New graph")]]]
-     [:div.row
-      [:div.span12.columns
-       (form-to [:post (if (:name graph) "/graphs/update-graph"
-                           "/graphs/new-graph")]
-                (hidden-field :id (:_id graph))
-                [:fieldset
-                 [:div.clearfix
-                  [:label {:for "problem"} "Problem"]
-                  [:div.input
-                   [:input.xlarge {:id "problem" :name "problem" :size 30
-                                   :type "text" :value (:problem graph)}]]]
-                 [:div.clearfix
-                  [:label {:for "name"} "Name"]
-                  [:div.input
-                   [:input.xlarge {:id "name" :name "name" :size 30
-                                   :type "text" :value (:name graph)}]]]
-                 [:div.clearfix
-                  [:label {:for "width"} "Width (inches)"]
-                  [:div.input
-                   [:input.xlarge {:id "width" :name "width" :size 30
-                                   :type "text" :value (:width graph "7")}]]]
-                 [:div.clearfix
-                  [:label {:for "height"} "Height (inches)"]
-                  [:div.input
-                   [:input.xlarge {:id "height" :name "height" :size 30
-                                   :type "text" :value (:height graph "4")}]]]
-                 [:div.clearfix
-                  [:label {:for "run-or-sim"} "Run or simulation?"]
-                  [:div.input
-                   (drop-down :run-or-sim ["run" "simulation"]
-                              (:run-or-sim graph))]]
-                 [:div.clearfix
-                  [:label {:for "resultstype"} "Results type"]
-                  [:div.input
-                   (drop-down :resultstype ["non-comparative" "comparative"]
-                              (:resultstype graph))]]
-                 [:div.clearfix
-                  [:label {:for "caption"} "Caption"]
-                  [:div.input
-                   [:textarea.xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
-                 [:div.clearfix
-                  [:label {:for "code"} "R code"]
-                  [:div.input
-                   [:textarea.xxlarge {:id "code" :name "code" :rows 30
-                                       :style "font-family: monospace;"}
-                    (if (:code graph) (:code graph)
-                        "p <- ggplot(comparative) + geom_point(aes(x=Field1, y=Field2))")]
-                   [:span.help-block "Assume the existence of a data table named
+  [:section#graph-form
+   [:div.page-header
+    [:a {:name "new"}
+     [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
+              "New graph")]]]
+   [:div.row
+    [:div.span12.columns
+     (form-to [:post (if (:name graph) "/graphs/update-graph"
+                         "/graphs/new-graph")]
+              (hidden-field :graphid (:graphid graph))
+              [:fieldset
+               [:div.clearfix
+                [:label {:for "problems"} "Problems"]
+                [:div.input
+                 [:input.xlarge {:id "problems" :name "problems" :size 30
+                                 :type "text" :value (:problems graph)}]]]
+               [:div.clearfix
+                [:label {:for "name"} "Name"]
+                [:div.input
+                 [:input.xlarge {:id "name" :name "name" :size 30
+                                 :type "text" :value (:name graph)}]]]
+               [:div.clearfix
+                [:label {:for "width"} "Width (inches)"]
+                [:div.input
+                 [:input.xlarge {:id "width" :name "width" :size 30
+                                 :type "text" :value (or (:width graph) 7.0)}]]]
+               [:div.clearfix
+                [:label {:for "height"} "Height (inches)"]
+                [:div.input
+                 [:input.xlarge {:id "height" :name "height" :size 30
+                                 :type "text" :value (or (:height graph) 4.0)}]]]
+               [:div.clearfix
+                [:label {:for "resultstype"} "Results type"]
+                [:div.input
+                 (drop-down :resultstype ["non-comparative" "comparative"]
+                            (:resultstype graph))]]
+               [:div.clearfix
+                [:label {:for "caption"} "Caption"]
+                [:div.input
+                 [:textarea.xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
+               [:div.clearfix
+                [:label {:for "code"} "R code"]
+                [:div.input
+                 [:textarea.xxlarge {:id "code" :name "code" :rows 30
+                                     :style "font-family: monospace;"}
+                  (if (:code graph) (:code graph) "")]
+                 [:span.help-block "Assume the existence of a data table named
                                     'control', and tables 'comparison' and 'comparative'
                                     if the results type is comparative; also assume
                                     that that 'ggplot2' is loaded. Save the graph to
                                     the variable 'p'."]]]
-                 [:div.actions
-                  [:input.btn.primary
-                   {:name "action" :value (if (:name graph) "Update" "Save")
-                    :type "submit"}]
-                  " "
-                  (if (:name graph)
-                    [:input.btn.danger
-                     {:value "Delete" :name "action" :type "submit"}])]])]]
-     [:div.row
-      [:div.span12.columns
-       [:a {:name "help"}
-        [:h1 "Help"]]]]
-     [:div.row
-      [:div.span12.columns graph-help]]]))
+               [:div.actions
+                [:input.btn.primary
+                 {:name "action" :value (if (:name graph) "Update" "Save")
+                  :type "submit"}]
+                " "
+                (if (:name graph)
+                  [:input.btn.danger
+                   {:value "Delete" :name "action" :type "submit"}])]])]]
+   [:div.row
+    [:div.span12.columns
+     [:a {:name "help"}
+      [:h1 "Help"]]]]
+   [:div.row
+    [:div.span12.columns graph-help]]])
 
 (defpartial template-graph-fields
   [id comparative-fields control-fields]
@@ -286,46 +280,32 @@
     (set-graphs (:runid graphs) (:graphs graphs) (:run-or-sim graphs)))
   (resp/redirect (format "/%s/%s#graphs" (:run-or-sim graphs) (:docid graphs))))
 
-(defn get-graph-anchor
-  [graph]
-  (comment
-    (let [problems (str/split (:problem graph) #",")]
-      (format "%s%s" (str/replace (first problems) #"\W" "_")
-         (str/replace (:name graph) #"\W" "_")))))
-
-(defn get-template-graph-anchor
-  [template-graph]
-  (format "dummy"))
-
 (defpage
   [:post "/graphs/update-graph"] {:as graph}
-  (comment
-    (cond (= "Update" (:action graph))
-          (do
-            (update-graph graph)
-            (resp/redirect (format "/graphs#%s" (get-graph-anchor graph))))
-          (= "Delete" (:action graph))
-          (common/layout
-           "Confirm deletion"
-           (common/confirm-deletion "/graphs/delete-graph-confirm" (:id graph)
-                                    "Are you sure you want to delete the graph?"))
-          :else
-          (resp/redirect "/graphs"))))
+  (cond (= "Update" (:action graph))
+        (do
+          (update-graph graph)
+          (resp/redirect (format "/graphs#graph%s" (:graphid graph))))
+        (= "Delete" (:action graph))
+        (common/layout
+         "Confirm deletion"
+         (common/confirm-deletion "/graphs/delete-graph-confirm" (:graphid graph)
+                                  "Are you sure you want to delete the graph?"))
+        :else
+        (resp/redirect "/graphs")))
 
 (defpage
   [:post "/graphs/delete-graph-confirm"] {:as confirm}
-  (comment
-    (if (= (:choice confirm) "Confirm deletion")
-      (do
-        (delete-graph (:id confirm))
-        (resp/redirect "/graphs"))
-      (resp/redirect (format "/graphs#%s" (:id confirm))))))
+  (if (= (:choice confirm) "Confirm deletion")
+    (do
+      (delete-graph (:id confirm))
+      (resp/redirect "/graphs"))
+    (resp/redirect "/graphs")))
 
 (defpage
   [:post "/graphs/new-graph"] {:as graph}
-  (comment
-    (new-graph graph)
-    (resp/redirect (format "/graphs#%s" (get-graph-anchor graph)))))
+  (let [graphid (new-graph graph)]
+    (resp/redirect (format "/graphs#graph%d" graphid))))
 
 (defpage
   [:post "/graphs/new-template-graph"] {:as template-graph}
@@ -333,40 +313,38 @@
     (new-template-graph template-graph)
     (resp/redirect (format "/graphs#%s" (get-template-graph-anchor template-graph)))))
 
-(defpage "/graphs/update/:id" {id :id}
-  (comment
-    (let [graph (get-doc id)]
-      (common/layout
-       (format "Update graph %s" (:name graph))
-       (graph-form graph)))))
+(defpage "/graphs/update/:graphid" {graphid :graphid}
+  (let [graph (get-graph graphid)]
+    (common/layout
+     (format "Update graph %s" (:name graph))
+     (graph-form graph))))
 
 (defpage "/graphs" {}
-  (comment
-    (let [graphs (list-graphs)]
-      (common/layout
-       "Graphs"
-       (for [problem (sort (keys graphs))]
-         [:section {:id problem}
+  (let [graphs (list-graphs)]
+    (common/layout
+     "Graphs"
+     (for [problem (sort (keys graphs))]
+       [:section {:id problem}
+        [:div.row
+         [:div.span12.columns
+          [:div.page-header
+           [:a {:name (str/replace problem #"\W" "_")}
+            [:h1 (format "%s graphs" problem)]]]]]
+        (for [graph (sort-by :name (get graphs problem))]
           [:div.row
-           [:div.span12.columns
-            [:div.page-header
-             [:a {:name (str/replace problem #"\W" "_")}
-              [:h1 (format "%s graphs" problem)]]]]]
-          (for [graph (sort-by :name (get graphs problem))]
-            [:div.row
-             [:div.span4.columns
-              [:a {:name (get-graph-anchor graph)}
-               [:h2 (:name graph) [:br]
-                [:small (format "%s<br/>(%s by %s inches)<br/>(%s, %s)"
-                           (:problem graph)
-                           (:width graph "7") (:height graph "4")
-                           (:run-or-sim graph) (:resultstype graph))]]]
-              [:p (:caption graph)]
-              [:p (link-to (format "/graphs/update/%s" (:_id graph))
-                           "Update graph")]]
-             [:div.span8.columns
-              [:pre (:code graph)]]])])
-       (graph-form {})))))
+           [:div.span4.columns
+            [:a {:name (format "graph%d" (:graphid graph))}
+             [:h2 (:name graph) [:br]
+              [:small (format "%s<br/>(%.1f by %.1f inches)<br/>(%s)"
+                         (:problems graph)
+                         (or (:width graph) 7.0) (or (:height graph) 4.0)
+                         (:resultstype graph))]]]
+            [:p (:caption graph)]
+            [:p (link-to (format "/graphs/update/%s" (:graphid graph))
+                         "Update graph")]]
+           [:div.span8.columns
+            [:pre (:code graph)]]])])
+     (graph-form {}))))
 
 (defpage "/graph/:docid/:graphid/:graphrev/png"
   {docid :docid graphid :graphid graphrev :graphrev}
@@ -389,5 +367,3 @@
                                             (:ftype graph)))
      (header "Content-Disposition"
              (format "attachment; filename=\"%s.%s\"" (:filename graph) (:ftype graph))))))
-
-
