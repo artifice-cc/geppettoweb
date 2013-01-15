@@ -8,7 +8,7 @@
   (:use [sisyphus.models.parameters :only [list-parameters get-parameters-by-problem-name]])
   (:use [sisyphus.models.analysis :only [list-analysis]])
   (:use [sisyphus.models.graphs :only [list-graphs]])
-  (:use [sisyphus.models.runs :only [list-runs get-summary-results]])
+  (:use [sisyphus.models.runs :only [list-runs-couch get-summary-results]])
   (:use [korma.core]))
 
 (defn string-or-null
@@ -111,7 +111,6 @@
                   param-problem param-name paramrev (format-date (:time run))))
       (let [runid (:generated_key
                    (insert runs (values [{:paramid paramid
-                                          :paramrev paramrev
                                           :branch (:branch run)
                                           :commit (:commit run)
                                           :commitmsg (:commit-msg run)
@@ -136,27 +135,33 @@
           (let [analysis (get-doc analysis-hash)
                 analysisid (get-analysisid (:problem analysis) (:name analysis))]
             (insert run-analyses (values [{:runid runid :analysisid analysisid}]))))
-        (doseq [simtype [:control :comparison]]
-          (doseq [sim-results (get-summary-results run simtype)]
-            (let [runsimid (:simulation sim-results)
-                  results (dissoc sim-results :control-params :comparison-params
+        (doseq [resultstype [:control :comparison :comparative]]
+          (doseq [sim-results (get-summary-results run resultstype)]
+            (let [results (dissoc sim-results :control-params :comparison-params
                                   :params :simulation)
-                  simid (:generated_key
-                         (insert simulations (values [{:runid runid :runsimid runsimid
-                                                       :simtype (name simtype)}])))]
-              (doseq [[field val] results]
-                (let [entry {:simid simid :field (name field)}
-                      entry-typed (cond (= Double (type val))
-                                        (assoc entry :valtype "floatval" :floatval val)
-                                        (= Integer (type val))
-                                        (assoc entry :valtype "intval" :intval val)
-                                        :else
-                                        (assoc entry :valtype "strval" :strval val))]
-                  (insert results-fields (values [entry-typed])))))))))))
+                  simid (when (not-empty results)
+                          (:generated_key
+                           (insert simulations
+                                   (values [{:runid runid
+                                             :controlparams (or (:control-params sim-results)
+                                                                (:params sim-results))
+                                             :comparisonparams (:comparison-params sim-results)}]))))]
+              (when simid
+                (doseq [[field val] results]
+                  (let [entry {:simid simid
+                               :resultstype (name resultstype)
+                               :field (name field)}
+                        entry-typed (cond (= Double (type val))
+                                          (assoc entry :valtype "floatval" :floatval val)
+                                          (= Integer (type val))
+                                          (assoc entry :valtype "intval" :intval val)
+                                          :else
+                                          (assoc entry :valtype "strval" :strval val))]
+                    (insert results-fields (values [entry-typed]))))))))))))
 
 (defn convert-runs
   []
-  (doseq [run (map #(get-doc (:_id %)) (list-runs))]
+  (doseq [run (map #(get-doc (:_id %)) (sort-by :_id (list-runs-couch)))]
     (convert-run run)))
 
 (defn -main [& args]

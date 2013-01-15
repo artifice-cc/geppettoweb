@@ -5,9 +5,11 @@
   (:require [noir.cookies :as cookies])
   (:require [clojure.set :as set])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.common :only [get-doc to-clj]])
-  (:use [sisyphus.models.parameters :only
-         [new-parameters update-parameters list-parameters runs-with-parameters delete-parameters]])
+  (:use [sisyphus.models.common :only [to-clj]])
+  (:use [granary.parameters :only
+         [parameters-latest? parameters-latest
+          new-parameters update-parameters get-params
+          list-parameters runs-with-parameters delete-parameters]])
   (:use [sisyphus.views.overview :only [runs-table]]))
 
 (defpartial parameters-form
@@ -22,7 +24,7 @@
     [:div.span12.columns
      (form-to [:post (if (:name params) "/parameters/update-parameters"
                          "/parameters/new-parameters")]
-              (hidden-field :id (:_id params))
+              (hidden-field :paramid (:paramid params))
               [:fieldset
                [:div.clearfix
                 [:label {:for "problem"} "Problem"]
@@ -38,14 +40,7 @@
                 [:label {:for "description"} "Description"]
                 [:div.input
                  [:textarea.xxlarge {:id "description" :name "description"}
-                  (:description params)]]]
-               [:div.clearfix
-                [:div.input
-                 (radio-button "paramstype" (= "comparative" (:paramstype params))
-                               "comparative") " Comparative"
-                 " "
-                 (radio-button "paramstype" (= "non-comparative" (:paramstype params))
-                               "non-comparative") " Non-comparative"]]]
+                  (:description params)]]]]
               [:fieldset
                [:legend "Parameters"]
                [:div.clearfix
@@ -62,7 +57,7 @@
                [:input.btn.primary {:value (if (:name params) "Update" "Save")
                                     :name "action" :type "submit"}]
                " "
-               (if (and (:name params) (empty? (runs-with-parameters params)))
+               (if (and (:name params) (empty? (runs-with-parameters (:paramid params))))
                  [:input.btn.danger {:value "Delete" :name "action":type "submit"}])])]]])
 
 (defn vectorize-params
@@ -109,15 +104,16 @@
   [params embedded?]
   [:div.row
    [:div.span12.columns
-    [:a {:name (:_id params)}
+    [:a {:name (format "params%d" (:paramid params))}
      [(if embedded? :h3 :h2) (format "%s/%s" (:problem params) (:name params))]]
-    (if (or (nil? (:revs params))
-            (= (:start (:revs params)) (Integer/parseInt (first (str/split #"-" (:_rev params))))))
-      [:p (link-to (format "/parameters/update/%s" (:_id params)) "Update")]
+    (if (parameters-latest? (:paramid params))
+      [:p (link-to (format "/parameters/update/%s" (:paramid params)) "Update")]
       [:p "This is an old version. "
-       (link-to (format "/parameters#%s" (:_id params)) "View the latest version.")])
+       (link-to (format "/parameters#params%s" (:paramid (parameters-latest
+                                                     (:problem params) (:name params))))
+                "View the latest version.")])
     [:p (:description params)]]]
-  (if (= "comparative" (:paramstype params))
+  (if (:comparison params)
     (let [control-params (to-clj (:control params))
           comparison-params (to-clj (:comparison params))]
       [:div.row
@@ -139,21 +135,21 @@
          [:pre (:control params)]]]]))
   [:div
    [:h3 "Runs with these parameters"]]
-  (runs-table (runs-with-parameters params) (:problem params)))
+  (runs-table (runs-with-parameters (:paramid params)) (:problem params)))
 
 (defpage
   [:post "/parameters/update-parameters"] {:as params}
   (cond (= "Update" (:action params))
         (do
-          (update-parameters params)
-          (resp/redirect (format "/parameters#%s" (:id params))))
+          (let [paramid-new (update-parameters params)]
+            (resp/redirect (format "/parameters#params%s" paramid-new))))
         (= "Delete" (:action params))
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/parameters/delete-parameters-confirm" (:id params)
+         (common/confirm-deletion "/parameters/delete-parameters-confirm" (:paramid params)
                                   "Are you sure you want to delete the parameters?"))
         :else
-        (resp/redirect (format "/parameters#%s" (:id params)))))
+        (resp/redirect (format "/parameters#params%s" (:paramid params)))))
 
 (defpage
   [:post "/parameters/delete-parameters-confirm"] {:as confirm}
@@ -161,22 +157,22 @@
     (do
       (delete-parameters (:id confirm))
       (resp/redirect "/parameters"))
-    (resp/redirect (format "/parameters#%s" (:id confirm)))))
+    (resp/redirect (format "/parameters#params%s" (:id confirm)))))
 
 (defpage
   [:post "/parameters/new-parameters"] {:as params}
-  (let [id (:_id (new-parameters params))]
-    (resp/redirect (format "/parameters#%s" id))))
+  (let [paramid-new (new-parameters params)]
+    (resp/redirect (format "/parameters#params%s" paramid-new))))
 
-(defpage "/parameters/update/:id" {id :id}
-  (if-let [params (get-doc id)]
+(defpage "/parameters/update/:paramid" {paramid :paramid}
+  (if-let [params (get-params paramid)]
     (common/layout
      (format "Parameters: %s/%s" (:problem params) (:name params))
      (parameters-form params))
     (resp/redirect "/parameters")))
 
-(defpage "/parameters/:id/:rev" {id :id rev :rev}
-  (if-let [params (get-doc id rev)]
+(defpage "/parameters/:paramid" {paramid :paramid}
+  (if-let [params (get-params paramid)]
     (common/layout
      (format "Parameters: %s/%s" (:problem params) (:name params))
      (parameters-summary params false))

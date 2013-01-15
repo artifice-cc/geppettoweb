@@ -2,21 +2,21 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.runs :only
-         [get-summary-results get-summary-fields get-fields set-fields]])
+  (:use [granary.runs :only
+         [get-run gather-results-fields get-results]])
+  (:use [sisyphus.models.results :only [get-table-fields set-table-fields]])
   (:use [sisyphus.views.fields :only [field-checkboxes]])
   (:use [sisyphus.views.run :only
-         [run-parameters run-overview-notes run-metainfo run-delete-run]])
+         [run-parameters run-metainfo run-delete-run]])
   (:use [sisyphus.views.results :only
          [results-table paired-results-table]]))
 
 (defpartial run-fields-form
-  [run results-type on-fields fields]
+  [runid tabletype on-fields fields]
   (form-to
    [:post "/run/tables/set-fields"]
-   (hidden-field :id (:_id run))
-   (hidden-field :results-type results-type)
+   (hidden-field :runid runid)
+   (hidden-field :tabletype tabletype)
    [:div.row
     [:div.span12.columns
      [:p [:b [:a.fields_checkboxes_header "Select active fields..."]]]]]
@@ -29,63 +29,64 @@
        [:input.btn.primary {:value "Update" :type "submit"}]]]]]))
 
 (defpartial run-comparative-results-table
-  [run comparative-fields]
-  (let [on-fields (get-fields run :comparative)
-        results (get-summary-results run :comparative on-fields)]
+  [runid]
+  (let [comparative-fields (gather-results-fields runid :comparative)
+        on-fields (get-table-fields runid :comparative)
+        results (get-results runid :comparative on-fields)]
     [:section#comparative-results
      [:div.page-header
       [:a {:name "comparative-results"}
        [:h2 "Comparative results"]]]
      (results-table results on-fields)
-     (run-fields-form run :comparative on-fields comparative-fields)]))
+     (run-fields-form runid :comparative on-fields comparative-fields)]))
 
 (defpartial run-paired-results-table
-  [run control-fields]
-  (let [on-fields (get-fields run :paired)
-        control-results (get-summary-results run :control on-fields)
-        comparison-results (get-summary-results run :comparison on-fields)]
+  [runid]
+  (let [control-fields (gather-results-fields runid :control)
+        on-fields (get-table-fields runid :paired)
+        control-results (get-results runid :control on-fields)
+        comparison-results (get-results runid :comparison on-fields)]
     [:section#paired-results
      [:div.page-header
       [:a {:name "control-comparison-results"}
        [:h2 "Control/comparison results"]]]
      (paired-results-table control-results comparison-results on-fields)
-     (run-fields-form run :paired on-fields control-fields)]))
+     (run-fields-form runid :paired on-fields control-fields)]))
 
 (defpartial run-non-comparative-results-table
-  [run control-fields]
-  (let [on-fields (get-fields run :non-comparative)
-        results (get-summary-results run :control on-fields)]
+  [runid]
+  (let [control-fields (gather-results-fields runid :control)
+        on-fields (get-table-fields runid :non-comparative)
+        results (get-results runid :control on-fields)]
     [:section#non-comparative-results
      [:div.page-header
       [:a {:name "results"}
        [:h2 "Results"]]]
      (results-table results on-fields)
-     (run-fields-form run :non-comparative on-fields control-fields)]))
+     (run-fields-form runid :non-comparative on-fields control-fields)]))
 
 (defpage
   [:post "/run/tables/set-fields"] {:as fields}
-  (set-fields (:id fields) (:fields fields) (:results-type fields))
-  (resp/redirect (format "/run/tables/%s#%s" (:id fields)
-                         (format "%s-results" (name (:results-type fields))))))
+  (set-table-fields (:runid fields) (:tabletype fields) (:fields fields))
+  (resp/redirect (format "/run/tables/%s#%s" (:runid fields)
+                         (format "%s-results" (name (:tabletype fields))))))
 
-(defpage "/run/tables/:id" {id :id}
-  (let [run (get-doc id)
-        comparative? (= "comparative" (:paramstype run))
-        comparative-fields (get-summary-fields run :comparative)
-        control-fields (get-summary-fields run :control)]
+(defpage "/run/tables/:runid" {runid :runid}
+  (let [run (get-run runid)]
     (common/layout
-     (format "%s run %s" (:problem run) (subs id 22))
+     (format "%s/%s run %s" (:problem run) (:name run) runid)
      [:div.row [:div.span12.columns
-                [:h1 (format "%s run %s <small>(%s)</small>"
-                        (:problem run) (format "<a href=\"/run/%s\">%s</a>" id (subs id 22))
-                        (:paramstype run))]]]
-     (if comparative?
-       (run-comparative-results-table run comparative-fields))
-     (if comparative?
-       (run-paired-results-table run control-fields))
-     (if-not comparative?
-       (run-non-comparative-results-table run control-fields))
+                [:h1 (format "%s/%s run %s <small>(%s)</small>"
+                        (:problem run) (:name run)
+                        (format "<a href=\"/run/%s\">%s</a>" runid runid)
+                        (if (:comparison run)
+                          "comparative" "non-comparative"))]]]
+     (if (:comparison run)
+       (run-comparative-results-table runid))
+     (if (:comparison run)
+       (run-paired-results-table runid))
+     (if (nil? (:comparison run))
+       (run-non-comparative-results-table runid))
      (run-parameters run)
-     #_(run-overview-notes run)
      (run-metainfo run)
      (run-delete-run run))))

@@ -31,11 +31,9 @@
           [:h3 (link-to "/" "Sisyphus")]
           [:ul.nav
            [:li (link-to "/" "Runs")]
-           [:li (link-to "/claims" "Claims")]
            [:li (link-to "/parameters" "Parameters")]
            [:li (link-to "/graphs" "Graphs")]
-           [:li (link-to "/analysis" "Analysis")]
-           [:li (link-to "/configure" "Configure")]]]]]
+           [:li (link-to "/analyses" "Analyses")]]]]]
        (let [headers (re-seq #"<a name=\"([^\"]+)\"><h(\d)>([^<]+)" chtml)]
          [:div.sidebar {:style "position: fixed; top: 0; height: 100%; overflow: auto;"}
           [:p {:style "height: 40px; padding-top: 10px;"}
@@ -52,8 +50,8 @@
         chtml]]])))
 
 (defpartial date-format
-  [ms]
-  (let [date (new java.util.Date (long ms))
+  [timestamp]
+  (let [date (new java.util.Date (.getTime timestamp))
         dateinstance (. java.text.DateFormat getDateTimeInstance
                         ;; date format, time format
                         java.text.DateFormat/SHORT java.text.DateFormat/SHORT)]
@@ -71,7 +69,6 @@
    [:div.page-header
     [:h2 "Confirm deletion"]]
    [:div.row
-    [:div.span4.columns "&nbsp;"]
     [:div.span12.columns
      [:p msg]
      (form-to [:post post]

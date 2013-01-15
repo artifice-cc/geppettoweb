@@ -5,27 +5,25 @@
   (:require [noir.cookies :as cookies])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.common :only [get-doc]])
-  (:use [sisyphus.models.runs :only [list-runs delete-run]]))
+  (:use [sisyphus.models.analysis :only [analysis-count]])
+  (:use [sisyphus.models.graphs :only [graph-count]])
+  (:use [granary.runs :only [simulation-count list-runs delete-run]]))
 
 (defpartial run-table-row
   [run]
-  (let [id (:_id run)
-        params (get-doc (:paramsid run) (:paramsrev run))]
-    [:tr
-     [:td (link-to (format "/run/%s" (:_id run)) (subs id 22))]
-     [:td [:div {:style "white-space: nowrap;"} (common/date-format (:time run))]]
-     [:td (:username run)]
-     [:td (link-to (format "/parameters/%s/%s" (:paramsid run) (:paramsrev run))
-                   (format "%s (%s)" (:paramsname run)
-                           (if (= "comparative" (:paramstype run)) "c" "nc")))]
-     [:td (:count run)]
-     [:td (:graph-count run)]
-     [:td (:analysis-count run)]
-     [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s" (:commit run))
-                   (subs (:commit run) 0 10))
-      " @ " (:branch run)]
-     [:td (check-box "delete[]" false id)]]))
+  [:tr
+   [:td (link-to (format "/run/%s" (:runid run)) (:runid run))]
+   [:td [:div {:style "white-space: nowrap;"} (common/date-format (:starttime run))]]
+   [:td (:username run)]
+   [:td (link-to (format "/parameters/%d/%d" (:paramid run) (:paramrev run)) (:paramname run))]
+   [:td (simulation-count (:runid run))]
+   [:td (graph-count (:runid run))]
+   [:td (analysis-count (:runid run))]
+   [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"
+                    (:commit run))
+                 (subs (:commit run) 0 10))
+    " / " (:branch run)]
+   [:td (check-box "delete[]" false (:runid run))]])
 
 (defpartial runs-table
   [runs problem]
@@ -35,7 +33,7 @@
      [:th "Run ID"]
      [:th "Time"]
      [:th "User"]
-     [:th "Params (c/nc)"]
+     [:th "Params"]
      [:th "Sims"]
      [:th "Graphs"]
      [:th "Analysis"]
@@ -63,21 +61,21 @@
 (defpartial runs-by-project
   [runs-grouped-project]
   (map (fn [project]
-         (let [project-id (str/replace project #"\W" "_")
-               runs-grouped-problem
-               (group-by :problem (get runs-grouped-project project))]
-           [:section {:id (format "runs-project-%s" project-id)}
-            [:div.page-header
-             [:a {:name project-id}
-              [:h1 project]]]
-            (runs-by-problem runs-grouped-problem project)]))
-       (sort (keys runs-grouped-project))))
+       (let [project-id (if project (str/replace project #"\W" "_") "Unknown")
+             runs-grouped-problem
+             (group-by :param-problem (get runs-grouped-project project))]
+         [:section {:id (format "runs-project-%s" project-id)}
+          [:div.page-header
+           [:a {:name (or project-id "unknown")}
+            [:h1 (or project "Unknown")]]]
+          (runs-by-problem runs-grouped-problem project)]))
+     (sort (keys runs-grouped-project))))
 
 (defpage
   [:post "/delete-runs"] {:as runs}
-  (doseq [id (:delete runs)]
-    (println "Deleting" id)
-    (delete-run id))
+  (doseq [runid (:delete runs)]
+    (println "Deleting" runid)
+    (delete-run runid))
   (resp/redirect "/"))
 
 (defpage "/" []

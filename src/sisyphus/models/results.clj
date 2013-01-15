@@ -2,8 +2,31 @@
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.string :as str])
   (:require [clojure.java.io :as io])
-  (:use [sisyphus.models.runs :only [get-summary-results]])
-  (:use sisyphus.models.common))
+  (:use [korma.core])
+  (:use [granary.runs :only [get-run]])
+  (:use [granary.models])
+  (:use [granary.misc])
+  (:use [sisyphus.models.common]))
+
+(defentity table-fields
+  (table :table_fields)
+  (pk :tfid)
+  (belongs-to runs {:fk :runid}))
+
+(defn get-table-fields
+  [runid tabletype]
+  (set (map keyword (sort (map :field (with-db @sisyphus-db
+                                    (select table-fields (fields :field)
+                                            (where {:runid runid
+                                                    :tabletype (name tabletype)}))))))))
+
+(defn set-table-fields
+  [runid tabletype fields]
+  (with-db @sisyphus-db
+    (delete table-fields (where {:runid runid :tabletype (name tabletype)}))
+    (insert table-fields
+            (values (map (fn [f] {:runid runid :tabletype (name tabletype) :field f})
+                       fields)))))
 
 (defn csv-filenames
   [doc]
@@ -40,7 +63,7 @@
           (. outfile createNewFile)
           (let [results (if (= "run" (:type doc))
                           ;; for a run
-                          (get-summary-results doc results-type)
+                          [] #_(get-summary-results doc results-type)
                           ;; for a simulation
                           (get doc results-type))
                 fields (sort (keys (first results)))

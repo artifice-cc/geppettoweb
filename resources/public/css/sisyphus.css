@@ -1,4 +1,8 @@
 
+.content {
+    background: white;
+}
+
 .fields_checkboxes_header,
 .code_header,
 .download_header {

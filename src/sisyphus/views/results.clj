@@ -28,7 +28,7 @@
 (defpartial results-table
   [results on-fields]
   [:div.row
-   [:div.span12.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
+   [:div.span12.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
     [:table.tablesorter.zebra-striped
      [:thead
       [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
@@ -38,12 +38,13 @@
           [:tr [:td (if (and (:control-params r) (:comparison-params r))
                       (params-modal i :comparative
                                     [(:control-params r) (:comparison-params r)])
-                      (params-modal i :control (:params r)))]
+                      (params-modal i :control (:control-params r)))]
            (map (fn [f] [:td (let [val (get r f)]
-                               (if (= java.lang.Double (type val))
-                                 (format "%.2f" val)
-                                 (str val)))])
-                on-fields)]))]]]])
+                            (if (= java.lang.Double (type val))
+                              (format "%.3f" val)
+                              (try (format "%.3f" (Double/parseDouble val))
+                                   (catch Exception _ (str val)))))])
+              on-fields)]))]]]])
 
 ;; A paired results table; each cell has either one or two values: one
 ;; if control/comparison values are identical, otherwise two values,
@@ -53,7 +54,7 @@
   [control-results comparison-results on-fields]
   (let [paired-results (partition 2 (interleave control-results comparison-results))]
     [:div.row
-     [:div.span12.columns {:style "max-width: 960px; max-height: 20em; overflow: auto;"}
+     [:div.span12.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
       [:table.tablesorter.zebra-striped
        [:thead
         [:tr [:th "Params"] (map (fn [f] [:th (name f)]) on-fields)]]
@@ -64,16 +65,17 @@
                                     [(:control-params control)
                                      (:comparison-params comparison)])]
              (map (fn [f]
-                    [:td (let [control-val (get control f)
-                               comparison-val (get comparison f)]
-                           (if (not= control-val comparison-val)
-                             (if (and (= java.lang.Double (type control-val))
-                                      (= java.lang.Double (type comparison-val)))
-                               (format "<strong>%.2f</strong><br/>%.2f"
-                                       comparison-val control-val)
-                               (format "<strong>%s</strong><br/>%s"
-                                       (str comparison-val) (str control-val)))
-                             (if (= java.lang.Double (type control-val))
-                               (format "%.2f" control-val)
-                               (str control-val))))])
-                  on-fields)]))]]]]))
+                  [:td (let [control-val (get control f)
+                             comparison-val (get comparison f)]
+                         (if (not= control-val comparison-val)
+                           (if (and (= java.lang.Double (type control-val))
+                                    (= java.lang.Double (type comparison-val)))
+                             (format "<strong>%.3f</strong><br/>%.3f"
+                                comparison-val control-val)
+                             (format "<strong>%s</strong><br/>%s"
+                                (str comparison-val) (str control-val)))
+                           (if (= java.lang.Double (type control-val))
+                             (format "%.3f" control-val)
+                             (try (format "%.3f" (Double/parseDouble control-val))
+                                  (catch Exception _ (str control-val))))))])
+                on-fields)]))]]]]))
