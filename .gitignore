@@ -8,3 +8,4 @@ pom.xml
 /resources/public/js/jquery.tablesorter.min.js
 /resources/public/img/graphs
 app/.couchapprc
+cache

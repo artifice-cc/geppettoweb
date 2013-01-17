@@ -5,7 +5,6 @@
   (:use [korma.core])
   (:use [granary.models])
   (:use [granary.misc])
-  (:use [sisyphus.models.results :only [rbin-filenames results-to-rbin]])
   (:use [sisyphus.models.common])
   (:use [sisyphus.models.commonr]))
 

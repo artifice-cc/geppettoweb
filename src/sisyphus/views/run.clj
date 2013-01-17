@@ -165,7 +165,7 @@
                 [:p (link-to (format "/run/tables/%s" runid)
                              "View tables...")]]]
      #_(analysis run)
-     #_(graphs run comparative-fields control-fields)
+     (graphs run comparative-fields control-fields)
      (run-parameters run)
      #_(annotations run "run")
      (run-project run)

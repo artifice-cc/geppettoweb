@@ -1,11 +1,12 @@
 (ns sisyphus.server
+  (:import (java.io File))
   (:use [clojure.contrib.command-line :only [with-command-line]])
   (:use [granary.misc])
-  (:use [korma.db])
-  (:use [sisyphus.models.common :only [sisyphus-db]])
+  (:use [korma.db :only [create-db mysql]])
+  (:use [sisyphus.models.common :only [sisyphus-db cachedir]])
   (:require [noir.server :as server])
   (:require [sisyphus.views.run]
-            [sisyphus.views.run-tables]
+            [sisyphus.views.tables]
             [sisyphus.views.graphs]
             [sisyphus.views.overview]
             [sisyphus.views.parameters]
@@ -34,7 +35,9 @@
      [sisyphus-dbhost "Sisyphus MySQL database host" "localhost"]
      [sisyphus-dbname "Sisyphus MySQL database name" "sisyphusdb"]
      [sisyphus-dbuser "Sisyphus MySQL database user" "user"]
-     [sisyphus-dbpassword "Sisyphus MySQL database password" "password"]]
+     [sisyphus-dbpassword "Sisyphus MySQL database password" "password"]
+     [cache "Cache directory" "cache"]]
+    (.mkdirs (File. cache))
     (set-granary-db granary-dbhost granary-dbname granary-dbuser granary-dbpassword)
     (dosync
      (alter sisyphus-db
@@ -42,7 +45,8 @@
              (create-db (mysql {:host sisyphus-dbhost
                                 :db sisyphus-dbname
                                 :user sisyphus-dbuser
-                                :password sisyphus-dbpassword})))))
+                                :password sisyphus-dbpassword}))))
+     (alter cachedir (constantly cache)))
     (server/start (Integer/parseInt port)
                   {:mode :dev
                    :ns 'sisyphus})

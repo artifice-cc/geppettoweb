@@ -1,6 +1,6 @@
 (ns sisyphus.models.common)
 
-(def cachedir "/tmp")
+(def cachedir (ref nil))
 
 (def sisyphus-db (ref nil))
 

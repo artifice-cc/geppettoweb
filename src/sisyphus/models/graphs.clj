@@ -4,8 +4,9 @@
   (:require [clojure.string :as str])
   (:use [korma.core])
   (:use [granary.models])
+  (:use [granary.runs])
   (:use [granary.misc])
-  (:use [sisyphus.models.results :only [rbin-filenames results-to-rbin]])
+  (:use [granary.r])
   (:use [sisyphus.models.common])
   (:use [sisyphus.models.commonr]))
 
@@ -16,12 +17,7 @@
   (table :run_graphs)
   (pk :rungraphid)
   (belongs-to runs {:fk :runid})
-  (has-one graphs {:fk :graphid}))
-
-(defn type-filename
-  [doc graph ftype]
-  (format "%s/%s-%s-%s.%s" cachedir
-     (:_id doc) (:_id graph) (:_rev graph) ftype))
+  (belongs-to graphs {:fk :graphid}))
 
 (defn graph-count
   [runid]
@@ -29,10 +25,18 @@
                    (select run-graphs (where {:runid runid})
                            (aggregate (count :runid) :count))))))
 
+(defn default-width-height
+  [g]
+  (assoc g
+    :width (if (nil? (:width g)) 7.0
+               (:width g))
+    :height (if (nil? (:height g)) 4.0
+                (:height g))))
+
 (defn list-graphs
   []
   (with-db @sisyphus-db
-    (let [all-graphs (select graphs)
+    (let [all-graphs (map default-width-height (select graphs))
           problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-graphs))]
       (reduce (fn [m problem]
            (assoc m problem (filter (fn [g] (some #{problem}
@@ -42,29 +46,21 @@
 
 (defn get-graph
   [graphid]
-  (first (with-db @sisyphus-db (select graphs (where {:graphid graphid})))))
+  (default-width-height
+    (first (with-db @sisyphus-db (select graphs (where {:graphid graphid}))))))
 
-;; graphs for simulations are set in the run
-(defn set-graphs
-  [runid graphs run-or-sim]
-  (comment
-    (let [doc (get-doc runid)]
-      (reset-doc-cache runid)
-      (clutch/with-db db
-        (clutch/update-document doc {(if (= "run" run-or-sim) :graphs
-                                         :simulation-graphs) graphs})))))
-
-(defn update-graph
-  [graph]
+(defn set-run-graphs
+  [runid graphids]
   (with-db @sisyphus-db
-    (update graphs (set-fields (dissoc graph :graphid :action))
-            (where {:graphid (:graphid graph)}))))
+    (delete run-graphs (where {:runid runid}))
+    (insert run-graphs (values (map (fn [graphid] {:runid runid :graphid graphid}) graphids)))))
 
-(defn new-graph
-  [graph]
-  (:generated_key
-   (with-db @sisyphus-db
-     (insert graphs (values [(dissoc graph :graphid :action)])))))
+(defn get-run-graphs
+  [runid]
+  (map default-width-height
+     (map #(dissoc % :rungraphid :runid :graphid_2)
+        (with-db @sisyphus-db
+          (select run-graphs (with graphs) (where {:runid runid}))))))
 
 (defn new-template-graph
   [template-graph]
@@ -299,74 +295,92 @@ Loading required package: proto")
            (cond (= (:template template-graph) "bars")
                  (apply-template-bar doc template-graph)))))
 
+(defn graph-filename
+  [runid graphid ftype theme width height]
+  (prn runid graphid ftype theme width height)
+  (format "%s/%d-%d-%s-%.2f-%.2f.%s"
+     @cachedir runid graphid theme width height ftype))
+
+(defn delete-cached-graphs
+  [graphid]
+  (doseq [f (filter #(re-matches (re-pattern (format "\\d+\\-%d\\-.*" graphid)) (.getName %))
+               (file-seq (io/file @cachedir)))]
+    (.delete f)))
+
 (defn render-graph-file
-  [doc graph ftype theme width height]
-  (comment
-    (reset-doc-cache (:_id doc))
-    (if (get-attachment (:_id doc) (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) ftype
-                                      theme width height))
+  [run graph ftype theme width height]
+  (let [graph-fname (graph-filename (:runid run) (:graphid graph) ftype theme width height)]
+    (if (.exists (io/file graph-fname))
       {:success true}
-      (let [rbin-fnames (rbin-filenames doc)
-            ftype-fname (type-filename doc graph ftype)
-            tmp-fname (format "%s/%s-%s-%s.rscript"
-                         cachedir (:_id doc) (:_id graph) (:_rev graph))
+      (let [rscript-fname (graph-filename (:runid run) (:graphid graph) "rscript"
+                                          theme width height)
             g (if (= "template-graph" (:type graph))
-                (apply-template doc graph) graph)
-            rcode (format "library(ggplot2)\nlibrary(grid)\n%s\n%s\n%s\n
+                (apply-template run graph) graph)
+            rcode (format "library(ggplot2)\nlibrary(grid)
+                         %s # extra-funcs
+                         %s # themes
+                         load('%s/%d-control.rbin')
+                         load('%s/%d-comparison.rbin')
+                         load('%s/%d-comparative.rbin')
                          p <- ggplot()\n
-                         %s\n
+                         %s # graph code
                          # see: https://github.com/wch/ggplot2/wiki/New-theme-system
                          #p <- p + theme_%s()\n 
-                         %s\n
-                         %s\n
-                         ggsave(\"%s\", plot = p, dpi = %d, width = %d, height = %d)"
+                         %s # scale_colour
+                         %s # scale_fill
+                         ggsave(\"%s\", plot = p, dpi = %d, width = %.2f, height = %.2f)"
                      extra-funcs
                      (format "%s\n%s\n%s\n" theme_website theme_paper theme_poster)
-                     (apply str (map #(format "load(\"%s\")\n" (get rbin-fnames %))
-                                   (keys rbin-fnames)))
+                     @cachedir (:runid run) @cachedir (:runid run) @cachedir (:runid run)
                      (:code g) theme
                      (if (not (re-find #"scale_colour" (:code g)))
                        (format "p <- p + scale_colour_manual(values=%s_palette)" theme) "")
                      (if (not (re-find #"scale_fill" (:code g)))
                        (format "p <- p + scale_fill_manual(values=%s_palette)" theme) "" )
-                     ftype-fname
+                     graph-fname
                      (if (= "png" ftype) 100 600)
-                     (Integer/parseInt width)
-                     (Integer/parseInt height))]
-        (results-to-rbin doc)
+                     width height)]
+        (results-to-rbin (:runid run) @cachedir)
         ;; save rcode to file
-        (with-open [writer (io/writer tmp-fname)]
+        (with-open [writer (io/writer rscript-fname)]
           (.write writer rcode))
         ;; run Rscript
-        (let [status (sh "/usr/bin/Rscript" tmp-fname)]
+        (let [status (sh "/usr/bin/Rscript" rscript-fname)]
           (cond (not= 0 (:exit status))
                 {:err (str/replace (:err status) r-error-prefix "")}
-                (not (. (io/file ftype-fname) exists))
+                (not (. (io/file graph-fname) exists))
                 {:err "Resulting file does not exist."}
                 :else
-                (do (update-graph-attachment doc ftype-fname g ftype theme width height)
-                    {:success true})))))))
-
-(defn get-graph-png
-  [doc graph]
-  (comment
-    (render-graph-file doc graph "png" "website" (:width graph "7") (:height graph "4"))
-    (if-let [f (get-attachment (:_id doc)
-                               (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) "png"
-                                  "website" (:width graph "7") (:height graph "4")))]
-      (try (io/input-stream f) (catch Exception _)))))
+                {:success true}))))))
 
 (defn get-graph-download
-  [doc graph theme width height ftype]
-  (comment
-    (render-graph-file doc graph ftype theme width height)
-    (if-let [f (get-attachment (:_id doc)
-                               (format "%s-%s-%s-%s-%s-%s" (:_id graph) (:_rev graph) ftype
-                                  theme width height))]
-      (try (io/input-stream f) (catch Exception _)))))
+  [runid graphid ftype theme width height]
+  (render-graph-file (get-run runid) (get-graph graphid) ftype theme width height)
+  (println (graph-filename runid graphid ftype theme width height))
+  (try (io/input-stream (io/file (graph-filename runid graphid ftype theme width height)))
+       (catch Exception _)))
+
+(defn get-graph-png
+  [runid graphid]
+  (let [graph (get-graph graphid)]
+    (get-graph-download runid graphid "png" "website" (:width graph) (:height graph))))
+
+(defn update-graph
+  [graph]
+  (delete-cached-graphs (Integer/parseInt (:graphid graph)))
+  (with-db @sisyphus-db
+    (update graphs (set-fields (dissoc graph :graphid :action))
+            (where {:graphid (:graphid graph)}))))
+
+(defn new-graph
+  [graph]
+  (:generated_key
+   (with-db @sisyphus-db
+     (insert graphs (values [(dissoc graph :graphid :action)])))))
 
 (defn delete-graph
   [graphid]
+  (delete-cached-graphs (Integer/parseInt graphid))
   (with-db @sisyphus-db
     (delete run-graphs (where {:graphid graphid}))
     (delete graphs (where {:graphid graphid}))))

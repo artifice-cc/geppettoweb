@@ -1,10 +1,10 @@
-(ns sisyphus.views.run-tables
+(ns sisyphus.views.tables
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [granary.runs :only
          [get-run gather-results-fields get-results]])
-  (:use [sisyphus.models.results :only [get-table-fields set-table-fields]])
+  (:use [sisyphus.models.tables :only [get-table-fields set-table-fields]])
   (:use [sisyphus.views.fields :only [field-checkboxes]])
   (:use [sisyphus.views.run :only
          [run-parameters run-metainfo run-delete-run]])
