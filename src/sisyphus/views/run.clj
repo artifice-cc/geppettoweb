@@ -1,10 +1,12 @@
 (ns sisyphus.views.run
+  (:require [clojure.java.io :as io])
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [granary.runs :only
          [get-run list-projects set-project delete-run]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
+  (:use [sisyphus.models.common])
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analysis :only [analysis]])
   (:use [sisyphus.views.annotations :only [annotations]])
@@ -141,12 +143,19 @@
    (common/confirm-deletion "/run/delete-run-confirm" (:runid run)
                             "Are you sure you want to delete the run?")))
 
+(defn delete-cached-rundata
+  [runid]
+  (doseq [f (filter #(re-matches (re-pattern (format "%d\\-.*" runid)) (.getName %))
+               (file-seq (io/file @cachedir)))]
+    (.delete f)))
+
 (defpage
   [:post "/run/delete-run-confirm"] {:as confirm}
   ;; use :id in confirm map not :runid
   (if (= (:choice confirm) "Confirm deletion")
     (do
-      (delete-run (:id confirm))
+      (delete-cached-rundata (Integer/parseInt (:id confirm)))
+      (delete-run (Integer/parseInt (:id confirm)))
       (resp/redirect "/"))
     (resp/redirect (format "/run/%s" (:id confirm)))))
 
