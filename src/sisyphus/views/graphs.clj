@@ -216,8 +216,8 @@
 
 (defpartial graphs
   [run comparative-fields control-fields & opts]
-  (let [avail-graphs (filter #(if (nil? (:comparison run))
-                           (= "non-comparative" (:resultstype %)))
+  (let [avail-graphs (filter #(or (:comparison run)
+                             (= "non-comparative" (:resultstype %)))
                         (get (list-graphs) (:problem run)))
         active-graphs (set (get-run-graphs (:runid run)))
         template-graphs #{}]

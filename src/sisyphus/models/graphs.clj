@@ -297,7 +297,6 @@ Loading required package: proto")
 
 (defn graph-filename
   [runid graphid ftype theme width height]
-  (prn runid graphid ftype theme width height)
   (format "%s/%d-%d-%s-%.2f-%.2f.%s"
      @cachedir runid graphid theme width height ftype))
 
@@ -356,7 +355,6 @@ Loading required package: proto")
 (defn get-graph-download
   [runid graphid ftype theme width height]
   (render-graph-file (get-run runid) (get-graph graphid) ftype theme width height)
-  (println (graph-filename runid graphid ftype theme width height))
   (try (io/input-stream (io/file (graph-filename runid graphid ftype theme width height)))
        (catch Exception _)))
 
