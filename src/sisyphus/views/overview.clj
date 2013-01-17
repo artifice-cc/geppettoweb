@@ -45,9 +45,8 @@
   [problem runs project]
   [:div
    [:div.page-header
-    [:a {:name (if (and problem project)
-                 (str (str/replace problem #"\W" "_")
-                      (str/replace project #"\W" "_")) "")}
+    [:a {:name (str (str/replace (or problem "Unknown") #"\W" "_")
+                    (str/replace (or project "Unknown") #"\W" "_"))}
      [:h2 problem]]]
    [:div.row
     [:div.span12.columns
@@ -63,7 +62,7 @@
   (map (fn [project]
        (let [project-id (if project (str/replace project #"\W" "_") "Unknown")
              runs-grouped-problem
-             (group-by :param-problem (get runs-grouped-project project))]
+             (group-by :problem (get runs-grouped-project project))]
          [:section {:id (format "runs-project-%s" project-id)}
           [:div.page-header
            [:a {:name (or project-id "unknown")}
