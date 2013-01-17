@@ -15,7 +15,7 @@
    [:td (link-to (format "/run/%s" (:runid run)) (:runid run))]
    [:td [:div {:style "white-space: nowrap;"} (common/date-format (:starttime run))]]
    [:td (:username run)]
-   [:td (link-to (format "/parameters/%d/%d" (:paramid run) (:paramrev run)) (:paramname run))]
+   [:td (link-to (format "/parameters/%d" (:paramid run)) (:name run))]
    [:td (simulation-count (:runid run))]
    [:td (graph-count (:runid run))]
    [:td (analysis-count (:runid run))]
