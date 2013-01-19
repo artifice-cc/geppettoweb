@@ -325,8 +325,8 @@ Loading required package: proto")
                          %s # graph code
                          # see: https://github.com/wch/ggplot2/wiki/New-theme-system
                          #p <- p + theme_%s()\n 
-                         %s # scale_colour
-                         %s # scale_fill
+                         #%s # scale_colour
+                         #%s # scale_fill
                          ggsave(\"%s\", plot = p, dpi = %d, width = %.2f, height = %.2f)"
                      extra-funcs
                      (format "%s\n%s\n%s\n" theme_website theme_paper theme_poster)

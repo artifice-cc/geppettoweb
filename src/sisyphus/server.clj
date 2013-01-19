@@ -8,6 +8,7 @@
   (:require [sisyphus.views.run]
             [sisyphus.views.tables]
             [sisyphus.views.graphs]
+            [sisyphus.views.analyses]
             [sisyphus.views.overview]
             [sisyphus.views.parameters]
             [sisyphus.views.results]))

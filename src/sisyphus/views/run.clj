@@ -8,7 +8,7 @@
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.common])
   (:use [sisyphus.views.graphs :only [graphs]])
-  (:use [sisyphus.views.analysis :only [analysis]])
+  (:use [sisyphus.views.analyses :only [analyses]])
   (:use [sisyphus.views.annotations :only [annotations]])
   (:use [sisyphus.views.parameters :only [parameters-summary]]))
 
@@ -173,7 +173,7 @@
      [:div.row [:div.span12.columns
                 [:p (link-to (format "/run/tables/%s" runid)
                              "View tables...")]]]
-     #_(analysis run)
+     (analyses run)
      (graphs run comparative-fields control-fields)
      (run-parameters run)
      #_(annotations run "run")

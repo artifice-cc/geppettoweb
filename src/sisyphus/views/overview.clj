@@ -5,7 +5,7 @@
   (:require [noir.cookies :as cookies])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.analysis :only [analysis-count]])
+  (:use [sisyphus.models.analyses :only [analysis-count]])
   (:use [sisyphus.models.graphs :only [graph-count]])
   (:use [granary.runs :only [simulation-count list-runs delete-run]]))
 
