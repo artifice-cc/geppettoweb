@@ -168,7 +168,7 @@
      [:div.row [:div.span12.columns
                 [:h1 (format "%s/%s run %s <small>(%s)</small>"
                              (:problem run) (:name run) runid
-                             (if (:comparison-params run)
+                             (if (:comparison run)
                                "comparative" "non-comparative"))]]]
      [:div.row [:div.span12.columns
                 [:p (link-to (format "/run/tables/%s" runid)
