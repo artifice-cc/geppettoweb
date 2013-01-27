@@ -4,7 +4,7 @@
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [granary.runs :only
-         [get-run list-projects set-project delete-run]])
+         [get-run list-projects set-project delete-run gather-results-fields]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.common])
   (:use [sisyphus.views.graphs :only [graphs]])
@@ -161,8 +161,8 @@
 
 (defpage "/run/:runid" {runid :runid}
   (let [run (get-run runid)
-        comparative-fields []
-        control-fields []]
+        comparative-fields (gather-results-fields runid :comparative)
+        control-fields (gather-results-fields runid :control)]
     (common/layout
      (format "%s/%s run %s" (:problem run) (:name run) runid)
      [:div.row [:div.span12.columns

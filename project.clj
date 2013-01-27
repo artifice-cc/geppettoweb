@@ -6,7 +6,8 @@
                  [org.clojure/java.jdbc "0.2.3"]
                  [korma "0.3.0-beta15-SNAPSHOT"]
                  [mysql/mysql-connector-java "5.1.6"]
-                 [org.markdownj/markdownj "0.3.0-1.0.2b4"]]
+                 [org.markdownj/markdownj "0.3.0-1.0.2b4"]
+                 [fleet "0.9.5"]]
   :dev-dependencies [[lein-ring "0.4.5"]]
   :ring {:handler sisyphus.server/handler}
   :main sisyphus.server
