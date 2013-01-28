@@ -182,6 +182,7 @@
   (form-to [:post "/graph/download"]
            (hidden-field :runid (:runid run))
            (hidden-field :graphid (:graphid graph))
+           (hidden-field :templateid (:templateid graph))
            [:fieldset
             [:div.clearfix
              [:label {:for "theme"} "Theme"]
@@ -435,7 +436,12 @@
                             (= "png" (:ftype graph))
                             "image/png")
                       (get-graph-download (Integer/parseInt (:runid graph))
-                                          (Integer/parseInt (:graphid graph))
+                                          (try
+                                            (Integer/parseInt (:graphid graph))
+                                            (catch Exception _ nil))
+                                          (try
+                                            (Integer/parseInt (:templateid graph))
+                                            (catch Exception _ nil))
                                           (:ftype graph)
                                           (:theme graph)
                                           (Double/parseDouble (:width graph))
