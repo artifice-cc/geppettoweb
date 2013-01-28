@@ -215,11 +215,18 @@ Loading required package: proto")
                (apply-template-bar run graph)
                :else "")))
 
+(defn convert-template-graph-none-fields
+  [graph]
+  (let [none-fields #{:xfield :xfactor :yfield :fill :color :linetype :shape
+                      :facethoriz :facetvert}]
+    (reduce (fn [g [k v]] (assoc g k (if (and (none-fields k) (= v "None")) nil v)))
+       {} (seq graph))))
+
 (defn update-template-graph
   [graph]
   (delete-cached-template-graphs (Integer/parseInt (:templateid graph)))
   (let [run (get-run (:runid graph))
-        g (apply-template run graph)]
+        g (apply-template run (convert-template-graph-none-fields graph))]
     (with-db @sisyphus-db
       (update template-graphs (set-fields (dissoc g :templateid :action))
               (where {:templateid (:templateid g)})))))
@@ -228,7 +235,7 @@ Loading required package: proto")
   [graph]
   (:generated_key
    (let [run (get-run (:runid graph))
-         g (apply-template run graph)]
+         g (apply-template run (convert-template-graph-none-fields graph))]
      (with-db @sisyphus-db
        (insert template-graphs (values [(dissoc g :templateid :action)]))))))
 
