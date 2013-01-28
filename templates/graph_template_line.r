@@ -1,0 +1,35 @@
+library(reshape2)
+
+m <- melt(control, id.vars=c("simulation",
+                     <(if (:facethoriz graph) (format "\"%s\"," (:facethoriz graph)) "")>
+                     <(if (:facetvert graph) (format "\"%s\"," (:facetvert graph)) "")>
+                     <(if (:color graph) (format "\"%s\"," (:color graph)) "")>
+                     <(if (:linetype graph) (format "\"%s\"," (:linetype graph)) "")>
+                     <(format "\"%s\"" (:xfield graph))>
+                     ),
+          measure.vars=c(<(format "\"%s\"" (:yfield graph))>))
+
+dse <- summarySE(m, measurevar="value",
+                 groupvars=c(<(format "\"%s\"" (:xfield graph))>,
+                   <(if (:facethoriz graph) (format "\"%s\"," (:facethoriz graph)) "")>
+                   <(if (:facetvert graph) (format "\"%s\"," (:facetvert graph)) "")>
+                   <(if (:color graph) (format "\"%s\"," (:color graph)) "")>
+                   <(if (:linetype graph) (format "\"%s\"," (:linetype graph)) "")>
+                   "variable"))
+
+p <- ggplot(dse, aes(x=<(:xfield graph)>, y=value,
+                     <(if (:color graph) (format "color=factor(%s)," (:color graph)) "")>
+                     <(if (:linetype graph) (format "linetype=factor(%s)," (:linetype graph)) "")>
+                     ))
+p <- p + geom_line()
+
+p <- p + scale_x_continuous("<(:xlabel graph)>")
+p <- p + scale_y_continuous("<(:ylabel graph)>")
+
+<(if (or (:facethoriz graph) (:facetvert graph)) ">
+p <- p + facet_grid(
+<(str (if (:facetvert graph) (:facetvert graph) "."))>
+~
+<(str (if (:facethoriz graph) (:facethoriz graph) "."))>
+)
+<")>

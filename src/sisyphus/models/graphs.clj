@@ -203,17 +203,15 @@ Loading required package: proto")
     (delete run-graphs (where {:graphid graphid}))
     (delete graphs (where {:graphid graphid}))))
 
-(defn apply-template-bar
-  [run graph]
-  (let [t (fleet [graph] (slurp "templates/graph_template_bars.r"))]
-    (str (t graph))))
-
 (defn apply-template
   [run graph]
-  (assoc graph :code
-         (cond (= (:template graph) "bars")
-               (apply-template-bar run graph)
-               :else "")))
+  (let [template-file (cond (= (:template graph) "bars")
+                            "templates/graph_template_bars.r"
+                            (= (:template graph) "line")
+                            "templates/graph_template_line.r")
+        t (if template-file (fleet [graph] (slurp template-file)))]
+    (if t (assoc graph :code (str (t graph)))
+        graph)))
 
 (defn convert-template-graph-none-fields
   [graph]
