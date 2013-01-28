@@ -225,7 +225,8 @@
        [:a {:name (if (:templateid graph)
                     (format "template%d" (:templateid graph))
                     (format "graph%d" (:graphid graph)))}
-        [:h3 (:name graph)]]
+        [:h3 (format "%s%s" (:name graph)
+                (if (:templateid graph) " (template)" ""))]]
        [:p (:caption graph)]]]
      [:div.row
       [:div.span12.columns
