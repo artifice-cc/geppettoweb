@@ -9,7 +9,8 @@
   (:use [granary.parameters :only
          [parameters-latest? parameters-latest
           new-parameters update-parameters get-params
-          list-parameters runs-with-parameters delete-parameters]])
+          list-parameters runs-with-parameters delete-parameters
+          vectorize-params explode-params params-pairable?]])
   (:use [sisyphus.views.overview :only [runs-table]]))
 
 (defpartial parameters-form
@@ -60,25 +61,6 @@
                (if (and (:name params) (empty? (runs-with-parameters (:paramid params))))
                  [:input.btn.danger {:value "Delete" :name "action":type "submit"}])])]]])
 
-(defn vectorize-params
-  [params]
-  (try
-    (reduce (fn [m k] (let [v (k params)]
-                        (assoc m k (if (vector? v) v [v]))))
-            {} (keys params))
-    (catch Exception _ {})))
-
-(defn explode-params
-  "Want {:Xyz [1 2 3], :Abc [3 4]} to become [{:Xyz 1, :Abc 3}, {:Xyz 2, :Abc 4}, ...]"
-  [params]
-  (when (not-empty params)
-    (if (= 1 (count params))
-      (for [v (second (first params))]
-        {(first (first params)) v})
-      (let [p (first params)
-            deeper (explode-params (rest params))]
-        (flatten (map (fn [v] (map #(assoc % (first p) v) deeper)) (second p)))))))
-
 (defpartial params-diff
   [ps1 ps2]
   (try
@@ -116,17 +98,24 @@
   (if (:comparison params)
     (let [control-params (to-clj (:control params))
           comparison-params (to-clj (:comparison params))]
-      [:div.row
-       [:div.span6.columns
-        [:h3 "Control"]
-        [:div.params
-         (paramscount control-params)
-         (params-diff control-params comparison-params)]]
-       [:div.span6.columns
-        [:h3 "Comparison"]
-        [:div.params
-         (paramscount comparison-params)
-         (params-diff comparison-params control-params)]]])
+      [:div
+       (when-not (params-pairable? control-params comparison-params)
+         [:div.row
+          [:div.span12.columns
+           [:p
+            [:span.label.warning "Warning"]
+            " These parameters cannot be paired, as they specify different keys."]]])
+       [:div.row
+        [:div.span6.columns
+         [:h3 "Control"]
+         [:div.params
+          (paramscount control-params)
+          (params-diff control-params comparison-params)]]
+        [:div.span6.columns
+         [:h3 "Comparison"]
+         [:div.params
+          (paramscount comparison-params)
+          (params-diff comparison-params control-params)]]]])
     (let [control-params (to-clj (:control params))]
       [:div.row
        [:div.span6.columns

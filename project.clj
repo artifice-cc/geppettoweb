@@ -2,7 +2,7 @@
   :description "FIXME: write this!"
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [noir "1.2.0"]
-                 [cc.artifice/granary "1.0.0"]
+                 [cc.artifice/granary "1.0.2"]
                  [org.clojure/java.jdbc "0.2.3"]
                  [korma "0.3.0-RC2"]
                  [mysql/mysql-connector-java "5.1.6"]
