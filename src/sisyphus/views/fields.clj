@@ -8,8 +8,8 @@
 
 (defpartial field-checkboxes
   [on-fields fields]
-  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 3))) fields)]
+  (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 2))) fields)]
     (map (fn [fs]
-           [:div.span4.columns
+           [:div.span6.columns
             [:ul.inputs-list (map (fn [f] (field-checkbox f on-fields)) fs)]])
          field-groups)))
