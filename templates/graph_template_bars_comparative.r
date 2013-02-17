@@ -1,36 +1,37 @@
+m <- merge(control, comparison, by=c("simulation"))
 result <- data.frame(value=c(), se=c(),
                      <(str (if (:fill graph) "fill=c()," ""))>
                      <(str (if (:color graph) "color=c()," ""))>
                      xfactor=c())
 
 <(if (:fill graph) ">
-for(fill in unique(control$<(:fill graph)>)) {
+for(fill in unique(m$<(:fill graph)>.y)) {
 <")>
 
 <(if (:color graph) ">
-for(color in unique(control$<(:color graph)>)) {
+for(color in unique(m$<(:color graph)>.y)) {
 <")>
 
 <(if (:facethoriz graph) ">
-for(facethoriz in unique(control$<(:facethoriz graph)>)) {
+for(facethoriz in unique(m$<(:facethoriz graph)>.y)) {
 <")>
 
 <(if (:facetvert graph) ">
-for(facetvert in unique(control$<(:facetvert graph)>)) {
+for(facetvert in unique(m$<(:facetvert graph)>.y)) {
 <")>
 
-for(xfactor in unique(control$<(:xfactor graph)>)) {
+for(xfactor in unique(m$<(:xfactor graph)>.y)) {
 
-  data <- subset(control,
-                 <(if (:fill graph) "><(:fill graph)> == fill & <")>
-                 <(if (:color graph) "><(:color graph)> == color & <")>
-                 <(if (:facethoriz graph) "><(:facethoriz graph)> == facethoriz & <")>
-                 <(if (:facetvert graph) "><(:facetvert graph)> == facetvert & <")>
-                 <(:xfactor graph)> == xfactor)
+  data <- subset(m,
+                 <(if (:fill graph) "><(:fill graph)>.y == fill & <")>
+                 <(if (:color graph) "><(:color graph)>.y == color & <")>
+                 <(if (:facethoriz graph) "><(:facethoriz graph)>.y == facethoriz & <")>
+                 <(if (:facetvert graph) "><(:facetvert graph)>.y == facetvert & <")>
+                 <(:xfactor graph)>.y == xfactor)
 
   if(nrow(data) > 0) {
-    d <- data.frame(label="<(:yfield graph)>",
-                    value=data$<(:yfield graph)>)
+    d <- data.frame(label="Diff<(:yfield graph)>",
+                    value=data$<(:yfield graph)>.y-data$<(:yfield graph)>.x)
     dse <- summarySE(d, measurevar="value", groupvars=c("label"))
     result <- rbind(result, data.frame(
                               <(str (if (:fill graph) "fill=fill," ""))>

@@ -105,7 +105,8 @@
             [:div.clearfix
              [:label {:for "template"} "Template"]
              [:div.input
-              (drop-down :template ["line" "bars"])]]
+              (drop-down :template ["line" "line-comparative" "bars" "bars-comparative"]
+                         (:template graph))]]
             [:div.clearfix
              [:label {:for "name"} "Name"]
              [:div.input [:input.xlarg {:id "name" :name "name" :size 30

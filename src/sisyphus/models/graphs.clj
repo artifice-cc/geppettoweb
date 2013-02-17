@@ -207,8 +207,12 @@ Loading required package: proto")
   [run graph]
   (let [template-file (cond (= (:template graph) "bars")
                             "templates/graph_template_bars.r"
+                            (= (:template graph) "bars-comparative")
+                            "templates/graph_template_bars_comparative.r"
                             (= (:template graph) "line")
-                            "templates/graph_template_line.r")
+                            "templates/graph_template_line.r"
+                            (= (:template graph) "line-comparative")
+                            "templates/graph_template_line_comparative.r")
         t (if template-file (fleet [graph] (slurp template-file)))]
     (if t (assoc graph :code (str (t graph)))
         graph)))
