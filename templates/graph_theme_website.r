@@ -1,5 +1,6 @@
-website_palette <- c("#3465a4", "#2e3436", "#f57900")
-theme_website <- function (base_size = 12, base_family = "") {
+# see: https://github.com/wch/ggplot2/wiki/New-theme-system
+custom_palette <- c("#999967", "#666666", "#cccccc", "#cccc9a")
+theme_custom <- function (base_size = 12, base_family = "") {
   theme_grey(base_size=base_size, base_family=base_family) %+replace%
   theme(
     axis.line = theme_blank(),

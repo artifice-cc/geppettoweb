@@ -1,5 +1,5 @@
-website_palette <- c("#3465a4", "#2e3436", "#f57900")
-theme_website <- function (base_size = 12, base_family = "") {
+custom_palette <- c("#3465a4", "#2e3436", "#f57900")
+theme_custom <- function (base_size = 12, base_family = "") {
   theme_grey(base_size=base_size, base_family=base_family) %+replace%
   theme(
     axis.line = theme_blank(),
