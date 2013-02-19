@@ -10,10 +10,8 @@
           new-graph update-graph delete-graph
           new-template-graph update-template-graph delete-template-graph
           render-graph-file get-graph-png get-graph-download]])
+  (:use [sisyphus.config])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
-
-(def graph-help (.markdown common/mdp
-                           (slurp "/home/josh/git/research/sisyphus/help/graphs.md")))
 
 (defpartial graph-form
   [graph]
@@ -81,7 +79,7 @@
      [:a {:name "help"}
       [:h1 "Help"]]]]
    [:div.row
-    [:div.span12.columns graph-help]]])
+    [:div.span12.columns @graphs-help]]])
 
 (defpartial template-graph-fields
   [graph id comparative-fields control-fields]

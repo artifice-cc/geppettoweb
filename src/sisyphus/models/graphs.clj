@@ -8,6 +8,7 @@
   (:use [granary.runs])
   (:use [granary.misc])
   (:use [granary.r])
+  (:use [sisyphus.config])
   (:use [sisyphus.models.common])
   (:use [sisyphus.models.commonr]))
 
@@ -117,11 +118,16 @@ Loading required package: proto")
                (file-seq (io/file @cachedir)))]
     (.delete f)))
 
-(def theme_website "")
-
-(def theme_paper "")
-
-(def theme_poster "")
+(defn apply-theme
+  [theme]
+  (let [template-file (cond (= theme "website")
+                            "templates/graph_theme_website.r"
+                            (= theme "paper")
+                            "templates/graph_theme_paper.r"
+                            (= theme "poster")
+                            "templates/graph_theme_poster.r")
+        t (if template-file (fleet [] (slurp template-file)))]
+    (if t (str (t)) "")))
 
 (defn render-graph-file
   [run graph ftype theme width height]
@@ -131,28 +137,27 @@ Loading required package: proto")
       {:success true}
       (let [rscript-fname (graph-filename (:runid run) (:graphid graph) (:templateid graph)
                                           "rscript" theme width height)
-            rcode (format "library(ggplot2)\nlibrary(grid)
-                         %s # extra-funcs
-                         %s # themes
-                         load('%s/%d-control.rbin')
-                         load('%s/%d-comparison.rbin')
-                         load('%s/%d-comparative.rbin')
-                         p <- ggplot()\n
-                         %s # graph code
-                         # see: https://github.com/wch/ggplot2/wiki/New-theme-system
-                         #p <- p + theme_%s()\n
-                         #%s # scale_colour
-                         %s # scale_fill
-                         ggsave(\"%s\", plot = p, dpi = %d, width = %.2f, height = %.2f)"
+            rcode (format "library(ggplot2)
+                      library(grid)
+                      %s # extra-funcs
+                      %s # theme
+                      load('%s/%d-control.rbin')
+                      load('%s/%d-comparison.rbin')
+                      load('%s/%d-comparative.rbin')
+                      p <- ggplot()
+                      %s # graph code
+                      p <- p + theme_custom() # load theme
+                      %s # scale_colour
+                      %s # scale_fill
+                      ggsave(\"%s\", plot = p, dpi = %d, width = %.2f, height = %.2f)"
                      extra-funcs
-                     (format "%s\n%s\n%s\n" theme_website theme_paper theme_poster)
+                     (apply-theme theme)
                      @cachedir (:runid run) @cachedir (:runid run) @cachedir (:runid run)
-                     (:code graph) theme
+                     (:code graph)
                      (if (not (re-find #"scale_colour" (:code graph)))
-                       (format "p <- p + scale_colour_manual(values=%s_palette)" theme) "")
+                       "p <- p + scale_colour_manual(values=custom_palette)" "")
                      (if (not (re-find #"scale_fill" (:code graph)))
-                       "p <- p + scale_fill_manual(values=c(\"#666666\", \"#aaaaaa\", \"#dddddd\"))"
-                       "")
+                       "p <- p + scale_fill_manual(values=custom_palette)" "")
                      graph-fname
                      (if (= "png" ftype) 100 600)
                      width height)]

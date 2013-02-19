@@ -7,6 +7,7 @@
          [get-run list-projects set-project delete-run gather-results-fields]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.common])
+  (:use [sisyphus.config])
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analyses :only [analyses]])
   (:use [sisyphus.views.annotations :only [annotations]])

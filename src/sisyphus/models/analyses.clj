@@ -7,6 +7,7 @@
   (:use [granary.runs])
   (:use [granary.misc])
   (:use [granary.r])
+  (:use [sisyphus.config])
   (:use [sisyphus.models.common])
   (:use [sisyphus.models.commonr]))
 
