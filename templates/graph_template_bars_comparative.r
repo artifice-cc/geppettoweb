@@ -54,8 +54,8 @@ p <- ggplot(result, aes(x=factor(xfactor), y=value,
 p <- p + geom_bar(position=position_dodge())
 p <- p + geom_errorbar(aes(ymin=value-se, ymax=value+se),
                        width=.5, position=position_dodge(.9))
-p <- p + scale_x_discrete("<(:xlabel graph)>")
-p <- p + scale_y_continuous("<(:ylabel graph)>")
+p <- p + scale_x_discrete("<(if (not= "" (:xlabel graph)) (:xlabel graph) (:xfactor graph))>")
+p <- p + scale_y_continuous("<(if (not= "" (:ylabel graph)) (:ylabel graph) (:yfield graph))>")
 
 <(if (or (:facethoriz graph) (:facetvert graph)) ">
 p <- p + facet_grid(

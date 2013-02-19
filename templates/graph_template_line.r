@@ -23,8 +23,8 @@ p <- ggplot(dse, aes(x=<(:xfield graph)>, y=value,
                      ))
 p <- p + geom_line()
 
-p <- p + scale_x_continuous("<(:xlabel graph)>")
-p <- p + scale_y_continuous("<(:ylabel graph)>")
+p <- p + scale_x_continuous("<(if (not= "" (:xlabel graph)) (:xlabel graph) (:xfield graph))>")
+p <- p + scale_y_continuous("<(if (not= "" (:ylabel graph)) (:ylabel graph) (:yfield graph))>")
 
 <(if (or (:facethoriz graph) (:facetvert graph)) ">
 p <- p + facet_grid(
