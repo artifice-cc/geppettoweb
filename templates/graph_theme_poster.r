@@ -17,6 +17,7 @@ theme_custom <- function (base_size = 12, base_family = "") {
     legend.text = theme_text(family = base_family, size = base_size * 0.8),
     legend.title = theme_text(family = base_family, size = base_size * 0.8, face = "bold", hjust = 0),
     legend.justification = "center",
+    legend.position = "bottom",
     panel.background = theme_rect(fill = "white", colour = NA),
     panel.border = theme_rect(fill = NA, colour = "gray90"),
     panel.grid.major = theme_line(colour = "gray90", size = 0.2),
