@@ -1,6 +1,6 @@
 (ns sisyphus.config
   (:use propertea.core)
-  (:use [granary.misc])
+  (:use [geppetto.misc])
   (:use [korma.db :only [create-db mysql]])
   (:use [sisyphus.models.common :only [sisyphus-db]]))
 
@@ -14,10 +14,11 @@
   []
   (let [props (read-properties "config.properties")]
     (prn props)
-    (set-granary-db (:granary_dbhost props)
-                    (:granary_dbname props)
-                    (:granary_dbuser props)
-                    (:granary_dbpassword props))
+    (setup-geppetto (:geppetto_dbhost props)
+                    (:geppetto_dbname props)
+                    (:geppetto_dbuser props)
+                    (:geppetto_dbpassword props)
+                    true)
     (dosync (alter cachedir (constantly (:cachedir props)))
             (alter port (constantly (:port props)))
             (alter graphs-help (constantly (:graphs_help props)))

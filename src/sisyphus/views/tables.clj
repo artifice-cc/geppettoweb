@@ -2,7 +2,7 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [granary.runs :only
+  (:use [geppetto.runs :only
          [get-run gather-results-fields get-results]])
   (:use [sisyphus.models.tables :only [get-table-fields set-table-fields]])
   (:use [sisyphus.views.fields :only [field-checkboxes]])

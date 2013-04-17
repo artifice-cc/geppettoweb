@@ -7,7 +7,7 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.analyses :only [analysis-count]])
   (:use [sisyphus.models.graphs :only [graph-count]])
-  (:use [granary.runs :only [simulation-count list-runs delete-run]]))
+  (:use [geppetto.runs :only [simulation-count list-runs delete-run]]))
 
 (defpartial run-table-row
   [run]

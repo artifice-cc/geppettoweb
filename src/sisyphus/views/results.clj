@@ -40,9 +40,9 @@
                                     [(:control-params r) (:comparison-params r)])
                       (params-modal i :control (:control-params r)))]
            (map (fn [f] [:td (let [val (get r f)]
-                            (if (= java.lang.Double (type val))
+                            (if (= java.lang.Float (type val))
                               (format "%.3f" val)
-                              (try (format "%.3f" (Double/parseDouble val))
+                              (try (format "%.3f" (Float/parseFloat val))
                                    (catch Exception _ (str val)))))])
               on-fields)]))]]]])
 
@@ -68,14 +68,14 @@
                   [:td (let [control-val (get control f)
                              comparison-val (get comparison f)]
                          (if (not= control-val comparison-val)
-                           (if (and (= java.lang.Double (type control-val))
-                                    (= java.lang.Double (type comparison-val)))
+                           (if (and (= java.lang.Float (type control-val))
+                                    (= java.lang.Float (type comparison-val)))
                              (format "<strong>%.3f</strong><br/>%.3f"
                                 comparison-val control-val)
                              (format "<strong>%s</strong><br/>%s"
                                 (str comparison-val) (str control-val)))
-                           (if (= java.lang.Double (type control-val))
+                           (if (= java.lang.Float (type control-val))
                              (format "%.3f" control-val)
-                             (try (format "%.3f" (Double/parseDouble control-val))
+                             (try (format "%.3f" (Float/parseFloat control-val))
                                   (catch Exception _ (str control-val))))))])
                 on-fields)]))]]]]))

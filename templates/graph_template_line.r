@@ -26,6 +26,11 @@ p <- p + geom_line()
 p <- p + scale_x_continuous("<(if (not= "" (:xlabel graph)) (:xlabel graph) (:xfield graph))>")
 p <- p + scale_y_continuous("<(if (not= "" (:ylabel graph)) (:ylabel graph) (:yfield graph))>")
 
+p <- p + labs(
+           <(if (:color graph) (format "color=\"%s\"," (:color graph)) "")>
+           <(if (:linetype graph) (format "linetype=\"%s\"," (:linetype graph)) "")>
+           dummy="")
+
 <(if (or (:facethoriz graph) (:facetvert graph)) ">
 p <- p + facet_grid(
 <(str (if (:facetvert graph) (:facetvert graph) "."))>

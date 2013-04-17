@@ -3,7 +3,7 @@
   (:require [sisyphus.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [granary.runs :only
+  (:use [geppetto.runs :only
          [get-run list-projects set-project delete-run gather-results-fields]])
   (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.common])

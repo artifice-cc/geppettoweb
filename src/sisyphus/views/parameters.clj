@@ -6,7 +6,7 @@
   (:require [clojure.set :as set])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.common :only [to-clj]])
-  (:use [granary.parameters :only
+  (:use [geppetto.parameters :only
          [parameters-latest? parameters-latest
           new-parameters update-parameters get-params
           list-parameters runs-with-parameters delete-parameters

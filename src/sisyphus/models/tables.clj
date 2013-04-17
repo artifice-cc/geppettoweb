@@ -1,9 +1,9 @@
 (ns sisyphus.models.tables
   (:require [clojure.string :as str])
   (:use [korma.core])
-  (:use [granary.runs :only [get-run]])
-  (:use [granary.models])
-  (:use [granary.misc])
+  (:use [geppetto.runs :only [get-run]])
+  (:use [geppetto.models])
+  (:use [geppetto.misc])
   (:use [sisyphus.models.common]))
 
 (defentity table-fields
