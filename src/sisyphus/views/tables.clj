@@ -45,7 +45,7 @@
   (let [control-fields (gather-results-fields runid :control)
         on-fields (get-table-fields runid :paired)
         control-results (get-results runid :control on-fields)
-        comparison-results (get-results runid :comparison on-fields)]
+        comparison-results (get-results runid :comparison on-fields)]    
     [:section#paired-results
      [:div.page-header
       [:a {:name "control-comparison-results"}

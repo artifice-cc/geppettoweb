@@ -25,7 +25,6 @@
 
 (defn -main [& args]
   (load-config)
-  (.mkdirs (File. @cachedir))
   (server/start (Integer/parseInt @port)
                 {:mode :dev
                  :ns 'sisyphus})

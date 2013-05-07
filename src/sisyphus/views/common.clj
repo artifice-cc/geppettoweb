@@ -60,8 +60,8 @@
 (def mdp (com.petebevin.markdown.MarkdownProcessor.))
 
 (defpartial convert-md
-  [s]
-  (.markdown mdp s))
+  [f]
+  (.markdown mdp (slurp f)))
 
 (defpartial confirm-deletion
   [post id msg]

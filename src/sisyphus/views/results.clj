@@ -35,10 +35,10 @@
      [:tbody
       (for [i (range (count results))]
         (let [r (nth results i)]
-          [:tr [:td (if (and (:control-params r) (:comparison-params r))
+          [:tr [:td (if (and (:controlparams r) (:comparisonparams r))
                       (params-modal i :comparative
-                                    [(:control-params r) (:comparison-params r)])
-                      (params-modal i :control (:control-params r)))]
+                                    [(:controlparams r) (:comparisonparams r)])
+                      (params-modal i :control (:params r)))]
            (map (fn [f] [:td (let [val (get r f)]
                             (if (= java.lang.Float (type val))
                               (format "%.3f" val)
@@ -62,8 +62,8 @@
         (for [i (range (count paired-results))]
           (let [[control comparison] (nth paired-results i)]
             [:tr [:td (params-modal i :paired
-                                    [(:control-params control)
-                                     (:comparison-params comparison)])]
+                                    [(:controlparams control)
+                                     (:comparisonparams comparison)])]
              (map (fn [f]
                   [:td (let [control-val (get control f)
                              comparison-val (get comparison f)]

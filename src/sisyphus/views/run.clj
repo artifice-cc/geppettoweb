@@ -5,12 +5,10 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [geppetto.runs :only
          [get-run list-projects set-project delete-run gather-results-fields]])
-  (:use [sisyphus.models.annotations :only [add-annotation delete-annotation]])
   (:use [sisyphus.models.common])
   (:use [sisyphus.config])
   (:use [sisyphus.views.graphs :only [graphs]])
   (:use [sisyphus.views.analyses :only [analyses]])
-  (:use [sisyphus.views.annotations :only [annotations]])
   (:use [sisyphus.views.parameters :only [parameters-summary]]))
 
 (defn make-run-command
@@ -119,16 +117,6 @@
                [:input.btn.danger {:value "Delete run" :type "submit"}]])]]])
 
 (defpage
-  [:post "/run/delete-annotation"] {:as annotation}
-  (delete-annotation (:id annotation) (Integer/parseInt (:index annotation)))
-  (resp/redirect (format "/run/%s#annotations" (:id annotation))))
-
-(defpage
-  [:post "/run/add-annotation"] {:as annotation}
-  (add-annotation (:id annotation) (:content annotation))
-  (resp/redirect (format "/run/%s#annotations" (:id annotation))))
-
-(defpage
   [:post "/run/set-project"] {:as project}
   (if (and (= "New..." (:project-select project)) (empty? (:new-project project)))
     (resp/redirect (format "/run/%s" (:runid project)))
@@ -144,18 +132,11 @@
    (common/confirm-deletion "/run/delete-run-confirm" (:runid run)
                             "Are you sure you want to delete the run?")))
 
-(defn delete-cached-rundata
-  [runid]
-  (doseq [f (filter #(re-matches (re-pattern (format "%d\\-.*" runid)) (.getName %))
-               (file-seq (io/file @cachedir)))]
-    (.delete f)))
-
 (defpage
   [:post "/run/delete-run-confirm"] {:as confirm}
   ;; use :id in confirm map not :runid
   (if (= (:choice confirm) "Confirm deletion")
     (do
-      (delete-cached-rundata (Integer/parseInt (:id confirm)))
       (delete-run (Integer/parseInt (:id confirm)))
       (resp/redirect "/"))
     (resp/redirect (format "/run/%s" (:id confirm)))))
@@ -177,7 +158,6 @@
      (analyses run)
      (graphs run comparative-fields control-fields)
      (run-parameters run)
-     #_(annotations run "run")
      (run-project run)
      (run-metainfo run)
      (run-delete-run run))))

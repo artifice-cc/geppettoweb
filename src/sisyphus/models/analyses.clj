@@ -55,31 +55,30 @@
        (select run-analyses (with analyses) (where {:runid runid})))))
 
 (defn analysis-filename
-  [runid analysisid]
-  (format "%s/%d-%d.analysis" @cachedir runid analysisid))
+  [run analysisid]
+  (format "%s/analysis-%d.txt" (:recorddir run) analysisid))
 
 (defn delete-cached-analyses
-  [analysisid]
-  (doseq [f (filter #(re-matches (re-pattern (format "\\d+\\-%d\\.analysis" analysisid)) (.getName %))
-               (file-seq (io/file @cachedir)))]
+  [run analysisid]
+  (doseq [f (filter #(re-matches (re-pattern (format "analysis-%d\\.txt" analysisid)) (.getName %))
+               (file-seq (io/file (:recorddir run))))]
     (.delete f)))
 
 (defn get-analysis-output
   [run analysis]
-  (let [analysis-fname (analysis-filename (:runid run) (:analysisid analysis))]
+  (let [analysis-fname (analysis-filename run (:analysisid analysis))]
     (if (.exists (io/file analysis-fname))
       (slurp analysis-fname)
-      (let [rscript-fname (format "%s/%d-%d.analysis.rscript"
-                             @cachedir (:runid run) (:analysisid analysis))
+      (let [rscript-fname (format "%s/analysis-%d.rscript"
+                             (:recorddir run) (:analysisid analysis))
             rcode (format "%s # extra funcs
-                      load('%s/%d-control.rbin')
-                      load('%s/%d-comparison.rbin')
-                      load('%s/%d-comparative.rbin')
+                      load('%s/control.rbin')
+                      load('%s/comparison.rbin')
+                      load('%s/comparative.rbin')
                       %s # analysis code"
                      extra-funcs
-                     @cachedir (:runid run) @cachedir (:runid run) @cachedir (:runid run)
+                     (:recorddir run) (:recorddir run) (:recorddir run)
                      (:code analysis))]
-        (results-to-rbin (:runid run) @cachedir)
         ;; save rcode to file
         (with-open [writer (io/writer rscript-fname)]
           (.write writer rcode))
@@ -91,7 +90,7 @@
 
 (defn update-analysis
   [analysis]
-  (delete-cached-analyses (Integer/parseInt (:analysisid analysis)))
+  (delete-cached-analyses (get-run (:runid analysis)) (Integer/parseInt (:analysisid analysis)))
   (with-db @sisyphus-db
     (update analyses (set-fields (dissoc analysis :analysisid :action))
             (where {:analysisid (:analysisid analysis)}))))
@@ -104,7 +103,8 @@
 
 (defn delete-analysis
   [analysisid]
-  (delete-cached-analyses (Integer/parseInt analysisid))
-  (with-db @sisyphus-db
-    (delete run-analyses (where {:analysisid analysisid}))
-    (delete analyses (where {:analysisid analysisid}))))
+  (let [run (get-run (:runid (first (select run-analyses (where {:analysisid analysisid})))))]
+    (delete-cached-analyses run (Integer/parseInt analysisid))
+    (with-db @sisyphus-db
+      (delete run-analyses (where {:analysisid analysisid}))
+      (delete analyses (where {:analysisid analysisid})))))

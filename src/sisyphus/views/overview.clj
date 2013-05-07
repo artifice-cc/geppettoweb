@@ -7,7 +7,7 @@
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [sisyphus.models.analyses :only [analysis-count]])
   (:use [sisyphus.models.graphs :only [graph-count]])
-  (:use [geppetto.runs :only [simulation-count list-runs delete-run]]))
+  (:use [geppetto.runs :only [list-runs delete-run]]))
 
 (defpartial run-table-row
   [run]
@@ -16,7 +16,7 @@
    [:td [:div {:style "white-space: nowrap;"} (common/date-format (:starttime run))]]
    [:td (:username run)]
    [:td (link-to (format "/parameters/%d" (:paramid run)) (:name run))]
-   [:td (simulation-count (:runid run))]
+   [:td (:simcount run)]
    [:td (graph-count (:runid run))]
    [:td (analysis-count (:runid run))]
    [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"

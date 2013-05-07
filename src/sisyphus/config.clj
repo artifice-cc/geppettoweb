@@ -8,8 +8,6 @@
 
 (def port (ref "3737"))
 
-(def cachedir (ref "cache"))
-
 (defn load-config
   []
   (let [props (read-properties "config.properties")]
@@ -19,8 +17,7 @@
                     (:geppetto_dbuser props)
                     (:geppetto_dbpassword props)
                     true)
-    (dosync (alter cachedir (constantly (:cachedir props)))
-            (alter port (constantly (:port props)))
+    (dosync (alter port (constantly (:port props)))
             (alter graphs-help (constantly (:graphs_help props)))
             (alter sisyphus-db
                    (constantly

@@ -97,25 +97,25 @@ Loading required package: grid
 Loading required package: proto")
 
 (defn graph-filename
-  [runid graphid templateid ftype theme width height]
+  [run graphid templateid ftype theme width height]
   (if graphid
-    (format "%s/%d-%d-%s-%.2f-%.2f.%s"
-       @cachedir runid graphid theme width height ftype)
-    (format "%s/template-%d-%d-%s-%.2f-%.2f.%s"
-       @cachedir runid templateid theme width height ftype)))
+    (format "%s/graph-%d-%s-%.2f-%.2f.%s"
+       (:recorddir run) graphid theme width height ftype)
+    (format "%s/template-graph-%d-%s-%.2f-%.2f.%s"
+       (:recorddir run) templateid theme width height ftype)))
 
 (defn delete-cached-graphs
-  [graphid]
-  (doseq [f (filter #(re-matches (re-pattern (format "\\d+\\-%d\\-.*" graphid))
+  [run graphid]
+  (doseq [f (filter #(re-matches (re-pattern (format "graph-%d\\-.*" graphid))
                             (.getName %))
-               (file-seq (io/file @cachedir)))]
+               (file-seq (io/file (:recorddir run))))]
     (.delete f)))
 
 (defn delete-cached-template-graphs
-  [templateid]
-  (doseq [f (filter #(re-matches (re-pattern (format "template\\-\\d+\\-%d\\-.*" templateid))
+  [run templateid]
+  (doseq [f (filter #(re-matches (re-pattern (format "template\\-graph\\-\\d+\\-%d\\-.*" templateid))
                             (.getName %))
-               (file-seq (io/file @cachedir)))]
+               (file-seq (io/file (:recorddir run))))]
     (.delete f)))
 
 (defn apply-theme
@@ -131,19 +131,19 @@ Loading required package: proto")
 
 (defn render-graph-file
   [run graph ftype theme width height]
-  (let [graph-fname (graph-filename (:runid run) (:graphid graph) (:templateid graph)
+  (let [graph-fname (graph-filename run (:graphid graph) (:templateid graph)
                                     ftype theme width height)]
     (if (.exists (io/file graph-fname))
       {:success true}
-      (let [rscript-fname (graph-filename (:runid run) (:graphid graph) (:templateid graph)
+      (let [rscript-fname (graph-filename run (:graphid graph) (:templateid graph)
                                           "rscript" theme width height)
             rcode (format "library(ggplot2)
                       library(grid)
                       %s # extra-funcs
                       %s # theme
-                      load('%s/%d-control.rbin')
-                      load('%s/%d-comparison.rbin')
-                      load('%s/%d-comparative.rbin')
+                      load('%s/control.rbin')
+                      load('%s/comparison.rbin')
+                      load('%s/comparative.rbin')
                       p <- ggplot()
                       %s # graph code
                       p <- p + theme_custom() # load theme
@@ -152,7 +152,7 @@ Loading required package: proto")
                       ggsave(\"%s\", plot = p, dpi = %d, width = %.2f, height = %.2f)"
                      extra-funcs
                      (apply-theme theme)
-                     @cachedir (:runid run) @cachedir (:runid run) @cachedir (:runid run)
+                     (:recorddir run) (:recorddir run) (:recorddir run)
                      (:code graph)
                      (if (not (re-find #"scale_colour" (:code graph)))
                        "p <- p + scale_colour_manual(values=custom_palette)" "")
@@ -161,7 +161,6 @@ Loading required package: proto")
                      graph-fname
                      (if (= "png" ftype) 100 600)
                      width height)]
-        (results-to-rbin (:runid run) @cachedir)
         ;; save rcode to file
         (with-open [writer (io/writer rscript-fname)]
           (.write writer rcode))
@@ -176,9 +175,10 @@ Loading required package: proto")
 
 (defn get-graph-download
   [runid graphid templateid ftype theme width height]
-  (let [graph (if graphid (get-graph graphid) (get-template-graph templateid))]
+  (let [run (get-run runid)
+        graph (if graphid (get-graph graphid) (get-template-graph templateid))]
     (render-graph-file (get-run runid) graph ftype theme width height)
-    (try (io/input-stream (io/file (graph-filename runid graphid templateid
+    (try (io/input-stream (io/file (graph-filename run graphid templateid
                                                    ftype theme width height)))
          (catch Exception _))))
 
@@ -190,10 +190,11 @@ Loading required package: proto")
 
 (defn update-graph
   [graph]
-  (delete-cached-graphs (Integer/parseInt (:graphid graph)))
-  (with-db @sisyphus-db
-    (update graphs (set-fields (dissoc graph :graphid :action))
-            (where {:graphid (:graphid graph)}))))
+  (let [run (get-run (:runid graph))]
+    (delete-cached-graphs run (Integer/parseInt (:graphid graph)))
+    (with-db @sisyphus-db
+      (update graphs (set-fields (dissoc graph :graphid :action))
+              (where {:graphid (:graphid graph)})))))
 
 (defn new-graph
   [graph]
@@ -203,10 +204,11 @@ Loading required package: proto")
 
 (defn delete-graph
   [graphid]
-  (delete-cached-graphs (Integer/parseInt graphid))
-  (with-db @sisyphus-db
-    (delete run-graphs (where {:graphid graphid}))
-    (delete graphs (where {:graphid graphid}))))
+  (let [run (get-run (:runid (first (select run-graphs (where {:graphid graphid})))))]
+    (delete-cached-graphs run (Integer/parseInt graphid))
+    (with-db @sisyphus-db
+      (delete run-graphs (where {:graphid graphid}))
+      (delete graphs (where {:graphid graphid})))))
 
 (defn apply-template
   [run graph]
@@ -231,12 +233,12 @@ Loading required package: proto")
 
 (defn update-template-graph
   [graph]
-  (delete-cached-template-graphs (Integer/parseInt (:templateid graph)))
-  (let [run (get-run (:runid graph))
-        g (apply-template run (convert-template-graph-none-fields graph))]
-    (with-db @sisyphus-db
-      (update template-graphs (set-fields (dissoc g :templateid :action))
-              (where {:templateid (:templateid g)})))))
+  (let [run (get-run (:runid graph))]
+    (delete-cached-template-graphs graph (Integer/parseInt (:templateid graph)))
+    (let [g (apply-template run (convert-template-graph-none-fields graph))]
+      (with-db @sisyphus-db
+        (update template-graphs (set-fields (dissoc g :templateid :action))
+                (where {:templateid (:templateid g)}))))))
 
 (defn new-template-graph
   [graph]
@@ -248,6 +250,7 @@ Loading required package: proto")
 
 (defn delete-template-graph
   [templateid]
-  (delete-cached-template-graphs (Integer/parseInt templateid))
-  (with-db @sisyphus-db
-    (delete template-graphs (where {:templateid templateid}))))
+  (let [run (get-run (:runid (first (select template-graphs (where {:templateid templateid})))))]
+    (delete-cached-template-graphs run (Integer/parseInt templateid))
+    (with-db @sisyphus-db
+      (delete template-graphs (where {:templateid templateid})))))

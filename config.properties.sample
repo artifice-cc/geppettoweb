@@ -2,8 +2,6 @@
 
 graphs_help = /home/josh/git/research/sisyphus/help/graphs.md
 
-cachedir = /home/josh/git/research/sisyphus/cache
-
 port = 3737
 
 sisyphus_dbhost = localhost
