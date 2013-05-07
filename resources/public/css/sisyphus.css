@@ -36,3 +36,8 @@ div.paramsmodal div.modal {
 table, table.tablesorter {
     width: 700px;
 }
+
+.modal {
+    width: 780px;
+    margin: -250px 0 0 -385px;
+}
