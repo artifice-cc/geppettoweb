@@ -49,7 +49,7 @@
                                        (* 1000 60)))))]
         [:dd (format "%s%s" (common/date-format (:starttime run)) mins)])]
      [:dl [:dt "Simulation type"]
-      [:dd (if (:comparison-params run) "comparative" "non-comparative")]]]
+      [:dd (if (:comparison run) "comparative" "non-comparative")]]]
     [:div.span4.columns
      [:dl [:dt "Reptitions"]
       [:dd (:repetitions run)]]
