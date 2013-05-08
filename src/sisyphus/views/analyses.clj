@@ -10,101 +10,92 @@
 (defpartial show-analysis
   [run analysis]
   [:div
-   [:div.row
-    [:div.span12.columns
-     [:a {:name (format "analysis%d" (:analysisid analysis))}
-      [:h3 (:name analysis)]]
-     [:p (:caption analysis)]]]
-   [:div.row
-    [:div.span12.columns
-     [:pre (get-analysis-output run analysis)]]]])
+   [:a {:name (format "analysis%d" (:analysisid analysis))}
+    [:h3 (:name analysis)]]
+   [:pre (get-analysis-output run analysis)]])
 
 (defpartial analysis-form
   [analysis]
   [:section#analysis-form
    [:div.page-header
-    [:a {:name "new"}
-     [:h1 (if (:name analysis) (format "Update analysis %s" (:name analysis))
-              "New analysis")]]]
-   [:div.row
-    [:div.span12.columns
-     (form-to [:post (if (:name analysis) "/analyses/update-analysis"
-                         "/analyses/new-analysis")]
-              (hidden-field :analysisid (:analysisid analysis))
-              [:fieldset
-               [:div.clearfix
-                [:label {:for "problems"} "Problems"]
-                [:div.input
-                 [:input.xlarge {:id "problems" :name "problems" :size 30
-                                 :type "text" :value (:problems analysis)}]]]
-               [:div.clearfix
-                [:label {:for "name"} "Name"]
-                [:div.input
-                 [:input.xlarge {:id "name" :name "name" :size 30
-                                 :type "text" :value (:name analysis)}]]]
-               [:div.clearfix
-                [:label {:for "resultstype"} "Results type"]
-                [:div.input
-                 (drop-down :resultstype ["non-comparative" "comparative"]
-                            (:resultstype analysis))]]
-               [:div.clearfix
-                [:label {:for "caption"} "Caption"]
-                [:div.input
-                 [:textarea.xxlarge {:id "caption" :name "caption"} (:caption analysis)]]]
-               [:div.clearfix
-                [:label {:for "code"} "R code"]
-                [:div.input
-                 [:textarea.xxlarge {:id "code" :name "code" :rows 30
-                                     :style "font-family: monospace;"}
-                  (if (:code analysis) (:code analysis) "")]
-                 [:span.help-block "Assume the existence of data frames named 'control',
+    (if (:name analysis)
+      [:h1 (format "Update %s" (:name analysis))]
+      [:a {:name "new"}
+       [:h1 "New analysis"]])]
+   [:form.form-horizontal {:method "POST" :action (if (:name analysis) "/analyses/update-analysis"
+                                                      "/analyses/new-analysis")}
+    (hidden-field :analysisid (:analysisid analysis))
+    [:div.control-group
+     [:label.control-label {:for "problems"} "Problems"]
+     [:div.controls
+      [:input.input-large {:id "problems" :name "problems" :size 30
+                           :type "text" :value (:problems analysis)}]]]
+    [:div.control-group
+     [:label.control-label {:for "name"} "Name"]
+     [:div.controls
+      [:input.input-large {:id "name" :name "name" :size 30
+                           :type "text" :value (:name analysis)}]]]
+    [:div.control-group
+     [:label.control-label {:for "resultstype"} "Results type"]
+     [:div.controls
+      (drop-down :resultstype ["non-comparative" "comparative"]
+                 (:resultstype analysis))]]
+    [:div.control-group
+     [:label.control-label {:for "caption"} "Caption"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "caption" :name "caption"} (:caption analysis)]]]
+    [:div.control-group
+     [:label.control-label {:for "code"} "R code"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "code" :name "code" :rows 30
+                                :style "font-family: monospace;"}
+       (if (:code analysis) (:code analysis) "")]
+      [:span.help-block "Assume the existence of data frames named 'control',
                                     'comparison', and 'comparative'."]]]
-               [:div.actions
-                [:input.btn.primary
-                 {:name "action" :value (if (:name analysis) "Update" "Save")
-                  :type "submit"}]
-                " "
-                (if (:name analysis)
-                  [:input.btn.danger
-                   {:value "Delete" :name "action" :type "submit"}])]])]]])
+    [:div.form-actions
+     [:input.btn.btn-primary
+      {:name "action" :value (if (:name analysis) "Update" "Save")
+       :type "submit"}]
+     " "
+     (if (:name analysis)
+       [:input.btn.btn-danger
+        {:value "Delete" :name "action" :type "submit"}])]]])
 
 (defpartial analyses
   [run & opts]
   (let [avail-analyses (filter #(or (:comparison run)
-                             (= "non-comparative" (:resultstype %)))
-                        (get (list-analyses) (:problem run)))
+                               (= "non-comparative" (:resultstype %)))
+                          (get (list-analyses) (:problem run)))
         active-analyses (set (get-run-analyses (:runid run)))]
     (if (or (not-empty active-analyses) (not (some #{:no-select} opts)))
-      [:section#analyses
+      [:section
        [:div.page-header
         [:a {:name "analyses"}
-         [:h2 "Analyses"]]]
+         [:h1 "Analyses"]]]
        (if (empty? active-analyses)
-         [:div.row
-          [:div.span12.columns [:p "No analyses."]]]
+         [:p "No analyses."]
          (for [a (sort-by :name active-analyses) :when a]
            (show-analysis run a)))
        (if-not (or (empty? avail-analyses) (some #{:no-select} opts))
          [:div
-          [:div.row
-           [:div.span4.columns
+          [:div.row-fluid
+           [:div.span12.columns
             [:p [:b [:a.fields_checkboxes_header "Choose analyses..."]]]]]
           [:div.fields_checkboxes
-           [:div.row
-            [:div.span8.columns
-             (form-to
-              [:post "/analyses/set-run-analyses"]
-              (hidden-field :runid (:runid run))
-              [:div.clearfix
-               [:div.input
-                [:ul.inputs-list
-                 (for [a (sort-by :name avail-analyses)]
-                   [:li [:label
-                         [:input {:type "checkbox" :name "analysisids[]" :value (:analysisid a)
-                                  :checked (active-analyses a)}]
-                         " " (:name a)]])]]
-               [:div.actions
-                [:input.btn.primary {:value "Update" :type "submit"}]]])]]]])])))
+           (form-to
+            [:post "/analyses/set-run-analyses"]
+            (hidden-field :runid (:runid run))
+            [:div.row-fluid
+             (for [analyses-group (partition-all (int (Math/ceil (/ (count avail-analyses) 2)))
+                                                 (sort-by :name avail-analyses))]
+               [:div.span6
+                (for [a analyses-group]
+                  [:label.checkbox
+                   [:input {:type "checkbox" :name "analysisids[]" :value (:analysisid a)
+                            :checked (active-analyses a)}]
+                   " " (:name a)])])]
+            [:div.form-actions
+             [:input.btn.btn-primary {:value "Update" :type "submit"}]])]])])))
 
 (defpage
   [:post "/analyses/set-run-analyses"] {:as analyses}
@@ -150,13 +141,11 @@
      "Analyses"
      (for [problem (sort (keys analyses))]
        [:section {:id problem}
-        [:div.row
-         [:div.span12.columns
-          [:div.page-header
-           [:a {:name (str/replace problem #"\W" "_")}
-            [:h1 (format "%s analyses" problem)]]]]]
+        [:div.page-header
+         [:a {:name (str/replace problem #"\W" "_")}
+          [:h1 (format "%s analyses" problem)]]]
         (for [analysis (sort-by :name (get analyses problem))]
-          [:div.row
+          [:div.row-fluid
            [:div.span4.columns
             [:a {:name (format "analysis%d" (:analysisid analysis))}
              [:h2 (:name analysis) [:br]

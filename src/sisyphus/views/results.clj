@@ -15,19 +15,19 @@
       [:div {:style "padding: 10px;"}
        (if (= resultstype :control)
          [:div
-          [:h4 "Parameters"]
+          [:h3 "Parameters"]
           [:pre (str (dissoc (read-string params) :simulation))]]
          [:div
-          [:h4 "Control parameters"]
+          [:h3 "Control parameters"]
           [:pre (str (dissoc (read-string (first params)) :simulation))]
-          [:h4 "Comparison parameters"]
+          [:h3 "Comparison parameters"]
           [:pre (str (dissoc (read-string (second params)) :simulation))]])]]]))
 
 ;; A results table with single rows (not paired rows); used for
 ;; comparative results or non-comparative runs (i.e. control results)
 (defpartial results-table
   [results on-fields]
-  [:div.row
+  [:div.row-fluid
    [:div.span12.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
     [:table.tablesorter.zebra-striped
      [:thead
@@ -53,7 +53,7 @@
 (defpartial paired-results-table
   [control-results comparison-results on-fields]
   (let [paired-results (partition 2 (interleave control-results comparison-results))]
-    [:div.row
+    [:div.row-fluid
      [:div.span12.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
       [:table.tablesorter.zebra-striped
        [:thead

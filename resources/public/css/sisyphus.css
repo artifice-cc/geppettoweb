@@ -33,11 +33,8 @@ div.paramsmodal div.modal {
     display: none;
 }
 
-table, table.tablesorter {
-    width: 700px;
+code, pre {
+    color: #555;
+    font-family: Consolas, monospace;
 }
 
-.modal {
-    width: 780px;
-    margin: -250px 0 0 -385px;
-}

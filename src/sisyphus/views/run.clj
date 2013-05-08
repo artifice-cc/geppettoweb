@@ -13,31 +13,30 @@
 
 (defn make-run-command
   [run]
-  (format (str "lein run -m retrospect.core --action run --params \"%s/%s\" "
-               "--nthreads %d --repetitions %d --seed %d")
-          (:problem run) (:name run) (:nthreads run)
-          (:repetitions run) (:seed run)))
+  (format (str "lein trampoline run <strong>--action run "
+          "--params \"%s/%s\" --nthreads %d --repetitions %d --seed %d</strong>")
+     (:problem run) (:name run) (:nthreads run) (:repetitions run) (:seed run)))
 
 (defpartial run-metainfo
   [run]
-  [:section#metadata
+  [:section
    [:div.page-header
     [:a {:name "metadata"}
-     [:h2 "Metadata"]]]
-   [:div.row
+     [:h1 "Metadata"]]]
+   [:div.row-fluid
     [:div.span12.columns
-     [:h3 "Commit message"]
+     [:h2 "Commit message"]
      [:p (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"
                      (:commit run))
                   (subs (:commit run) 0 10))
       " / " (:branch run) " @ " (common/date-format (:commitdate run))]]]
-   [:div.row
+   [:div.row-fluid
     [:div.span12.columns
      [:pre (:commitmsg run)]]]
-   [:div.row
+   [:div.row-fluid
     [:div.span12.columns
-     [:h3 "Simulation properties"]]]
-   [:div.row
+     [:h2 "Simulation properties"]]]
+   [:div.row-fluid
     [:div.span4.columns
      [:dl [:dt "User@host"]
       [:dd (format "%s@%s" (:username run) (:hostname run))]]
@@ -47,74 +46,62 @@
                             (double (/ (- (.getTime (:endtime run))
                                           (.getTime (:starttime run)))
                                        (* 1000 60)))))]
-        [:dd (format "%s%s" (common/date-format (:starttime run)) mins)])]
-     [:dl [:dt "Simulation type"]
-      [:dd (if (:comparison run) "comparative" "non-comparative")]]]
+        [:dd (format "%s%s" (common/date-format (:starttime run)) mins)])]]
     [:div.span4.columns
      [:dl [:dt "Reptitions"]
       [:dd (:repetitions run)]]
      [:dl [:dt "Seed"]
-      [:dd (:seed run)]]
-     [:dl [:dt "Number of threads"]
-      [:dd (:nthreads run)]]]
+      [:dd (:seed run)]]]
     [:div.span4.columns
-     [:dl [:dt "Working directory"]
-      [:dd (:pwd run)]]
-     [:dl [:dt "Data directory"]
-      [:dd (:datadir run)]]
-     [:dl [:dt "Record directory"]
-      [:dd (:recorddir run)]]]]
-   [:div.row
+     [:dl [:dt "Number of threads"]
+      [:dd (:nthreads run)]]
+     [:dl [:dt "Simulation type"]
+      [:dd (if (:comparison run) "comparative" "non-comparative")]]]]
+   [:div.row-fluid
     [:div.span12.columns
-     [:h3 "Run command"]]]]
-  [:div.row
-   [:div.span12.columns
-    [:pre (make-run-command run)]]])
+     [:h2 "Record directory"]
+     [:p (:recorddir run)]]]
+   [:div.row-fluid
+    [:div.span12.columns
+     [:h2 "Run command"]
+     [:pre (make-run-command run)]]]])
 
 (defpartial run-parameters
   [run]
-  [:section#parameters
+  [:section
    [:div.page-header
     [:a {:name "parameters"}
-     [:h2 "Parameters"]]]
+     [:h1 "Parameters"]]]
    ;; treat run as params since it has all the right fields
    (parameters-summary run true)])
 
 (defpartial run-project
   [run]
   (let [projects (list-projects)]
-    [:section#project
+    [:section
      [:div.page-header
       [:a {:name "project"}
-       [:h2 "Project"]]]
-     [:div.row
-      [:div.span12.columns [:p "Choose an existing project, or create a new project."]]]
-     [:div.row
-      [:div.span12.columns
-       (form-to
-        [:post "/run/set-project"]
-        (hidden-field :runid (:runid run))
-        [:div.clearfix
-         [:label {:for "project-select"} "Existing project"]
-         [:div.input (drop-down :project-select (concat ["New..."] projects)
-                                (:project run))]]
-        [:div.clearfix
-         [:label {:for "new-project"} "New project"]
-         [:div.input (text-field :new-project)]]
-        [:div.actions [:input.btn.primary {:value "Update" :type "submit"}]])]]]))
+       [:h1 "Project"]]]
+     [:form.form-horizontal {:method "POST" :action "/run/set-project"}
+      (hidden-field :runid (:runid run))
+      [:div.control-group
+       [:label.control-label {:for "project-select"} "Existing project"]
+       [:div.controls
+        (drop-down :project-select (concat ["New..."] projects) (:project run))]]
+      [:div.control-group
+       [:label.control-label {:for "new-project"} "New project"]
+       [:div.controls (text-field :new-project)]]
+      [:div.form-actions [:input.btn.btn-primary {:value "Update" :type "submit"}]]]]))
 
 (defpartial run-delete-run
   [run]
-  [:section#delete
+  [:section
    [:div.page-header
-    [:h2 "Delete"]]
-   [:div.row
-    [:div.span12.columns
-     [:p "Delete run and all associated results?"]
-     (form-to [:post "/run/delete-run"]
-              (hidden-field :runid (:runid run))
-              [:div.actions
-               [:input.btn.danger {:value "Delete run" :type "submit"}]])]]])
+    [:h1 "Delete"]]
+   (form-to [:post "/run/delete-run"]
+            (hidden-field :runid (:runid run))
+            [:div.form-actions
+             [:input.btn.btn-danger {:value "Delete run" :type "submit"}]])])
 
 (defpage
   [:post "/run/set-project"] {:as project}
@@ -147,14 +134,14 @@
         control-fields (gather-results-fields runid :control)]
     (common/layout
      (format "%s/%s run %s" (:problem run) (:name run) runid)
-     [:div.row [:div.span12.columns
-                [:h1 (format "%s/%s run %s <small>(%s)</small>"
-                             (:problem run) (:name run) runid
-                             (if (:comparison run)
-                               "comparative" "non-comparative"))]]]
-     [:div.row [:div.span12.columns
-                [:p (link-to (format "/run/tables/%s" runid)
-                             "View tables...")]]]
+     [:header.jumbotron.subhead
+      [:div.row-fluid
+       [:h1 (format "%s/%s run %s <small>(%s)</small>"
+               (:problem run) (:name run) runid
+               (if (:comparison run)
+                 "comparative" "non-comparative"))]]]
+     [:p (link-to (format "/run/tables/%s" runid)
+                  "View tables...")]
      (analyses run)
      (graphs run comparative-fields control-fields)
      (run-parameters run)

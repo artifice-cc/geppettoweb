@@ -20,66 +20,63 @@
     [:a {:name "new"}
      [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
               "New graph")]]]
-   [:div.row
-    [:div.span12.columns
-     (form-to [:post (if (:name graph) "/graphs/update-graph"
-                         "/graphs/new-graph")]
-              (hidden-field :graphid (:graphid graph))
-              [:fieldset
-               [:div.clearfix
-                [:label {:for "problems"} "Problems"]
-                [:div.input
-                 [:input.xlarge {:id "problems" :name "problems" :size 30
-                                 :type "text" :value (:problems graph)}]]]
-               [:div.clearfix
-                [:label {:for "name"} "Name"]
-                [:div.input
-                 [:input.xlarge {:id "name" :name "name" :size 30
-                                 :type "text" :value (:name graph)}]]]
-               [:div.clearfix
-                [:label {:for "width"} "Width (inches)"]
-                [:div.input
-                 [:input.small {:id "width" :name "width" :size 5
-                                :type "text" :value (:width graph)}]]]
-               [:div.clearfix
-                [:label {:for "height"} "Height (inches)"]
-                [:div.input
-                 [:input.small {:id "height" :name "height" :size 5
-                                :type "text" :value (:height graph)}]]]
-               [:div.clearfix
-                [:label {:for "resultstype"} "Results type"]
-                [:div.input
-                 (drop-down :resultstype ["non-comparative" "comparative"]
-                            (:resultstype graph))]]
-               [:div.clearfix
-                [:label {:for "caption"} "Caption"]
-                [:div.input
-                 [:textarea.xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
-               [:div.clearfix
-                [:label {:for "code"} "R code"]
-                [:div.input
-                 [:textarea.xxlarge {:id "code" :name "code" :rows 30
-                                     :style "font-family: monospace;"}
-                  (if (:code graph) (:code graph) "")]
-                 [:span.help-block "Assume the existence of a data table named
+   [:form.form-horizontal {:method "POST" :action (if (:name graph) "/graphs/update-graph"
+                                                      "/graphs/new-graph")}
+    (hidden-field :graphid (:graphid graph))
+    [:div.control-group
+     [:label.control-label {:for "problems"} "Problems"]
+     [:div.controls
+      [:input {:id "problems" :name "problems" :size 30
+               :type "text" :value (:problems graph)}]]]
+    [:div.control-group
+     [:label.control-label {:for "name"} "Name"]
+     [:div.controls
+      [:input {:id "name" :name "name" :size 30
+               :type "text" :value (:name graph)}]]]
+    [:div.control-group
+     [:label.control-label {:for "width"} "Width"]
+     [:div.controls
+      [:div.input-append
+       [:input.span6 {:id "width" :name "width" :size 5
+                      :type "text" :value (:width graph)}]
+       [:span.add-on "in"]]]]
+    [:div.control-group
+     [:label.control-label {:for "height"} "Height"]
+     [:div.controls
+      [:div.input-append
+       [:input.span6 {:id "height" :name "height" :size 5
+                      :type "text" :value (:height graph)}]
+       [:span.add-on "in"]]]]
+    [:div.control-group
+     [:label.control-label {:for "resultstype"} "Results type"]
+     [:div.controls
+      (drop-down :resultstype ["non-comparative" "comparative"]
+                 (:resultstype graph))]]
+    [:div.control-group
+     [:label.control-label {:for "caption"} "Caption"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
+    [:div.control-group
+     [:label.control-label {:for "code"} "R code"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "code" :name "code" :rows 30
+                                :style "font-family: monospace;"}
+       (if (:code graph) (:code graph) "")]
+      [:span.help-block "Assume the existence of a data table named
                                     'control', and tables 'comparison' and 'comparative'
                                     if the results type is comparative; also assume
                                     that that 'ggplot2' is loaded. Save the graph to
                                     the variable 'p'."]]]
-               [:div.actions
-                [:input.btn.primary
-                 {:name "action" :value (if (:name graph) "Update" "Save")
-                  :type "submit"}]
-                " "
-                (if (:name graph)
-                  [:input.btn.danger
-                   {:value "Delete" :name "action" :type "submit"}])]])]]
-   [:div.row
-    [:div.span12.columns
-     [:a {:name "help"}
-      [:h1 "Help"]]]]
-   [:div.row
-    [:div.span12.columns (common/convert-md @graphs-help)]]])
+    [:div.form-actions
+     [:input.btn.btn-primary
+      {:name "action" :value (if (:name graph) "Update" "Save")
+       :type "submit"}]
+     " "
+     (if (:name graph)
+       [:input.btn.btn-danger
+        {:value "Delete" :name "action" :type "submit"}])]]
+   [:a {:name "help"} [:h1 "Help"]]
+   (common/convert-md @graphs-help)])
 
 (defpartial template-graph-fields
   [graph id comparative-fields control-fields]
@@ -95,183 +92,187 @@
 
 (defpartial template-graph-form
   [run graph comparative-fields control-fields]
-  (form-to [:post (if (:name graph) "/graphs/update-template-graph"
-                      "/graphs/new-template-graph")]
-           (hidden-field :runid (:runid run))
-           (hidden-field :templateid (:templateid graph))
-           [:fieldset
-            [:div.clearfix
-             [:label {:for "template"} "Template"]
-             [:div.input
-              (drop-down :template ["line" "line-comparative" "bars" "bars-comparative"
-                                    "points" "density" "histogram"]
-                         (:template graph))]]
-            [:div.clearfix
-             [:label {:for "name"} "Name"]
-             [:div.input [:input.xlarg {:id "name" :name "name" :size 30
-                                        :type "text" :value (:name graph)}]]]
-            [:div.clearfix
-             [:label {:for "caption"} "Caption"]
-             [:div.input
-              [:textarea.xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
-            [:div.clearfix
-             [:label {:for "xfield"} "X field"]
-             [:div.input (template-graph-fields
-                          graph :xfield comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "xlabel"} "X label"]
-             [:div.input [:input.xlarg {:id "xlabel" :name "xlabel" :size 30
-                                        :type "text" :value (:xlabel graph)}]]]
-            [:div.clearfix
-             [:label {:for "yfield"} "Y field"]
-             [:div.input (template-graph-fields
-                          graph :yfield comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "ylabel"} "Y label"]
-             [:div.input [:input.xlarg {:id "ylabel" :name "ylabel" :size 30
-                                        :type "text" :value (:ylabel graph)}]]]
-            [:div.clearfix
-             [:label {:for "fill"} "Fill"]
-             [:div.input (template-graph-fields
-                          graph :fill comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "color"} "Color"]
-             [:div.input (template-graph-fields
-                          graph :color comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "linetype"} "Line type"]
-             [:div.input (template-graph-fields
-                          graph :linetype comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "shape"} "Shape"]
-             [:div.input (template-graph-fields
-                          graph :shape comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "facethoriz"} "Facet horizontal"]
-             [:div.input (template-graph-fields
-                          graph :facethoriz comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "facetvert"} "Facet vertical"]
-             [:div.input (template-graph-fields
-                          graph :facetvert comparative-fields control-fields)]]]
-           [:div.clearfix
-            [:label {:for "width"} "Width (inches)"]
-            [:div.input
-             [:input.small {:id "width" :name "width" :size 5
-                            :type "text" :value (or (:width graph) "7.0")}]]]
-           [:div.clearfix
-            [:label {:for "height"} "Height (inches)"]
-            [:div.input
-             [:input.small {:id "height" :name "height" :size 5
-                            :type "text" :value (or (:height graph) "4.0")}]]]
-           [:div.actions
-            [:input.btn.primary
-             {:name "action" :value (if (:name graph) "Update" "Create")
-              :type "submit"}]
-            " "
-            (if (:name graph)
-              [:input.btn.danger
-               {:value "Delete" :name "action" :type "submit"}])]))
+  [:form.form-horizontal {:method "POST" :action (if (:name graph) "/graphs/update-template-graph"
+                                                     "/graphs/new-template-graph")}
+   (hidden-field :runid (:runid run))
+   (hidden-field :templateid (:templateid graph))
+   [:div.control-group
+    [:label.control-label {:for "template"} "Template"]
+    [:div.controls
+     (drop-down :template ["line" "line-comparative" "bars" "bars-comparative"
+                           "points" "density" "histogram"]
+                (:template graph))]]
+   [:div.control-group
+    [:label.control-label {:for "name"} "Name"]
+    [:div.controls [:input.input-large {:id "name" :name "name" :size 30
+                                         :type "text" :value (:name graph)}]]]
+   [:div.control-group
+    [:label.control-label {:for "caption"} "Caption"]
+    [:div.controls
+     [:textarea.input-xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
+   [:div.control-group
+    [:label.control-label {:for "xfield"} "X field"]
+    [:div.controls (template-graph-fields
+                    graph :xfield comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "xlabel"} "X label"]
+    [:div.controls [:input.input-large {:id "xlabel" :name "xlabel" :size 30
+                                         :type "text" :value (:xlabel graph)}]]]
+   [:div.control-group
+    [:label.control-label {:for "yfield"} "Y field"]
+    [:div.controls (template-graph-fields
+                    graph :yfield comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "ylabel"} "Y label"]
+    [:div.controls [:input.input-large {:id "ylabel" :name "ylabel" :size 30
+                                         :type "text" :value (:ylabel graph)}]]]
+   [:div.control-group
+    [:label.control-label {:for "fill"} "Fill"]
+    [:div.controls (template-graph-fields
+                    graph :fill comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "color"} "Color"]
+    [:div.controls (template-graph-fields
+                    graph :color comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "linetype"} "Line type"]
+    [:div.controls (template-graph-fields
+                    graph :linetype comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "shape"} "Shape"]
+    [:div.controls (template-graph-fields
+                    graph :shape comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "facethoriz"} "Facet horizontal"]
+    [:div.controls (template-graph-fields
+                    graph :facethoriz comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "facetvert"} "Facet vertical"]
+    [:div.controls (template-graph-fields
+                    graph :facetvert comparative-fields control-fields)]]
+   [:div.control-group
+    [:label.control-label {:for "width"} "Width"]
+    [:div.controls
+     [:div.input-append
+      [:input.span6 {:id "width" :name "width" :size 5
+                     :type "text" :value (or (:width graph) "7.0")}]
+      [:span.add-on "in"]]]]
+   [:div.control-group
+    [:label.control-label {:for "height"} "Height"]
+    [:div.controls
+     [:div.input-append
+      [:input.span6 {:id "height" :name "height" :size 5
+                     :type "text" :value (or (:height graph) "4.0")}]
+      [:span.add-on "in"]]]]
+   [:div.form-actions
+    [:input.btn.btn-primary
+     {:name "action" :value (if (:name graph) "Update" "Create")
+      :type "submit"}]
+    " "
+    (if (:name graph)
+      [:input.btn.btn-danger
+       {:value "Delete" :name "action" :type "submit"}])]])
 
 (defpartial graph-download-form
   [run graph]
-  (form-to [:post "/graph/download"]
-           (hidden-field :runid (:runid run))
-           (hidden-field :graphid (:graphid graph))
-           (hidden-field :templateid (:templateid graph))
-           [:fieldset
-            [:div.clearfix
-             [:label {:for "theme"} "Theme"]
-             [:div.input
-              (drop-down :theme ["paper" "poster" "website"])]]
-            [:div.clearfix
-             [:label {:for "width"} "Width (in)"]
-             [:div.input
-              [:input.small {:id "width" :name "width"
-                             :size 10 :type "text" :value (:width graph)}]]]
-            [:div.clearfix
-             [:label {:for "height"} "Height (in)"]
-             [:div.input
-              [:input.small {:id "height" :name "height"
-                             :size 10 :type "text" :value (:height graph)}]]]
-            [:div.clearfix
-             [:label {:for "filename"} "File name (without extension)"]
-             [:div.input
-              [:input.xlarge
-               {:id "filename" :name "filename" :size 30 :type "text"
-                :value (format "%s-%s-%d--%s"
-                          (:problem run) (:name run) (:runid run)
-                          (:name graph))}]]]
-            [:div.actions
-             [:input.btn
-              {:name "ftype" :value "png" :type "submit"}]
-             " "
-             [:input.btn
-              {:name "ftype" :value "pdf" :type "submit"}]
-             " "
-             [:input.btn
-              {:name "ftype" :value "svg" :type "submit"}]]]))
+  [:form.form-horizontal {:method "POST" :action "/graph/download"}
+   (hidden-field :runid (:runid run))
+   (hidden-field :graphid (:graphid graph))
+   (hidden-field :templateid (:templateid graph))
+   [:div.control-group
+    [:label.control-label {:for "theme"} "Theme"]
+    [:div.controls
+     (drop-down :theme ["paper" "poster" "website"])]]
+   [:div.control-group
+    [:label.control-label {:for "width"} "Width"]
+    [:div.controls
+     [:div.input-append
+      [:input.span6 {:id "width" :name "width" :size 5
+                     :type "text" :value (:width graph)}]
+      [:span.add-on "in"]]]]
+   [:div.control-group
+    [:label.control-label {:for "heigh"} "Height"]
+    [:div.controls
+     [:div.input-append
+      [:input.span6 {:id "heigh" :name "height" :size 5
+                     :type "text" :value (:height graph)}]
+      [:span.add-on "in"]]]]
+   [:div.control-group
+    [:label.control-label {:for "filename"} "File name (without extension)"]
+    [:div.controls
+     [:input.input-xxlarge
+      {:id "filename" :name "filename" :size 30 :type "text"
+       :value (format "%s-%s-%d--%s"
+                 (:problem run) (:name run) (:runid run)
+                 (if (empty? (:name graph))
+                   (format "template-%s" (:template graph))
+                   (:name graph)))}]]]
+   [:div.form-actions
+    [:input.btn.btn-success
+     {:name "ftype" :value "png" :type "submit"}]
+    " "
+    [:input.btn.btn-success
+     {:name "ftype" :value "pdf" :type "submit"}]
+    " "
+    [:input.btn.btn-success
+     {:name "ftype" :value "svg" :type "submit"}]]])
 
 (defpartial show-graph
   [run graph comparative-fields control-fields & opts]
   (let [widthpx (int (* 100 (:width graph)))
         heightpx (int (* 100 (:height graph)))]
     [:div
-     [:div.row
-      [:div.span12.columns
-       [:a {:name (if (:templateid graph)
-                    (format "template%d" (:templateid graph))
-                    (format "graph%d" (:graphid graph)))}
-        [:h3 (format "%s%s" (:name graph)
-                (if (:templateid graph) (format " (template %s)" (:template graph)) ""))]]
-       [:p (:caption graph)]]]
-     [:div.row
-      [:div.span12.columns
-       [:p
-        (if-let [err (:err (render-graph-file run graph "png" "website"
-                                              (:width graph) (:height graph)))]
-          [:div
-           [:pre err]
-           (if (:templateid graph)
-             [:div
-              [:p
-               [:a.code_header "Code"] " / "
-               [:a.update_header "Update"]]
-              [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
-              [:div]
-              [:div.update (template-graph-form
-                            run graph comparative-fields control-fields)]]
+     [:a {:name (if (:templateid graph)
+                  (format "template%d" (:templateid graph))
+                  (format "graph%d" (:graphid graph)))}
+      [:h2 (format "%s%s" (:name graph)
+              (if (:templateid graph) (format " (template %s)" (:template graph)) ""))]
+      [:p (:caption graph)]
+      [:p
+       (if-let [err (:err (render-graph-file run graph "png" "website"
+                                             (:width graph) (:height graph)))]
+         [:div
+          [:pre err]
+          (if (:templateid graph)
+            [:div
              [:p
               [:a.code_header "Code"] " / "
-              (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")])
-           [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]]        
-          [:div
-           [:img {:src (if (:templateid graph)
-                         (format "/graph/template/%s/%s/png" (:runid run) (:templateid graph))
-                         (format "/graph/%s/%s/png" (:runid run) (:graphid graph)))
-                  :width widthpx
-                  :height heightpx}]
-           (if (not (some #{:no-select} opts))
-             (if (:templateid graph)
-               ;; show template-graph links/form
-               [:div
-                [:p
-                 [:a.code_header "Code"] " / "
-                 [:a.update_header "Update"] " / "
-                 [:a.download_header "Download"]]
-                [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
-                [:div.download (graph-download-form run graph)]
-                [:div.update (template-graph-form
-                              run graph comparative-fields control-fields)]]
-               ;; otherwise, show graph links/form
-               [:div
-                [:p
-                 [:a.code_header "Code"] " / "
-                 (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")
-                 " / "
-                 [:a.download_header "Download"]]
-                [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
-                [:div.download (graph-download-form run graph)]]))])]]]]))
+              [:a.update_header "Update"]]
+             [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
+             [:div]
+             [:div.update (template-graph-form
+                           run graph comparative-fields control-fields)]]
+            [:p
+             [:a.code_header "Code"] " / "
+             (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")])
+          [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]]        
+         [:div
+          [:img {:src (if (:templateid graph)
+                        (format "/graph/template/%s/%s/png" (:runid run) (:templateid graph))
+                        (format "/graph/%s/%s/png" (:runid run) (:graphid graph)))
+                 :width widthpx
+                 :height heightpx}]
+          (if (not (some #{:no-select} opts))
+            (if (:templateid graph)
+              ;; show template-graph links/form
+              [:div
+               [:p
+                [:a.code_header "Code"] " / "
+                [:a.update_header "Update"] " / "
+                [:a.download_header "Download"]]
+               [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
+               [:div.download (graph-download-form run graph)]
+               [:div.update (template-graph-form
+                             run graph comparative-fields control-fields)]]
+              ;; otherwise, show graph links/form
+              [:div
+               [:p
+                [:a.code_header "Code"] " / "
+                (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")
+                " / "
+                [:a.download_header "Download"]]
+               [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
+               [:div.download (graph-download-form run graph)]]))])]]]))
 
 (defpartial graphs
   [run comparative-fields control-fields & opts]
@@ -281,42 +282,40 @@
         active-graphs (set/union (set (get-run-graphs (:runid run)))
                              (set (get-run-template-graphs (:runid run))))]
     (if (or (not-empty avail-graphs) (not (some #{:no-select} opts)))
-      [:section#graphs
+      [:section
        [:div.page-header
         [:a {:name "graphs"}
-         [:h2 "Graphs"]]]
+         [:h1 "Graphs"]]]
        (if (empty? active-graphs)
-         [:div.row
-          [:div.span12.columns [:p "No graphs."]]]
+         [:p "No graphs."]
          (for [g (sort-by :name active-graphs) :when g]
            (apply show-graph run g comparative-fields control-fields opts)))
        (if-not (or (empty? avail-graphs) (some #{:no-select} opts))
          [:div
-          [:div.row
+          [:div.row-fluid
            [:div.span4.columns
             [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
           [:div.fields_checkboxes
-           [:div.row
-            [:div.span8.columns
-             (form-to
-              [:post "/graphs/set-run-graphs"]
-              (hidden-field :runid (:runid run))
-              [:div.clearfix
-               [:div.input
-                [:ul.inputs-list
-                 (for [g (sort-by :name avail-graphs)]
-                   [:li [:label
-                         [:input {:type "checkbox" :name "graphids[]" :value (:graphid g)
-                                  :checked (active-graphs g)}]
-                         " " (:name g)]])]]
-               [:div.actions
-                [:input.btn.primary {:value "Update" :type "submit"}]]])]]]
+           (form-to
+            [:post "/graphs/set-run-graphs"]
+            (hidden-field :runid (:runid run))
+            [:div.row-fluid
+             (for [graph-group (partition-all (int (Math/ceil (/ (count avail-graphs) 2)))
+                                              (sort-by :name avail-graphs))]
+               [:div.span6
+                (for [g graph-group]
+                  [:label.checkbox
+                   [:input {:type "checkbox" :name "graphids[]" :value (:graphid g)
+                            :checked (active-graphs g)}]
+                   " " (:name g)])])]
+            [:div.form-actions
+             [:input.btn.btn-primary {:value "Update" :type "submit"}]])]
           [:div
-           [:div.row
+           [:div.row-fluid
             [:div.span4.columns
              [:p [:b [:a.new_template_graph_form_header "New template graph..."]]]]]
            [:div.new_template_graph_form
-            [:div.row
+            [:div.row-fluid
              [:div.span12.columns
               (template-graph-form run {} comparative-fields control-fields)]]]]])])))
 
@@ -391,13 +390,11 @@
      "Graphs"
      (for [problem (sort (keys graphs))]
        [:section {:id problem}
-        [:div.row
-         [:div.span12.columns
-          [:div.page-header
-           [:a {:name (str/replace problem #"\W" "_")}
-            [:h1 (format "%s graphs" problem)]]]]]
+        [:div.page-header
+         [:a {:name (str/replace problem #"\W" "_")}
+          [:h1 (format "%s graphs" problem)]]]
         (for [graph (sort-by :name (get graphs problem))]
-          [:div.row
+          [:div.row-fluid
            [:div.span4.columns
             [:a {:name (format "graph%d" (:graphid graph))}
              [:h2 (:name graph) [:br]

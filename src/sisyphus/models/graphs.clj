@@ -105,11 +105,13 @@ Loading required package: proto")
        (:recorddir run) templateid theme width height ftype)))
 
 (defn delete-cached-graphs
-  [run graphid]
-  (doseq [f (filter #(re-matches (re-pattern (format "graph-%d\\-.*" graphid))
-                            (.getName %))
-               (file-seq (io/file (:recorddir run))))]
-    (.delete f)))
+  [graphid]
+  (let [runs (list-runs)]
+    (doseq [run runs]
+      (doseq [f (filter #(re-matches (re-pattern (format "graph-%d\\-.*" graphid))
+                                (.getName %))
+                   (file-seq (io/file (:recorddir run))))]
+        (.delete f)))))
 
 (defn delete-cached-template-graphs
   [run templateid]
@@ -171,7 +173,8 @@ Loading required package: proto")
                 (not (. (io/file graph-fname) exists))
                 {:err "Resulting file does not exist."}
                 :else
-                {:success true}))))))
+                (do (.delete (io/file rscript-fname))
+                    {:success true})))))))
 
 (defn get-graph-download
   [runid graphid templateid ftype theme width height]
@@ -190,11 +193,10 @@ Loading required package: proto")
 
 (defn update-graph
   [graph]
-  (let [run (get-run (:runid graph))]
-    (delete-cached-graphs run (Integer/parseInt (:graphid graph)))
-    (with-db @sisyphus-db
-      (update graphs (set-fields (dissoc graph :graphid :action))
-              (where {:graphid (:graphid graph)})))))
+  (delete-cached-graphs (Integer/parseInt (:graphid graph)))
+  (with-db @sisyphus-db
+    (update graphs (set-fields (dissoc graph :graphid :action))
+            (where {:graphid (:graphid graph)}))))
 
 (defn new-graph
   [graph]
@@ -204,11 +206,10 @@ Loading required package: proto")
 
 (defn delete-graph
   [graphid]
-  (let [run (get-run (:runid (first (select run-graphs (where {:graphid graphid})))))]
-    (delete-cached-graphs run (Integer/parseInt graphid))
-    (with-db @sisyphus-db
-      (delete run-graphs (where {:graphid graphid}))
-      (delete graphs (where {:graphid graphid})))))
+  (delete-cached-graphs (Integer/parseInt graphid))
+  (with-db @sisyphus-db
+    (delete run-graphs (where {:graphid graphid}))
+    (delete graphs (where {:graphid graphid}))))
 
 (defn apply-template
   [run graph]

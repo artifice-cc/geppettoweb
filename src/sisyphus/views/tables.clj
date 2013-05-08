@@ -13,20 +13,19 @@
 
 (defpartial run-fields-form
   [runid tabletype on-fields fields]
-  (form-to
-   [:post "/run/tables/set-fields"]
+  [:form {:action "/run/tables/set-fields" :method "POST"}
    (hidden-field :runid runid)
    (hidden-field :tabletype tabletype)
-   [:div.row
+   [:div.row-fluid
     [:div.span12.columns
      [:p [:b [:a.fields_checkboxes_header "Select active fields..."]]]]]
    [:div.fields_checkboxes
-    [:div.row
+    [:div.row-fluid
      (field-checkboxes on-fields fields)]
-    [:div.row
+    [:div.row-fluid
      [:div.span12.columns
-      [:div.actions
-       [:input.btn.primary {:value "Update" :type "submit"}]]]]]))
+      [:div.form-actions
+       [:input.btn.btn-primary {:value "Update" :type "submit"}]]]]]])
 
 (defpartial run-comparative-results-table
   [runid]
@@ -34,9 +33,8 @@
         on-fields (get-table-fields runid :comparative)
         results (get-results runid :comparative on-fields)]
     [:section#comparative-results
-     [:div.page-header
-      [:a {:name "comparative-results"}
-       [:h2 "Comparative results"]]]
+     [:a {:name "comparative-results"}
+      [:h2 "Comparative results"]]
      (results-table results on-fields)
      (run-fields-form runid :comparative on-fields comparative-fields)]))
 
@@ -47,9 +45,8 @@
         control-results (get-results runid :control on-fields)
         comparison-results (get-results runid :comparison on-fields)]    
     [:section#paired-results
-     [:div.page-header
-      [:a {:name "control-comparison-results"}
-       [:h2 "Control/comparison results"]]]
+     [:a {:name "control-comparison-results"}
+      [:h2 "Control/comparison results"]]
      (paired-results-table control-results comparison-results on-fields)
      (run-fields-form runid :paired on-fields control-fields)]))
 
@@ -59,9 +56,8 @@
         on-fields (get-table-fields runid :non-comparative)
         results (get-results runid :control on-fields)]
     [:section#non-comparative-results
-     [:div.page-header
-      [:a {:name "results"}
-       [:h2 "Results"]]]
+     [:a {:name "results"}
+      [:h1 "Results"]]
      (results-table results on-fields)
      (run-fields-form runid :non-comparative on-fields control-fields)]))
 
@@ -75,12 +71,13 @@
   (let [run (get-run runid)]
     (common/layout
      (format "%s/%s run %s" (:problem run) (:name run) runid)
-     [:div.row [:div.span12.columns
-                [:h1 (format "%s/%s run %s <small>(%s)</small>"
-                        (:problem run) (:name run)
-                        (format "<a href=\"/run/%s\">%s</a>" runid runid)
-                        (if (:comparison run)
-                          "comparative" "non-comparative"))]]]
+     [:div.header.jumbotron.subhead
+      [:div.row-fluid
+       [:h1 (format "%s/%s run %s <small>(%s)</small>"
+               (:problem run) (:name run)
+               (format "<a href=\"/run/%s\">%s</a>" runid runid)
+               (if (:comparison run)
+                 "comparative" "non-comparative"))]]]
      (if (:comparison run)
        (run-comparative-results-table runid))
      (if (:comparison run)

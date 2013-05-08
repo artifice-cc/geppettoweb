@@ -17,49 +17,44 @@
   [params]
   [:section#parameters-form
    [:div.page-header
-    [:a {:name "form"}
-     [:h1 (if (and (:name params) (:problem params))
-            (format "Update parameters %s/%s" (:problem params) (:name params))
-            "New parameters")]]]
-   [:div.row
-    [:div.span12.columns
-     (form-to [:post (if (:name params) "/parameters/update-parameters"
-                         "/parameters/new-parameters")]
-              (hidden-field :paramid (:paramid params))
-              [:fieldset
-               [:div.clearfix
-                [:label {:for "problem"} "Problem"]
-                [:div.input
-                 [:input.xlarge {:id "problem" :name "problem" :size 30
-                                 :type "text" :value (:problem params)}]]]
-               [:div.clearfix
-                [:label {:for "name"} "Name"]
-                [:div.input
-                 [:input.xlarge {:id "name" :name "name" :size 30
-                                 :type "text" :value (:name params)}]]]
-               [:div.clearfix
-                [:label {:for "description"} "Description"]
-                [:div.input
-                 [:textarea.xxlarge {:id "description" :name "description"}
-                  (:description params)]]]]
-              [:fieldset
-               [:legend "Parameters"]
-               [:div.clearfix
-                [:label {:for "control"} "Control /<br/>Non-comparative"]
-                [:div.input
-                 [:textarea.xxlarge {:id "control" :name "control" :rows 10}
-                  (:control params)]]]
-               [:div.clearfix
-                [:label {:for "comparison"} "Comparison<br/>(if comparative)"]
-                [:div.input
-                 [:textarea.xxlarge {:id "comparison" :name "comparison" :rows 10}
-                  (:comparison params)]]]]
-              [:div.actions
-               [:input.btn.primary {:value (if (:name params) "Update" "Save")
-                                    :name "action" :type "submit"}]
-               " "
-               (if (and (:name params) (empty? (runs-with-parameters (:paramid params))))
-                 [:input.btn.danger {:value "Delete" :name "action":type "submit"}])])]]])
+    (if (and (:name params) (:problem params))
+      [:h1 (format "Update %s/%s" (:problem params) (:name params))]
+      [:a {:name "form"}
+       [:h1 "New parameters"]])]
+   [:form.form-horizontal {:method "POST" :action (if (:name params) "/parameters/update-parameters"
+                                                      "/parameters/new-parameters")}
+    (hidden-field :paramid (:paramid params))
+    [:div.control-group
+     [:label.control-label {:for "problem"} "Problem"]
+     [:div.controls
+      [:input.input-large {:id "problem" :name "problem" :size 30
+                           :type "text" :value (:problem params)}]]]
+    [:div.control-group
+     [:label.control-label {:for "name"} "Name"]
+     [:div.controls
+      [:input.input-large {:id "name" :name "name" :size 30
+                           :type "text" :value (:name params)}]]]
+    [:div.control-group
+     [:label.control-label {:for "description"} "Description"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "description" :name "description"}
+       (:description params)]]]
+    [:div.control-group
+     [:label.control-label {:for "control"} "Control"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "control" :name "control" :rows 10}
+       (:control params)]]]
+    [:div.control-group
+     [:label.control-label {:for "comparison"} "Comparison"]
+     [:div.controls
+      [:textarea.input-xxlarge {:id "comparison" :name "comparison" :rows 10}
+       (:comparison params)]]]
+    [:div.form-actions
+     [:input.btn.btn-primary {:value (if (:name params) "Update" "Save")
+                              :name "action" :type "submit"}]
+     " "
+     (if (and (:name params) (empty? (runs-with-parameters (:paramid params))))
+       [:input.btn.btn-danger {:value "Delete" :name "action":type "submit"}])]]])
 
 (defpartial params-diff
   [ps1 ps2]
@@ -84,28 +79,35 @@
 
 (defpartial parameters-summary
   [params embedded?]
-  [:div.row
-   [:div.span12.columns
-    [:a {:name (format "params%d" (:paramid params))}
-     [(if embedded? :h3 :h2) (format "%s/%s" (:problem params) (:name params))]]
-    (if (parameters-latest? (:paramid params))
-      [:p (link-to (format "/parameters/update/%s" (:paramid params)) "Update")]
-      [:p "This is an old version. "
-       (link-to (format "/parameters#params%s" (:paramid (parameters-latest
-                                                     (:problem params) (:name params))))
-                "View the latest version.")])
-    [:p (:description params)]]]
+  (let [param-info (if (parameters-latest? (:paramid params))
+                     [:p (link-to (format "/parameters/update/%s" (:paramid params)) "Update")]
+                     [:p "This is an old version. "
+                      (link-to (format "/parameters/%s" (:paramid (parameters-latest
+                                                              (:problem params) (:name params))))
+                               "View the latest version.")])]
+    (if embedded?
+      [:div.row-fluid
+       [:div.span12.columns
+        [:a {:name (format "params%d" (:paramid params))}
+         [:h2 (format "%s/%s" (:problem params) (:name params))]]
+        param-info
+        [:p (:description params)]]]
+      [:section
+       [:div.page-header
+        [:h1 (format "%s/%s" (:problem params) (:name params))]]
+       param-info
+       [:p (:description params)]]))
   (if (:comparison params)
     (let [control-params (to-clj (:control params))
           comparison-params (to-clj (:comparison params))]
       [:div
        (when-not (params-pairable? control-params comparison-params)
-         [:div.row
+         [:div.row-fluid
           [:div.span12.columns
            [:p
-            [:span.label.warning "Warning"]
+            [:span.badge.badge-warning "Warning"]
             " These parameters cannot be paired, as they specify different keys."]]])
-       [:div.row
+       [:div.row-fluid
         [:div.span6.columns
          [:h3 "Control"]
          [:div.params
@@ -117,14 +119,13 @@
           (paramscount comparison-params)
           (params-diff comparison-params control-params)]]]])
     (let [control-params (to-clj (:control params))]
-      [:div.row
+      [:div.row-fluid
        [:div.span6.columns
         [:div.params
          (paramscount control-params)
          [:pre (:control params)]]]]))
-  [:div
-   [:h3 "Runs with these parameters"]]
-  (runs-table (runs-with-parameters (:paramid params)) (:problem params)))
+  [:h3 "Runs with these parameters"]
+  (runs-table (runs-with-parameters (:paramid params)) (:problem params) false))
 
 (defpage
   [:post "/parameters/update-parameters"] {:as params}
@@ -171,17 +172,16 @@
   (let [{:keys [comparative non-comparative]} (list-parameters)]
     (common/layout
      "Parameters"
-     [:div
-      [:section#comparative-parameters
-       [:div.page-header
-        [:a {:name "comparative"}
-         [:h1 "Comparative parameters"]]]
-       (for [params comparative]
-         (parameters-summary params false))]
-      [:section#non-comparative-parameters
-       [:div.page-header
-        [:a {:name "noncomparative"}
-         [:h1 "Non-comparative parameters"]]]
-       (for [params non-comparative]
-         (parameters-summary params false))]
-      (parameters-form nil)])))
+     [:section#comparative-parameters
+      [:div.page-header
+       [:a {:name "comparative"}
+        [:h1 "Comparative parameters"]]]
+      (for [params comparative]
+        (parameters-summary params true))]
+     [:section#non-comparative-parameters
+      [:div.page-header
+       [:a {:name "noncomparative"}
+        [:h1 "Non-comparative parameters"]]]
+      (for [params non-comparative]
+        (parameters-summary params true))]
+     (parameters-form nil))))

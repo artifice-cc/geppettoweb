@@ -10,47 +10,40 @@
   (:use [geppetto.runs :only [list-runs delete-run]]))
 
 (defpartial run-table-row
-  [run]
+  [run show-delete?]
   [:tr
    [:td (link-to (format "/run/%s" (:runid run)) (:runid run))]
    [:td [:div {:style "white-space: nowrap;"} (common/date-format (:starttime run))]]
    [:td (:username run)]
    [:td (link-to (format "/parameters/%d" (:paramid run)) (:name run))]
    [:td (:simcount run)]
-   [:td (graph-count (:runid run))]
-   [:td (analysis-count (:runid run))]
    [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"
                     (:commit run))
                  (subs (:commit run) 0 10))
     " / " (:branch run)]
-   [:td (check-box "delete[]" false (:runid run))]])
+   (when show-delete? [:td (check-box "delete[]" false (:runid run))])])
 
 (defpartial runs-table
-  [runs problem]
+  [runs problem show-delete?]
   [:table.tablesorter
    [:thead
     [:tr
-     [:th "Run ID"]
+     [:th "Run"]
      [:th "Time"]
      [:th "User"]
      [:th "Params"]
-     [:th "Sims"]
-     [:th "Graphs"]
-     [:th "Analysis"]
+     [:th "Simulations"]
      [:th "Commit"]
-     [:th "Delete?"]]]
-   [:tbody (map run-table-row runs)]])
+     (when show-delete? [:th "Delete?"])]]
+   [:tbody (map #(run-table-row % show-delete?) runs)]])
 
 (defpartial runs
   [problem runs project]
   [:div
-   [:div.page-header
-    [:a {:name (str (str/replace (or problem "Unknown") #"\W" "_")
-                    (str/replace (or project "Unknown") #"\W" "_"))}
-     [:h2 problem]]]
-   [:div.row
-    [:div.span12.columns
-     (runs-table runs problem)]]])
+   [:a {:name (str (str/replace (or problem "Unknown") #"\W" "_")
+                   (str/replace (or project "Unknown") #"\W" "_"))}
+    [:h2 problem]]
+   (runs-table runs problem true)])
 
 (defpartial runs-by-problem
   [runs-grouped-problem project]
@@ -66,7 +59,7 @@
          [:section {:id (format "runs-project-%s" project-id)}
           [:div.page-header
            [:a {:name (or project-id "unknown")}
-            [:h1 (or project "Unknown")]]]
+            [:h1 (or project "Unknown project")]]]
           (runs-by-problem runs-grouped-problem project)]))
      (sort (keys runs-grouped-project))))
 
@@ -79,11 +72,10 @@
 
 (defpage "/" []
   (let [runs-grouped-project (group-by :project (list-runs))]
-    (common/layout "Overview"
-                   (form-to [:post "/delete-runs"]
-                            (runs-by-project runs-grouped-project)
-                            [:div.row
-                             [:div.span12.columns
-                              [:div.actions
-                               [:input.btn.danger
-                                {:value "Delete runs" :name "action" :type "submit"}]]]]))))
+    (common/layout
+     "Overview"
+     (form-to [:post "/delete-runs"]
+              (runs-by-project runs-grouped-project)
+              [:div.form-actions
+                 [:input.btn.btn-danger
+                  {:value "Delete runs" :name "action" :type "submit"}]]))))

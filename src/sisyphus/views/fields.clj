@@ -3,13 +3,14 @@
 
 (defpartial field-checkbox
   [field on-fields]
-  [:li [:label [:input {:type "checkbox" :name "fields[]" :value (name field)
-                        :checked (on-fields field)}] " " (name field)]])
+  [:label.checkbox
+   [:input {:type "checkbox" :name "fields[]" :value (name field)
+            :checked (on-fields field)}] " " (name field)])
 
 (defpartial field-checkboxes
   [on-fields fields]
   (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 2))) fields)]
     (map (fn [fs]
-           [:div.span6.columns
-            [:ul.inputs-list (map (fn [f] (field-checkbox f on-fields)) fs)]])
-         field-groups)))
+         [:div.span6
+          (map (fn [f] (field-checkbox f on-fields)) fs)])
+       field-groups)))
