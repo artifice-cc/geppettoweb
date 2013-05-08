@@ -132,7 +132,7 @@
 (defpage "/analyses/update/:analysisid" {analysisid :analysisid}
   (let [analysis (get-analysis analysisid)]
     (common/layout
-     (format "Update analysis %s" (:name analysis))
+     (format "Update %s" (:name analysis))
      (analysis-form analysis))))
 
 (defpage "/analyses" {}

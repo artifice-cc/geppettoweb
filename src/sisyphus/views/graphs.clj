@@ -18,7 +18,7 @@
   [:section#graph-form
    [:div.page-header
     [:a {:name "new"}
-     [:h1 (if (:name graph) (format "Update graph %s" (:name graph))
+     [:h1 (if (:name graph) (format "Update %s" (:name graph))
               "New graph")]]]
    [:form.form-horizontal {:method "POST" :action (if (:name graph) "/graphs/update-graph"
                                                       "/graphs/new-graph")}
@@ -381,7 +381,7 @@
 (defpage "/graphs/update/:graphid" {graphid :graphid}
   (let [graph (get-graph graphid)]
     (common/layout
-     (format "Update graph %s" (:name graph))
+     (format "Update %s" (:name graph))
      (graph-form graph))))
 
 (defpage "/graphs" {}
