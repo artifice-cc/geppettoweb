@@ -113,7 +113,7 @@ Loading required package: proto")
 
 (defn delete-cached-template-graphs
   [run templateid]
-  (doseq [f (filter #(re-matches (re-pattern (format "template\\-graph\\-\\d+\\-%d\\-.*" templateid))
+  (doseq [f (filter #(re-matches (re-pattern (format "template\\-graph\\-%d\\-.*" templateid))
                             (.getName %))
                (file-seq (io/file (:recorddir run))))]
     (.delete f)))
@@ -219,22 +219,27 @@ Loading required package: proto")
                             (= (:template graph) "line")
                             "templates/graph_template_line.r"
                             (= (:template graph) "line-comparative")
-                            "templates/graph_template_line_comparative.r")
+                            "templates/graph_template_line_comparative.r"
+                            (= (:template graph) "density")
+                            "templates/graph_template_density.r"
+                            (= (:template graph) "histogram")
+                            "templates/graph_template_histogram.r"
+                            (= (:template graph) "points")
+                            "templates/graph_template_points.r")
         t (if template-file (fleet [graph] (slurp template-file)))]
     (if t (assoc graph :code (str (t graph)))
         graph)))
 
 (defn convert-template-graph-none-fields
   [graph]
-  (let [none-fields #{:xfield :xfactor :yfield :fill :color :linetype :shape
-                      :facethoriz :facetvert}]
+  (let [none-fields #{:xfield :yfield :fill :color :linetype :shape :facethoriz :facetvert}]
     (reduce (fn [g [k v]] (assoc g k (if (and (none-fields k) (= v "None")) nil v)))
        {} (seq graph))))
 
 (defn update-template-graph
   [graph]
   (let [run (get-run (:runid graph))]
-    (delete-cached-template-graphs graph (Integer/parseInt (:templateid graph)))
+    (delete-cached-template-graphs run (Integer/parseInt (:templateid graph)))
     (let [g (apply-template run (convert-template-graph-none-fields graph))]
       (with-db @sisyphus-db
         (update template-graphs (set-fields (dissoc g :templateid :action))

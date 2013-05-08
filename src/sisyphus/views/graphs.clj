@@ -79,7 +79,7 @@
      [:a {:name "help"}
       [:h1 "Help"]]]]
    [:div.row
-    [:div.span12.columns @graphs-help]]])
+    [:div.span12.columns (common/convert-md @graphs-help)]]])
 
 (defpartial template-graph-fields
   [graph id comparative-fields control-fields]
@@ -103,7 +103,8 @@
             [:div.clearfix
              [:label {:for "template"} "Template"]
              [:div.input
-              (drop-down :template ["line" "line-comparative" "bars" "bars-comparative"]
+              (drop-down :template ["line" "line-comparative" "bars" "bars-comparative"
+                                    "points" "density" "histogram"]
                          (:template graph))]]
             [:div.clearfix
              [:label {:for "name"} "Name"]
@@ -114,13 +115,9 @@
              [:div.input
               [:textarea.xxlarge {:id "caption" :name "caption"} (:caption graph)]]]
             [:div.clearfix
-             [:label {:for "xfield"} "X field (if no factor)"]
+             [:label {:for "xfield"} "X field"]
              [:div.input (template-graph-fields
                           graph :xfield comparative-fields control-fields)]]
-            [:div.clearfix
-             [:label {:for "xfactor"} "X factor (if no field)"]
-             [:div.input (template-graph-fields
-                          graph :xfactor comparative-fields control-fields)]]
             [:div.clearfix
              [:label {:for "xlabel"} "X label"]
              [:div.input [:input.xlarg {:id "xlabel" :name "xlabel" :size 30
@@ -169,7 +166,7 @@
                             :type "text" :value (or (:height graph) "4.0")}]]]
            [:div.actions
             [:input.btn.primary
-             {:name "action" :value (if (:name graph) "Update" "Save")
+             {:name "action" :value (if (:name graph) "Update" "Create")
               :type "submit"}]
             " "
             (if (:name graph)
@@ -226,7 +223,7 @@
                     (format "template%d" (:templateid graph))
                     (format "graph%d" (:graphid graph)))}
         [:h3 (format "%s%s" (:name graph)
-                (if (:templateid graph) " (template)" ""))]]
+                (if (:templateid graph) (format " (template %s)" (:template graph)) ""))]]
        [:p (:caption graph)]]]
      [:div.row
       [:div.span12.columns
