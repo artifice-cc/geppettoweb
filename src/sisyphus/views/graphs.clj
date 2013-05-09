@@ -6,7 +6,7 @@
   (:require [clojure.set :as set])
   (:use [sisyphus.models.graphs :only
          [list-graphs get-graph
-          get-run-graphs set-run-graphs get-run-template-graphs
+          get-run-graphs set-run-graphs get-run-template-graphs get-run-for-template-graph
           new-graph update-graph delete-graph
           new-template-graph update-template-graph delete-template-graph
           render-graph-file get-graph-png get-graph-download]])
@@ -367,11 +367,12 @@
 
 (defpage
   [:post "/graphs/delete-template-graph-confirm"] {:as confirm}
-  (if (= (:choice confirm) "Confirm deletion")
-    (do
-      (delete-template-graph (:id confirm))
-      (resp/redirect "/"))
-    (resp/redirect "/")))
+  (let [runid (get-run-for-template-graph (:id confirm))]
+    (if (= (:choice confirm) "Confirm deletion")
+      (do
+        (delete-template-graph (:id confirm))
+        (resp/redirect (format "/run/%d" runid)))
+      (resp/redirect (format "/run/%d" runid)))))
 
 (defpage
   [:post "/graphs/new-template-graph"] {:as graph}

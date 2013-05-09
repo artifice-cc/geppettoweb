@@ -64,6 +64,10 @@
   (default-width-height
     (first (with-db @sisyphus-db (select template-graphs (where {:templateid templateid}))))))
 
+(defn get-run-for-template-graph
+  [templateid]
+  (:runid (first (with-db @sisyphus-db (select template-graphs (where {:templateid templateid}))))))
+
 (defn set-run-graphs
   [runid graphids]
   (with-db @sisyphus-db
@@ -256,7 +260,7 @@ Loading required package: proto")
 
 (defn delete-template-graph
   [templateid]
-  (let [run (get-run (:runid (first (select template-graphs (where {:templateid templateid})))))]
-    (delete-cached-template-graphs run (Integer/parseInt templateid))
-    (with-db @sisyphus-db
+  (with-db @sisyphus-db
+    (let [run (get-run (:runid (first (select template-graphs (where {:templateid templateid})))))]
+      (delete-cached-template-graphs run (Integer/parseInt templateid))
       (delete template-graphs (where {:templateid templateid})))))
