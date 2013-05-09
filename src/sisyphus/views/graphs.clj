@@ -271,7 +271,7 @@
                 (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")
                 " / "
                 [:a.download_header "Download"]]
-               [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
+               [:pre.code (:code graph)]
                [:div.download (graph-download-form run graph)]]))])]]]))
 
 (defpartial graphs
