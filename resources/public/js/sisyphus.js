@@ -9,8 +9,8 @@ jQuery(document).ready(function() {
 });
 
 jQuery(document).ready(function() {
-    jQuery(".new_template_graph_form").hide();
-    jQuery(".new_template_graph_form_header").click(
+    jQuery(".new_template_form").hide();
+    jQuery(".new_template_form_header").click(
         function()
         {
             jQuery(this).parent().parent().parent().parent().next().slideToggle(500);

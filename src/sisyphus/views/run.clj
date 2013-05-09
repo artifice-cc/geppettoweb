@@ -142,7 +142,7 @@
                  "comparative" "non-comparative"))]]]
      [:p (link-to (format "/run/tables/%s" runid)
                   "View tables...")]
-     (analyses run)
+     (analyses run comparative-fields control-fields)
      (graphs run comparative-fields control-fields)
      (run-parameters run)
      (run-project run)

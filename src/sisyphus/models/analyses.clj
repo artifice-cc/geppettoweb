@@ -3,6 +3,7 @@
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
   (:use [korma.core])
+  (:use [fleet])
   (:use [geppetto.models])
   (:use [geppetto.runs])
   (:use [geppetto.misc])
@@ -20,10 +21,17 @@
   (belongs-to runs {:fk :runid})
   (belongs-to analyses {:fk :analysisid}))
 
+(defentity template-analyses
+  (table :template_analyses)
+  (pk :templateid)
+  (belongs-to runs {:fk :runid}))
+
 (defn analysis-count
   [runid]
-  (:count (first (with-db @sisyphus-db
-                   (select run-analyses (where {:runid runid})
+  (with-db @sisyphus-db
+    (:count (first (select run-analyses (where {:runid runid})
+                           (aggregate (count :runid) :count))))
+    (:count (first (select template-analyses (where {:runid runid})
                            (aggregate (count :runid) :count))))))
 
 (defn list-analyses
@@ -41,6 +49,10 @@
   [analysisid]
   (first (with-db @sisyphus-db (select analyses (where {:analysisid analysisid})))))
 
+(defn get-run-for-template-analysis
+  [templateid]
+  (:runid (first (with-db @sisyphus-db (select template-analyses (where {:templateid templateid}))))))
+
 (defn set-run-analyses
   [runid analysisids]
   (with-db @sisyphus-db
@@ -54,26 +66,40 @@
      (with-db @sisyphus-db
        (select run-analyses (with analyses) (where {:runid runid})))))
 
+(defn get-run-template-analyses
+  [runid]
+  (with-db @sisyphus-db
+    (select template-analyses (where {:runid runid}))))
+
 (defn analysis-filename
-  [run analysisid]
-  (format "%s/analysis-%d.txt" (:recorddir run) analysisid))
+  [run analysisid templateid]
+  (if analysisid
+    (format "%s/analysis-%d.txt" (:recorddir run) analysisid)
+    (format "%s/template-analysis-%d.txt" (:recorddir run) templateid)))
 
 (defn delete-cached-analyses
   [analysisid]
   (let [runs (list-runs)]
     (doseq [run runs]
-      (doseq [f (filter #(re-matches (re-pattern (format "analysis-%d.txt" analysisid))
+      (doseq [f (filter #(re-matches (re-pattern (format "analysis\\-%d\\.txt" analysisid))
                                 (.getName %))
                    (file-seq (io/file (:recorddir run))))]
         (.delete f)))))
 
+(defn delete-cached-template-analyses
+  [run templateid]
+  (.delete (io/file (format "template-analysis-%d.txt" templateid))))
+
 (defn get-analysis-output
   [run analysis]
-  (let [analysis-fname (analysis-filename run (:analysisid analysis))]
+  (let [analysis-fname (analysis-filename run (:analysisid analysis) (:templateid analysis))]
     (if (.exists (io/file analysis-fname))
       (slurp analysis-fname)
-      (let [rscript-fname (format "%s/analysis-%d.rscript"
-                             (:recorddir run) (:analysisid analysis))
+      (let [rscript-fname (format "%s/%sanalysis-%d.rscript"
+                             (:recorddir run)
+                             (if (:templateid analysis)
+                               "template-" "")
+                             (:analysisid analysis))
             rcode (format "%s # extra funcs
                       load('%s/control.rbin')
                       load('%s/comparison.rbin')
@@ -107,8 +133,45 @@
 
 (defn delete-analysis
   [analysisid]
-  (let [run (get-run (:runid (first (select run-analyses (where {:analysisid analysisid})))))]
-    (delete-cached-analyses run (Integer/parseInt analysisid))
-    (with-db @sisyphus-db
-      (delete run-analyses (where {:analysisid analysisid}))
-      (delete analyses (where {:analysisid analysisid})))))
+  (delete-cached-analyses (Integer/parseInt analysisid))
+  (with-db @sisyphus-db
+    (delete run-analyses (where {:analysisid analysisid}))
+    (delete analyses (where {:analysisid analysisid}))))
+
+(defn apply-template
+  [run analysis]
+  (let [template-file (cond (= (:template analysis) "linear-model")
+                            "templates/analysis_template_linear_model.r")
+        t (if template-file (fleet [analysis] (slurp template-file)))]
+    (if t (assoc analysis :code (str (t analysis)))
+        analysis)))
+
+(defn convert-template-analysis-none-fields
+  [analysis]
+  (let [none-fields #{:xfield :yfield}]
+    (reduce (fn [a [k v]] (assoc a k (if (and (none-fields k) (= v "None")) nil v)))
+       {} (seq analysis))))
+
+(defn update-template-analysis
+  [analysis]
+  (let [run (get-run (:runid analysis))]
+    (delete-cached-template-analyses run (Integer/parseInt (:templateid analysis)))
+    (let [a (apply-template run (convert-template-analysis-none-fields analysis))]
+      (with-db @sisyphus-db
+        (update template-analyses (set-fields (dissoc a :templateid :action))
+                (where {:templateid (:templateid a)}))))))
+
+(defn new-template-analysis
+  [analysis]
+  (:generated_key
+   (let [run (get-run (:runid analysis))
+         a (apply-template run (convert-template-analysis-none-fields analysis))]
+     (with-db @sisyphus-db
+       (insert template-analyses (values [(dissoc a :templateid :action)]))))))
+
+(defn delete-template-analysis
+  [templateid]
+  (with-db @sisyphus-db
+    (let [run (get-run (:runid (first (select template-analyses (where {:templateid templateid})))))]
+      (delete-cached-template-analyses run (Integer/parseInt templateid))
+      (delete template-analyses (where {:templateid templateid})))))

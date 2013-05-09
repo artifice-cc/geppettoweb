@@ -4,12 +4,7 @@
   (:use [ring.util.response :only [header]])
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
-  (:use [sisyphus.models.graphs :only
-         [list-graphs get-graph
-          get-run-graphs set-run-graphs get-run-template-graphs get-run-for-template-graph
-          new-graph update-graph delete-graph
-          new-template-graph update-template-graph delete-template-graph
-          render-graph-file get-graph-png get-graph-download]])
+  (:use [sisyphus.models.graphs :exclude [graphs]])
   (:use [sisyphus.config])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
@@ -223,56 +218,55 @@
         heightpx (int (* 100 (:height graph)))]
     [:div
      [:a {:name (if (:templateid graph)
-                  (format "template%d" (:templateid graph))
+                  (format "templategraph%d" (:templateid graph))
                   (format "graph%d" (:graphid graph)))}
       [:h2 (format "%s%s" (:name graph)
-              (if (:templateid graph) (format " (template %s)" (:template graph)) ""))]
-      [:p (:caption graph)]
-      [:p
-       (if-let [err (:err (render-graph-file run graph "png" "website"
-                                             (:width graph) (:height graph)))]
-         [:div
-          [:pre err]
-          (if (:templateid graph)
-            [:div
-             [:p
-              [:a.code_header "Code"] " / "
-              [:a.update_header "Update"]]
-             [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
-             [:div]
-             [:div.update (template-graph-form
-                           run graph comparative-fields control-fields)]]
+              (if (:templateid graph) (format " (template %s)" (:template graph)) ""))]]
+     [:p (:caption graph)]
+     [:p
+      (if-let [err (:err (render-graph-file run graph "png" "website"
+                                            (:width graph) (:height graph)))]
+        [:div
+         [:pre err]
+         (if (:templateid graph)
+           [:div
             [:p
              [:a.code_header "Code"] " / "
-             (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")])
-          [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]]        
-         [:div
-          [:img {:src (if (:templateid graph)
-                        (format "/graph/template/%s/%s/png" (:runid run) (:templateid graph))
-                        (format "/graph/%s/%s/png" (:runid run) (:graphid graph)))
-                 :width widthpx
-                 :height heightpx}]
-          (if (not (some #{:no-select} opts))
-            (if (:templateid graph)
-              ;; show template-graph links/form
-              [:div
-               [:p
-                [:a.code_header "Code"] " / "
-                [:a.update_header "Update"] " / "
-                [:a.download_header "Download"]]
-               [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
-               [:div.download (graph-download-form run graph)]
-               [:div.update (template-graph-form
-                             run graph comparative-fields control-fields)]]
-              ;; otherwise, show graph links/form
-              [:div
-               [:p
-                [:a.code_header "Code"] " / "
-                (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")
-                " / "
-                [:a.download_header "Download"]]
-               [:pre.code (:code graph)]
-               [:div.download (graph-download-form run graph)]]))])]]]))
+             [:a.update_header "Update"]]
+            [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]
+            [:div]
+            [:div.update (template-graph-form
+                          run graph comparative-fields control-fields)]]
+           [:p
+            [:a.code_header "Code"] " / "
+            (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")])
+         [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]]        
+        [:div
+         [:img {:src (if (:templateid graph)
+                       (format "/graph/template/%s/%s/png" (:runid run) (:templateid graph))
+                       (format "/graph/%s/%s/png" (:runid run) (:graphid graph)))
+                :width widthpx
+                :height heightpx}]
+         (if (not (some #{:no-select} opts))
+           (if (:templateid graph)
+             ;; show template-graph links/form
+             [:div
+              [:p
+               [:a.code_header "Code"] " / "
+               [:a.update_header "Update"] " / "
+               [:a.download_header "Download"]]
+              [:pre.code (:code graph)]
+              [:div.download (graph-download-form run graph)]
+              [:div.update (template-graph-form run graph comparative-fields control-fields)]]
+             ;; otherwise, show graph links/form
+             [:div
+              [:p
+               [:a.code_header "Code"] " / "
+               (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")
+               " / "
+               [:a.download_header "Download"]]
+              [:pre.code (:code graph)]
+              [:div.download (graph-download-form run graph)]]))])]]))
 
 (defpartial graphs
   [run comparative-fields control-fields & opts]
@@ -293,7 +287,7 @@
        (if-not (or (empty? avail-graphs) (some #{:no-select} opts))
          [:div
           [:div.row-fluid
-           [:div.span4.columns
+           [:div.span12.columns
             [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
           [:div.fields_checkboxes
            (form-to
@@ -312,9 +306,9 @@
              [:input.btn.btn-primary {:value "Update" :type "submit"}]])]
           [:div
            [:div.row-fluid
-            [:div.span4.columns
-             [:p [:b [:a.new_template_graph_form_header "New template graph..."]]]]]
-           [:div.new_template_graph_form
+            [:div.span12.columns
+             [:p [:b [:a.new_template_form_header "New template graph..."]]]]]
+           [:div.new_template_form
             [:div.row-fluid
              [:div.span12.columns
               (template-graph-form run {} comparative-fields control-fields)]]]]])])))
@@ -356,7 +350,7 @@
   (cond (= "Update" (:action graph))
         (do
           (update-template-graph graph)
-          (resp/redirect (format "/run/%s#template%s" (:runid graph) (:templateid graph))))
+          (resp/redirect (format "/run/%s#templategraph%s" (:runid graph) (:templateid graph))))
         (= "Delete" (:action graph))
         (common/layout
          "Confirm deletion"
@@ -377,7 +371,7 @@
 (defpage
   [:post "/graphs/new-template-graph"] {:as graph}
   (let [templateid (new-template-graph graph)]
-    (resp/redirect (format "/run/%s#template%d" (:runid graph) templateid))))
+    (resp/redirect (format "/run/%s#templategraph%d" (:runid graph) templateid))))
 
 (defpage "/graphs/update/:graphid" {graphid :graphid}
   (let [graph (get-graph graphid)]
