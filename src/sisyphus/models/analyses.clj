@@ -59,10 +59,13 @@
   (format "%s/analysis-%d.txt" (:recorddir run) analysisid))
 
 (defn delete-cached-analyses
-  [run analysisid]
-  (doseq [f (filter #(re-matches (re-pattern (format "analysis-%d\\.txt" analysisid)) (.getName %))
-               (file-seq (io/file (:recorddir run))))]
-    (.delete f)))
+  [analysisid]
+  (let [runs (list-runs)]
+    (doseq [run runs]
+      (doseq [f (filter #(re-matches (re-pattern (format "analysis-%d.txt" analysisid))
+                                (.getName %))
+                   (file-seq (io/file (:recorddir run))))]
+        (.delete f)))))
 
 (defn get-analysis-output
   [run analysis]
@@ -86,11 +89,12 @@
         (let [status (sh "/usr/bin/Rscript" rscript-fname)]
           (with-open [writer (io/writer analysis-fname)]
             (.write writer (str (:out status) (:err status))))
+          (.delete (io/file rscript-fname))
           (str (:out status) (:err status)))))))
 
 (defn update-analysis
   [analysis]
-  (delete-cached-analyses (get-run (:runid analysis)) (Integer/parseInt (:analysisid analysis)))
+  (delete-cached-analyses (Integer/parseInt (:analysisid analysis)))
   (with-db @sisyphus-db
     (update analyses (set-fields (dissoc analysis :analysisid :action))
             (where {:analysisid (:analysisid analysis)}))))

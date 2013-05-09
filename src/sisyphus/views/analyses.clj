@@ -12,7 +12,12 @@
   [:div
    [:a {:name (format "analysis%d" (:analysisid analysis))}
     [:h3 (:name analysis)]]
-   [:pre (get-analysis-output run analysis)]])
+   [:pre (get-analysis-output run analysis)]
+   [:div
+    [:p
+     [:a.code_header "Code"] " / "
+     (link-to (format "/analyses/update/%s" (:analysisid analysis)) "Update")]
+    [:pre.code (:code analysis)]]])
 
 (defpartial analysis-form
   [analysis]
