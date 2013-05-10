@@ -88,7 +88,7 @@
 
 (defn delete-cached-template-analyses
   [run templateid]
-  (.delete (io/file (format "template-analysis-%d.txt" templateid))))
+  (.delete (io/file (format "%s/template-analysis-%d.txt" (:recorddir run) templateid))))
 
 (defn get-analysis-output
   [run analysis]
