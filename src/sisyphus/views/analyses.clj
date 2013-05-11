@@ -133,43 +133,42 @@
                           (get (list-analyses) (:problem run)))
         active-analyses (set/union (set (get-run-analyses (:runid run)))
                                (set (get-run-template-analyses (:runid run))))]
-    (if (not-empty active-analyses)
-      [:section
-       [:div.page-header
-        [:a {:name "analyses"}
-         [:h1 "Analyses"]]]
-       (if (empty? active-analyses)
-         [:p "No analyses."]
-         (for [a (sort-by :name active-analyses) :when a]
-           (show-analysis run a comparative-fields control-fields)))
-       (if (not-empty avail-analyses)
-         [:div
+    [:section
+     [:div.page-header
+      [:a {:name "analyses"}
+       [:h1 "Analyses"]]]
+     (if (empty? active-analyses)
+       [:p "No analyses."]
+       (for [a (sort-by :name active-analyses) :when a]
+         (show-analysis run a comparative-fields control-fields)))
+     (if (not-empty avail-analyses)
+       [:div
+        [:div.row-fluid
+         [:div.span12.columns
+          [:p [:b [:a.fields_checkboxes_header "Choose analyses..."]]]]]
+        [:div.fields_checkboxes
+         (form-to
+          [:post "/analyses/set-run-analyses"]
+          (hidden-field :runid (:runid run))
+          [:div.row-fluid
+           (for [analyses-group (partition-all (int (Math/ceil (/ (count avail-analyses) 2)))
+                                               (sort-by :name avail-analyses))]
+             [:div.span6
+              (for [a analyses-group]
+                [:label.checkbox
+                 [:input {:type "checkbox" :name "analysisids[]" :value (:analysisid a)
+                          :checked (active-analyses a)}]
+                 " " (:name a)])])]
+          [:div.form-actions
+           [:input.btn.btn-primary {:value "Update" :type "submit"}]])]
+        [:div
+         [:div.row-fluid
+          [:div.span12.columns
+           [:p [:b [:a.new_template_form_header "New template analysis..."]]]]]
+         [:div.new_template_form
           [:div.row-fluid
            [:div.span12.columns
-            [:p [:b [:a.fields_checkboxes_header "Choose analyses..."]]]]]
-          [:div.fields_checkboxes
-           (form-to
-            [:post "/analyses/set-run-analyses"]
-            (hidden-field :runid (:runid run))
-            [:div.row-fluid
-             (for [analyses-group (partition-all (int (Math/ceil (/ (count avail-analyses) 2)))
-                                                 (sort-by :name avail-analyses))]
-               [:div.span6
-                (for [a analyses-group]
-                  [:label.checkbox
-                   [:input {:type "checkbox" :name "analysisids[]" :value (:analysisid a)
-                            :checked (active-analyses a)}]
-                   " " (:name a)])])]
-            [:div.form-actions
-             [:input.btn.btn-primary {:value "Update" :type "submit"}]])]
-          [:div
-           [:div.row-fluid
-            [:div.span12.columns
-             [:p [:b [:a.new_template_form_header "New template analysis..."]]]]]
-           [:div.new_template_form
-            [:div.row-fluid
-             [:div.span12.columns
-              (template-analysis-form run {} comparative-fields control-fields)]]]]])])))
+            (template-analysis-form run {} comparative-fields control-fields)]]]]])]))
 
 (defpage
   [:post "/analyses/set-run-analyses"] {:as analyses}
