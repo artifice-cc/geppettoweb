@@ -1,4 +1,4 @@
-custom_palette <- c("#babdb6", "#888a85", "#555753")
+custom_palette <- c("#babdb6", "#888a85", "#555753", "#2e3436", "#d3d7cf")
 theme_custom <- function (base_size = 12, base_family = "") {
   theme_grey(base_size=base_size, base_family=base_family) %+replace%
   theme(
