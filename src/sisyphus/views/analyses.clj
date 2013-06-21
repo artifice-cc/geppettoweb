@@ -160,15 +160,15 @@
                           :checked (active-analyses a)}]
                  " " (:name a)])])]
           [:div.form-actions
-           [:input.btn.btn-primary {:value "Update" :type "submit"}]])]
-        [:div
-         [:div.row-fluid
-          [:div.span12.columns
-           [:p [:b [:a.new_template_form_header "New template analysis..."]]]]]
-         [:div.new_template_form
-          [:div.row-fluid
-           [:div.span12.columns
-            (template-analysis-form run {} comparative-fields control-fields)]]]]])]))
+           [:input.btn.btn-primary {:value "Update" :type "submit"}]])]])
+     [:div
+      [:div.row-fluid
+       [:div.span12.columns
+        [:p [:b [:a.new_template_form_header "New template analysis..."]]]]]
+      [:div.new_template_form
+       [:div.row-fluid
+        [:div.span12.columns
+         (template-analysis-form run {} comparative-fields control-fields)]]]]]))
 
 (defpage
   [:post "/analyses/set-run-analyses"] {:as analyses}
