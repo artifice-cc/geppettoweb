@@ -1,5 +1,6 @@
 (ns sisyphus.server
   (:import (java.io File))
+  (:use [clojure.tools.cli :only [cli]])
   (:use [clojure.contrib.command-line :only [with-command-line]])
   (:use [sisyphus.config])
   (:require [noir.server :as server])
@@ -24,10 +25,13 @@
 (server/add-middleware cache-control)
 
 (defn -main [& args]
-  (load-config)
-  (server/start (Integer/parseInt @port)
-                {:mode :dev
-                 :ns 'sisyphus})
+  (let [[options _ banner]
+        (cli args
+             ["--config" "Config file (default: config.properties)" :default "config.properties"])]
+    (load-config (:config options))
+    (server/start (Integer/parseInt @port)
+                  {:mode :dev
+                   :ns 'sisyphus}))
   ;; silly hack needed to use (sh)
   ;; see: http://stackoverflow.com/questions/7259072/
   ;;      clojure-java-shell-sh-throws-rejectedexecutionexception

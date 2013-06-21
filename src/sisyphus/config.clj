@@ -9,8 +9,8 @@
 (def port (ref "3737"))
 
 (defn load-config
-  []
-  (let [props (read-properties "config.properties")]
+  [config-file]
+  (let [props (read-properties config-file)]
     (prn props)
     (setup-geppetto (:geppetto_dbhost props)
                     (:geppetto_dbname props)
