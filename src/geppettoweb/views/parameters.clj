@@ -1,17 +1,17 @@
-(ns sisyphus.views.parameters
+(ns geppettoweb.views.parameters
   (:require [clojure.contrib.string :as str])
-  (:require [sisyphus.views.common :as common])
+  (:require [geppettoweb.views.common :as common])
   (:require [noir.response :as resp])
   (:require [noir.cookies :as cookies])
   (:require [clojure.set :as set])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.common :only [to-clj]])
+  (:use [geppettoweb.models.common :only [to-clj]])
   (:use [geppetto.parameters :only
          [parameters-latest? parameters-latest
           new-parameters update-parameters get-params
           list-parameters runs-with-parameters delete-parameters
           vectorize-params explode-params params-pairable?]])
-  (:use [sisyphus.views.overview :only [runs-table]]))
+  (:use [geppettoweb.views.overview :only [runs-table]]))
 
 (defpartial parameters-form
   [params]

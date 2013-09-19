@@ -1,14 +1,14 @@
-(ns sisyphus.views.tables
-  (:require [sisyphus.views.common :as common])
+(ns geppettoweb.views.tables
+  (:require [geppettoweb.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [geppetto.runs :only
          [get-run gather-results-fields get-results]])
-  (:use [sisyphus.models.tables :only [get-table-fields set-table-fields]])
-  (:use [sisyphus.views.fields :only [field-checkboxes]])
-  (:use [sisyphus.views.run :only
+  (:use [geppettoweb.models.tables :only [get-table-fields set-table-fields]])
+  (:use [geppettoweb.views.fields :only [field-checkboxes]])
+  (:use [geppettoweb.views.run :only
          [run-parameters run-metainfo run-delete-run]])
-  (:use [sisyphus.views.results :only
+  (:use [geppettoweb.views.results :only
          [results-table paired-results-table]]))
 
 (defpartial run-fields-form

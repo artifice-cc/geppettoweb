@@ -1,4 +1,4 @@
-(ns sisyphus.models.graphs
+(ns geppettoweb.models.graphs
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
@@ -8,9 +8,9 @@
   (:use [geppetto.runs])
   (:use [geppetto.misc])
   (:use [geppetto.r])
-  (:use [sisyphus.config])
-  (:use [sisyphus.models.common])
-  (:use [sisyphus.models.commonr]))
+  (:use [geppettoweb.config])
+  (:use [geppettoweb.models.common])
+  (:use [geppettoweb.models.commonr]))
 
 (defentity graphs
   (pk :graphid))
@@ -28,7 +28,7 @@
 
 (defn graph-count
   [runid]
-  (with-db @sisyphus-db
+  (with-db @geppetto-db
     (+
      (:count (first (select run-graphs (where {:runid runid})
                             (aggregate (count :runid) :count))))
@@ -45,7 +45,7 @@
 
 (defn list-graphs
   []
-  (with-db @sisyphus-db
+  (with-db @geppetto-db
     (let [all-graphs (map default-width-height (select graphs))
           problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-graphs))]
       (reduce (fn [m problem]
@@ -57,20 +57,20 @@
 (defn get-graph
   [graphid]
   (default-width-height
-    (first (with-db @sisyphus-db (select graphs (where {:graphid graphid}))))))
+    (first (with-db @geppetto-db (select graphs (where {:graphid graphid}))))))
 
 (defn get-template-graph
   [templateid]
   (default-width-height
-    (first (with-db @sisyphus-db (select template-graphs (where {:templateid templateid}))))))
+    (first (with-db @geppetto-db (select template-graphs (where {:templateid templateid}))))))
 
 (defn get-run-for-template-graph
   [templateid]
-  (:runid (first (with-db @sisyphus-db (select template-graphs (where {:templateid templateid}))))))
+  (:runid (first (with-db @geppetto-db (select template-graphs (where {:templateid templateid}))))))
 
 (defn set-run-graphs
   [runid graphids]
-  (with-db @sisyphus-db
+  (with-db @geppetto-db
     (delete run-graphs (where {:runid runid}))
     (insert run-graphs (values (map (fn [graphid] {:runid runid :graphid graphid}) graphids)))))
 
@@ -78,13 +78,13 @@
   [runid]
   (map default-width-height
      (map #(dissoc % :rungraphid :runid :graphid_2)
-        (with-db @sisyphus-db
+        (with-db @geppetto-db
           (select run-graphs (with graphs) (where {:runid runid}))))))
 
 (defn get-run-template-graphs
   [runid]
   (map default-width-height
-     (with-db @sisyphus-db
+     (with-db @geppetto-db
        (select template-graphs (where {:runid runid})))))
 
 (def r-error-prefix
@@ -198,20 +198,20 @@ Loading required package: proto")
 (defn update-graph
   [graph]
   (delete-cached-graphs (Integer/parseInt (:graphid graph)))
-  (with-db @sisyphus-db
+  (with-db @geppetto-db
     (update graphs (set-fields (dissoc graph :graphid :action))
             (where {:graphid (:graphid graph)}))))
 
 (defn new-graph
   [graph]
   (:generated_key
-   (with-db @sisyphus-db
+   (with-db @geppetto-db
      (insert graphs (values [(dissoc graph :graphid :action)])))))
 
 (defn delete-graph
   [graphid]
   (delete-cached-graphs (Integer/parseInt graphid))
-  (with-db @sisyphus-db
+  (with-db @geppetto-db
     (delete run-graphs (where {:graphid graphid}))
     (delete graphs (where {:graphid graphid}))))
 
@@ -246,7 +246,7 @@ Loading required package: proto")
   (let [run (get-run (:runid graph))]
     (delete-cached-template-graphs run (Integer/parseInt (:templateid graph)))
     (let [g (apply-template run (convert-template-graph-none-fields graph))]
-      (with-db @sisyphus-db
+      (with-db @geppetto-db
         (update template-graphs (set-fields (dissoc g :templateid :action))
                 (where {:templateid (:templateid g)}))))))
 
@@ -255,12 +255,12 @@ Loading required package: proto")
   (:generated_key
    (let [run (get-run (:runid graph))
          g (apply-template run (convert-template-graph-none-fields graph))]
-     (with-db @sisyphus-db
+     (with-db @geppetto-db
        (insert template-graphs (values [(dissoc g :templateid :action)]))))))
 
 (defn delete-template-graph
   [templateid]
-  (with-db @sisyphus-db
+  (with-db @geppetto-db
     (let [run (get-run (:runid (first (select template-graphs (where {:templateid templateid})))))]
       (delete-cached-template-graphs run (Integer/parseInt templateid))
       (delete template-graphs (where {:templateid templateid})))))

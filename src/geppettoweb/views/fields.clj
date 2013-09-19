@@ -1,4 +1,4 @@
-(ns sisyphus.views.fields
+(ns geppettoweb.views.fields
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (defpartial field-checkbox

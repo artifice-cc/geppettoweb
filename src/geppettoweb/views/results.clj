@@ -1,4 +1,4 @@
-(ns sisyphus.views.results
+(ns geppettoweb.views.results
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 ;; Provide a modal dialog for the parameters for a single row in a

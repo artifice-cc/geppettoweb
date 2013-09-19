@@ -1,12 +1,12 @@
-(ns sisyphus.views.overview
+(ns geppettoweb.views.overview
   (:require [clojure.set :as set])
   (:require [clojure.string :as str])
-  (:require [sisyphus.views.common :as common])
+  (:require [geppettoweb.views.common :as common])
   (:require [noir.cookies :as cookies])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.analyses :only [analysis-count]])
-  (:use [sisyphus.models.graphs :only [graph-count]])
+  (:use [geppettoweb.models.analyses :only [analysis-count]])
+  (:use [geppettoweb.models.graphs :only [graph-count]])
   (:use [geppetto.runs :only [list-runs delete-run]]))
 
 (defpartial run-table-row

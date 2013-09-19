@@ -1,18 +1,18 @@
-(ns sisyphus.server
+(ns geppettoweb.server
   (:import (java.io File))
   (:use [clojure.tools.cli :only [cli]])
   (:use [clojure.contrib.command-line :only [with-command-line]])
-  (:use [sisyphus.config])
+  (:use [geppettoweb.config])
   (:require [noir.server :as server])
-  (:require [sisyphus.views.run]
-            [sisyphus.views.tables]
-            [sisyphus.views.graphs]
-            [sisyphus.views.analyses]
-            [sisyphus.views.overview]
-            [sisyphus.views.parameters]
-            [sisyphus.views.results]))
+  (:require [geppettoweb.views.run]
+            [geppettoweb.views.tables]
+            [geppettoweb.views.graphs]
+            [geppettoweb.views.analyses]
+            [geppettoweb.views.overview]
+            [geppettoweb.views.parameters]
+            [geppettoweb.views.results]))
 
-(server/load-views-ns 'sisyphus.views)
+(server/load-views-ns 'geppettoweb.views)
 
 (defn cache-control
   [handler]
@@ -31,12 +31,12 @@
     (load-config (:config options))
     (server/start (Integer/parseInt @port)
                   {:mode :dev
-                   :ns 'sisyphus}))
+                   :ns 'geppettoweb}))
   ;; silly hack needed to use (sh)
   ;; see: http://stackoverflow.com/questions/7259072/
   ;;      clojure-java-shell-sh-throws-rejectedexecutionexception
   ;;      -when-run-in-a-new-thread
   @(promise))
 
-(def handler (server/gen-handler {:ns 'sisyphus}))
+(def handler (server/gen-handler {:ns 'geppettoweb}))
 

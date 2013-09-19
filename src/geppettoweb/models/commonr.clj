@@ -1,4 +1,4 @@
-(ns sisyphus.models.commonr)
+(ns geppettoweb.models.commonr)
 
 (def extra-funcs
   "## Summarizes data.

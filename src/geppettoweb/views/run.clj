@@ -1,15 +1,15 @@
-(ns sisyphus.views.run
+(ns geppettoweb.views.run
   (:require [clojure.java.io :as io])
-  (:require [sisyphus.views.common :as common])
+  (:require [geppettoweb.views.common :as common])
   (:require [noir.response :as resp])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
   (:use [geppetto.runs :only
          [get-run list-projects set-project delete-run gather-results-fields]])
-  (:use [sisyphus.models.common])
-  (:use [sisyphus.config])
-  (:use [sisyphus.views.graphs :only [graphs]])
-  (:use [sisyphus.views.analyses :only [analyses]])
-  (:use [sisyphus.views.parameters :only [parameters-summary]]))
+  (:use [geppettoweb.models.common])
+  (:use [geppettoweb.config])
+  (:use [geppettoweb.views.graphs :only [graphs]])
+  (:use [geppettoweb.views.analyses :only [analyses]])
+  (:use [geppettoweb.views.parameters :only [parameters-summary]]))
 
 (defn make-run-command
   [run]

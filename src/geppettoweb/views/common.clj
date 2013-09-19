@@ -1,4 +1,4 @@
-(ns sisyphus.views.common
+(ns geppettoweb.views.common
   (:require [clojure.string :as str])
   (:use noir.core
         hiccup.core
@@ -11,15 +11,15 @@
   (let [chtml (html content)]
     (html5
      [:head
-      [:title (format "%s | Sisyphus" title)]
+      [:title (format "%s | Geppettoweb" title)]
       (include-css "/css/bootstrap.cosmo.min.css")
       (include-css "/css/bootswatch.css")
       (include-css "/css/tablesorter/style.css")
-      (include-css "/css/sisyphus.css")
+      (include-css "/css/geppettoweb.css")
       (include-js "/js/jquery-1.6.3.min.js")
       (include-js "/js/jquery.tablesorter.min.js")
       (include-js "/js/bootstrap-modal.js")
-      (include-js "/js/sisyphus.js")
+      (include-js "/js/geppettoweb.js")
       (javascript-tag "$(document).ready(function()
                      { $(\"table.tablesorter\").each(function(index)
                        { $(this).tablesorter(); }) });")]
@@ -28,7 +28,7 @@
       [:div.navbar
        [:div.navbar-inner
         [:div.container
-         [:a.brand {:href "/"} "Sisyphus"]
+         [:a.brand {:href "/"} "Geppetto"]
          [:div.nav-collapse
           [:ul.nav
            [:li (link-to "/" "Runs")]

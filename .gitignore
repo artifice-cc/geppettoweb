@@ -6,3 +6,4 @@ pom.xml
 /resources/public/img/graphs
 app/.couchapprc
 cache
+config.properties

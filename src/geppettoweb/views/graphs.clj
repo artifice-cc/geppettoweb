@@ -1,11 +1,11 @@
-(ns sisyphus.views.graphs
-  (:require [sisyphus.views.common :as common])
+(ns geppettoweb.views.graphs
+  (:require [geppettoweb.views.common :as common])
   (:require [noir.response :as resp])
   (:use [ring.util.response :only [header]])
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
-  (:use [sisyphus.models.graphs :exclude [graphs]])
-  (:use [sisyphus.config])
+  (:use [geppettoweb.models.graphs :exclude [graphs]])
+  (:use [geppettoweb.config])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (defpartial graph-form

@@ -1,9 +1,9 @@
-(ns sisyphus.views.analyses
-  (:require [sisyphus.views.common :as common])
+(ns geppettoweb.views.analyses
+  (:require [geppettoweb.views.common :as common])
   (:require [noir.response :as resp])
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
-  (:use [sisyphus.models.analyses :exclude [analyses]])
+  (:use [geppettoweb.models.analyses :exclude [analyses]])
   (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
 
 (defpartial analysis-form
