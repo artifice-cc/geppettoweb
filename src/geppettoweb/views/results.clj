@@ -1,10 +1,10 @@
 (ns geppettoweb.views.results
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
+  (:use hiccup.def hiccup.element hiccup.form hiccup.util))
 
 ;; Provide a modal dialog for the parameters for a single row in a
-;; results table; the output of this defpartial should be placed in a
+;; results table; the output of this defhtml should be placed in a
 ;; table cell
-(defpartial params-modal
+(defhtml params-modal
   [i resultstype params]
   (let [id (format "%s-%d" (name resultstype) i)]
     [:div.paramsmodal
@@ -25,7 +25,7 @@
 
 ;; A results table with single rows (not paired rows); used for
 ;; comparative results or non-comparative runs (i.e. control results)
-(defpartial results-table
+(defhtml results-table
   [results on-fields]
   [:div.row-fluid
    [:div.span12.columns {:style "max-width: 960px; max-height: 30em; overflow: auto;"}
@@ -50,7 +50,7 @@
 ;; if control/comparison values are identical, otherwise two values,
 ;; the top bold representing comparison value, the bottom regular font
 ;; representing control value
-(defpartial paired-results-table
+(defhtml paired-results-table
   [control-results comparison-results on-fields]
   (let [paired-results (partition 2 (interleave control-results comparison-results))]
     [:div.row-fluid

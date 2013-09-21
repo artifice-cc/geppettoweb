@@ -1,8 +1,8 @@
 (ns geppettoweb.views.run
   (:require [clojure.java.io :as io])
   (:require [geppettoweb.views.common :as common])
-  (:require [noir.response :as resp])
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
+  (:require [ring.util.response :as resp])
+  (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
   (:use [geppetto.runs :only
          [get-run list-projects set-project delete-run gather-results-fields]])
   (:use [geppettoweb.models.common])
@@ -17,7 +17,7 @@
           "--params \"%s/%s\" --nthreads %d --repetitions %d --seed %d</strong>")
      (:problem run) (:name run) (:nthreads run) (:repetitions run) (:seed run)))
 
-(defpartial run-metainfo
+(defhtml run-metainfo
   [run]
   [:section
    [:div.page-header
@@ -66,7 +66,7 @@
      [:h2 "Run command"]
      [:pre (make-run-command run)]]]])
 
-(defpartial run-parameters
+(defhtml run-parameters
   [run]
   [:section
    [:div.page-header
@@ -75,7 +75,7 @@
    ;; treat run as params since it has all the right fields
    (parameters-summary run true)])
 
-(defpartial run-project
+(defhtml run-project
   [run]
   (let [projects (list-projects)]
     [:section
@@ -93,7 +93,7 @@
        [:div.controls (text-field :new-project)]]
       [:div.form-actions [:input.btn.btn-primary {:value "Update" :type "submit"}]]]]))
 
-(defpartial run-delete-run
+(defhtml run-delete-run
   [run]
   [:section
    [:div.page-header
@@ -103,8 +103,8 @@
             [:div.form-actions
              [:input.btn.btn-danger {:value "Delete run" :type "submit"}]])])
 
-(defpage
-  [:post "/run/set-project"] {:as project}
+(defn set-project-action
+  [project]
   (if (and (= "New..." (:project-select project)) (empty? (:new-project project)))
     (resp/redirect (format "/run/%s" (:runid project)))
     (do
@@ -112,23 +112,23 @@
                                       (:new-project project) (:project-select project)))
       (resp/redirect (format "/run/%s#project" (:runid project))))))
 
-(defpage
-  [:post "/run/delete-run"] {:as run}
+(defn delete-run-ask
+  [runid]
   (common/layout
    "Confirm deletion"
-   (common/confirm-deletion "/run/delete-run-confirm" (:runid run)
+   (common/confirm-deletion "/run/delete-run-confirm" runid
                             "Are you sure you want to delete the run?")))
 
-(defpage
-  [:post "/run/delete-run-confirm"] {:as confirm}
-  ;; use :id in confirm map not :runid
-  (if (= (:choice confirm) "Confirm deletion")
+(defn delete-run-confirm
+  [id choice]
+  (if (= choice "Confirm deletion")
     (do
-      (delete-run (Integer/parseInt (:id confirm)))
+      (delete-run id)
       (resp/redirect "/"))
-    (resp/redirect (format "/run/%s" (:id confirm)))))
+    (resp/redirect (format "/run/%s" id))))
 
-(defpage "/run/:runid" {runid :runid}
+(defn show-run
+  [runid]
   (let [run (get-run runid)
         comparative-fields (gather-results-fields runid :comparative)
         control-fields (gather-results-fields runid :control)]
@@ -148,3 +148,14 @@
      (run-project run)
      (run-metainfo run)
      (run-delete-run run))))
+
+(defroutes run-routes
+  (context "/run" []
+    (POST "/set-project" [:as {project :params}]
+      (set-project-action project))
+    (POST "/delete-run" [runid]
+      (delete-run-ask runid))
+    (POST "/delete-run-confirm" [id choice]
+      (delete-run-confirm id choice))
+    (GET "/:runid" [runid]
+      (show-run runid))))

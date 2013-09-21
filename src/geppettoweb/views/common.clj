@@ -1,17 +1,14 @@
 (ns geppettoweb.views.common
   (:require [clojure.string :as str])
-  (:use noir.core
-        hiccup.core
-        hiccup.page-helpers
-        hiccup.form-helpers)
+  (:use hiccup.core hiccup.page hiccup.def hiccup.element hiccup.form hiccup.util)
   (:import [com.petebevin.markdown MarkdownProcessor]))
 
-(defpartial layout
+(defn layout
   [title & content]
   (let [chtml (html content)]
     (html5
      [:head
-      [:title (format "%s | Geppettoweb" title)]
+      [:title (format "%s | Geppetto" title)]
       (include-css "/css/bootstrap.cosmo.min.css")
       (include-css "/css/bootswatch.css")
       (include-css "/css/tablesorter/style.css")
@@ -49,7 +46,7 @@
                                :else [:span "&nbsp;&nbsp;&nbsp;&nbsp;" l])])) headers)]]
           [:div.span9 chtml]])]])))
 
-(defpartial date-format
+(defhtml date-format
   [timestamp]
   (let [date (new java.util.Date (.getTime timestamp))
         dateinstance (. java.text.DateFormat getDateTimeInstance
@@ -59,11 +56,11 @@
 
 (def mdp (com.petebevin.markdown.MarkdownProcessor.))
 
-(defpartial convert-md
+(defhtml convert-md
   [f]
   (.markdown mdp (slurp f)))
 
-(defpartial confirm-deletion
+(defhtml confirm-deletion
   [post id msg]
   [:section#confirm
    [:div.page-header

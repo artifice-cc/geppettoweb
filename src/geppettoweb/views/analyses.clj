@@ -1,12 +1,12 @@
 (ns geppettoweb.views.analyses
   (:require [geppettoweb.views.common :as common])
-  (:require [noir.response :as resp])
+  (:require [ring.util.response :as resp])
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
   (:use [geppettoweb.models.analyses :exclude [analyses]])
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
+  (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util))
 
-(defpartial analysis-form
+(defhtml analysis-form
   [analysis]
   [:section#analysis-form
    [:div.page-header
@@ -53,7 +53,7 @@
        [:input.btn.btn-danger
         {:value "Delete" :name "action" :type "submit"}])]]])
 
-(defpartial template-analysis-fields
+(defhtml template-analysis-fields
   [analysis id comparative-fields control-fields]
   (let [selected (get analysis id)]
     [:select {:name id :id id}
@@ -65,7 +65,7 @@
              [[:optgroup {:label "Control fields"}
                (select-options (map name control-fields) selected)]])]))
 
-(defpartial template-analysis-form
+(defhtml template-analysis-form
   [run analysis comparative-fields control-fields]
   [:form.form-horizontal {:method "POST" :action (if (:name analysis) "/analyses/update-template-analysis"
                                                      "/analyses/new-template-analysis")}
@@ -101,7 +101,7 @@
       [:input.btn.btn-danger
        {:value "Delete" :name "action" :type "submit"}])]])
 
-(defpartial show-analysis
+(defhtml show-analysis
   [run analysis comparative-fields control-fields]
   [:div
    [:a {:name (if (:templateid analysis)
@@ -126,7 +126,7 @@
         (link-to (format "/analyses/update/%s" (:analysisid analysis)) "Update")]
        [:pre.code (:code analysis)]])]])
 
-(defpartial analyses
+(defhtml analyses
   [run comparative-fields control-fields]
   (let [avail-analyses (filter #(or (:comparison run)
                                (= "non-comparative" (:resultstype %)))
@@ -170,73 +170,52 @@
         [:div.span12.columns
          (template-analysis-form run {} comparative-fields control-fields)]]]]]))
 
-(defpage
-  [:post "/analyses/set-run-analyses"] {:as analyses}
-  (set-run-analyses (:runid analyses) (:analysisids analyses))
-  (resp/redirect (format "/run/%s#analysis" (:runid analyses))))
-
-(defpage
-  [:post "/analyses/update-analysis"] {:as analysis}
-  (cond (= "Update" (:action analysis))
+(defn update-analysis-action
+  [analysisid action analysis]
+  (cond (= "Update" action)
         (do
           (update-analysis analysis)
-          (resp/redirect (format "/analyses#analysis%s" (:analysisid analysis))))
-        (= "Delete" (:action analysis))
+          (resp/redirect (format "/analyses#analysis%s" analysisid)))
+        (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/analyses/delete-analysis-confirm" (:analysisid analysis)
+         (common/confirm-deletion "/analyses/delete-analysis-confirm" analysisid
                                   "Are you sure you want to delete the analysis?"))
         :else
         (resp/redirect "/analyses")))
 
-(defpage
-  [:post "/analyses/delete-analysis-confirm"] {:as confirm}
-  (if (= (:choice confirm) "Confirm deletion")
+(defn delete-analysis-confirm
+  [id choice]
+  (if (= choice "Confirm deletion")
     (do
-      (delete-analysis (:id confirm))
+      (delete-analysis id)
       (resp/redirect "/analyses"))
     (resp/redirect "/analyses")))
 
-(defpage
-  [:post "/analyses/new-analysis"] {:as analysis}
-  (let [analysisid (new-analysis analysis)]
-    (resp/redirect (format "/analyses#analysis%d" analysisid))))
-
-(defpage
-  [:post "/analyses/update-template-analysis"] {:as analysis}
-  (cond (= "Update" (:action analysis))
+(defn update-template-analysis-action
+  [runid templateid action analysis]
+  (cond (= "Update" action)
         (do
           (update-template-analysis analysis)
-          (resp/redirect (format "/run/%s#templateanalysis%s" (:runid analysis) (:templateid analysis))))
-        (= "Delete" (:action analysis))
+          (resp/redirect (format "/run/%s#templateanalysis%s" runid templateid)))
+        (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/analyses/delete-template-analysis-confirm" (:templateid analysis)
+         (common/confirm-deletion "/analyses/delete-template-analysis-confirm" templateid
                                   "Are you sure you want to delete the analysis?"))
         :else
-        (resp/redirect (format "/run/%s" (:runid analysis)))))
+        (resp/redirect (format "/run/%s" runid))))
 
-(defpage
-  [:post "/analyses/delete-template-analysis-confirm"] {:as confirm}
-  (let [runid (get-run-for-template-analysis (:id confirm))]
-    (if (= (:choice confirm) "Confirm deletion")
+(defn delete-template-analysis-confirm
+  [id choice]
+  (let [runid (get-run-for-template-analysis id)]
+    (if (= choice "Confirm deletion")
       (do
-        (delete-template-analysis (:id confirm))
+        (delete-template-analysis id)
         (resp/redirect (format "/run/%d" runid)))
       (resp/redirect (format "/run/%d" runid)))))
 
-(defpage
-  [:post "/analyses/new-template-analysis"] {:as analysis}
-  (let [templateid (new-template-analysis analysis)]
-    (resp/redirect (format "/run/%s#templateanalysis%d" (:runid analysis) templateid))))
-
-(defpage "/analyses/update/:analysisid" {analysisid :analysisid}
-  (let [analysis (get-analysis analysisid)]
-    (common/layout
-     (format "Update %s" (:name analysis))
-     (analysis-form analysis))))
-
-(defpage "/analyses" {}
+(defn show-all-analyses []
   (let [analyses (list-analyses)]
     (common/layout
      "Analyses"
@@ -251,10 +230,37 @@
             [:a {:name (format "analysis%d" (:analysisid analysis))}
              [:h2 (:name analysis) [:br]
               [:small (format "%s<br/>(%s)"
-                         (:problems analysis) (:resultstype analysis))]]]
+                              (:problems analysis) (:resultstype analysis))]]]
             [:p (:caption analysis)]
             [:p (link-to (format "/analyses/update/%s" (:analysisid analysis))
                          "Update analysis")]]
            [:div.span8.columns
             [:pre (:code analysis)]]])])
      (analysis-form {}))))
+
+(defroutes analyses-routes
+  (context "/analyses" []
+    (POST "/set-run-analyses" [runid analysisids]
+      (do (set-run-analyses runid analysisids)
+          (resp/redirect (format "/run/%s#analysis" runid))))
+    (POST "/update-analysis" [analysisid action :as {analysis :params}]
+      (update-analysis-action analysisid action analysis))
+    (POST "/delete-analysis-confirm" [id choice]
+      (delete-analysis-confirm id choice))
+    (POST "/new-analysis" [:as {analysis :params}]
+      (let [analysisid (new-analysis analysis)]
+        (resp/redirect (format "/analyses#analysis%d" analysisid))))
+    (POST "/update-template-analysis" [runid templateid action :as {analysis :params}]
+      (update-template-analysis-action runid templateid action analysis))
+    (POST "/delete-template-analysis-confirm" [id choice]
+      (delete-template-analysis-confirm id choice))
+    (POST "/new-template-analysis" [:as {analysis :params}]
+      (let [templateid (new-template-analysis analysis)]
+        (resp/redirect (format "/run/%s#templateanalysis%d" (:runid analysis) templateid))))
+    (GET "/update/:analysisid" [analysisid]
+      (let [analysis (get-analysis analysisid)]
+        (common/layout
+         (format "Update %s" (:name analysis))
+         (analysis-form analysis))))
+    (GET "/" [] (show-all-analyses))))
+

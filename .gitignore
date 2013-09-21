@@ -7,3 +7,4 @@ pom.xml
 app/.couchapprc
 cache
 config.properties
+target

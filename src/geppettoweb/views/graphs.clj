@@ -1,14 +1,13 @@
 (ns geppettoweb.views.graphs
   (:require [geppettoweb.views.common :as common])
-  (:require [noir.response :as resp])
-  (:use [ring.util.response :only [header]])
+  (:require [ring.util.response :as resp])
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
   (:use [geppettoweb.models.graphs :exclude [graphs]])
   (:use [geppettoweb.config])
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
+  (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util))
 
-(defpartial graph-form
+(defhtml graph-form
   [graph]
   [:section#graph-form
    [:div.page-header
@@ -71,9 +70,9 @@
        [:input.btn.btn-danger
         {:value "Delete" :name "action" :type "submit"}])]]
    [:a {:name "help"} [:h1 "Help"]]
-   (common/convert-md @graphs-help)])
+   (common/convert-md "help/graphs.md")])
 
-(defpartial template-graph-fields
+(defhtml template-graph-fields
   [graph id comparative-fields control-fields]
   (let [selected (get graph id)]
     [:select {:name id :id id}
@@ -85,7 +84,7 @@
              [[:optgroup {:label "Control fields"}
                (select-options (map name control-fields) selected)]])]))
 
-(defpartial template-graph-form
+(defhtml template-graph-form
   [run graph comparative-fields control-fields]
   [:form.form-horizontal {:method "POST" :action (if (:name graph) "/graphs/update-template-graph"
                                                      "/graphs/new-template-graph")}
@@ -168,7 +167,7 @@
       [:input.btn.btn-danger
        {:value "Delete" :name "action" :type "submit"}])]])
 
-(defpartial graph-download-form
+(defhtml graph-download-form
   [run graph]
   [:form.form-horizontal {:method "POST" :action "/graph/download"}
    (hidden-field :runid (:runid run))
@@ -212,7 +211,7 @@
     [:input.btn.btn-success
      {:name "ftype" :value "svg" :type "submit"}]]])
 
-(defpartial show-graph
+(defhtml show-graph
   [run graph comparative-fields control-fields & opts]
   (let [widthpx (int (* 100 (:width graph)))
         heightpx (int (* 100 (:height graph)))]
@@ -268,7 +267,7 @@
               [:pre.code (:code graph)]
               [:div.download (graph-download-form run graph)]]))])]]))
 
-(defpartial graphs
+(defhtml graphs
   [run comparative-fields control-fields & opts]
   (let [avail-graphs (filter #(or (:comparison run)
                              (= "non-comparative" (:resultstype %)))
@@ -313,73 +312,52 @@
           [:div.span12.columns
            (template-graph-form run {} comparative-fields control-fields)]]]]])))
 
-(defpage
-  [:post "/graphs/set-run-graphs"] {:as graphs}
-  (set-run-graphs (:runid graphs) (:graphids graphs))
-  (resp/redirect (format "/run/%s#graphs" (:runid graphs))))
-
-(defpage
-  [:post "/graphs/update-graph"] {:as graph}
-  (cond (= "Update" (:action graph))
+(defn update-graph-action
+  [graphid action graph]
+  (cond (= "Update" action)
         (do
           (update-graph graph)
-          (resp/redirect (format "/graphs#graph%s" (:graphid graph))))
-        (= "Delete" (:action graph))
+          (resp/redirect (format "/graphs#graph%s" graphid)))
+        (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/graphs/delete-graph-confirm" (:graphid graph)
+         (common/confirm-deletion "/graphs/delete-graph-confirm" graphid
                                   "Are you sure you want to delete the graph?"))
         :else
         (resp/redirect "/graphs")))
 
-(defpage
-  [:post "/graphs/delete-graph-confirm"] {:as confirm}
-  (if (= (:choice confirm) "Confirm deletion")
+(defn delete-graph-confirm
+  [id choice]
+  (if (= choice "Confirm deletion")
     (do
-      (delete-graph (:id confirm))
+      (delete-graph id)
       (resp/redirect "/graphs"))
     (resp/redirect "/graphs")))
 
-(defpage
-  [:post "/graphs/new-graph"] {:as graph}
-  (let [graphid (new-graph graph)]
-    (resp/redirect (format "/graphs#graph%d" graphid))))
-
-(defpage
-  [:post "/graphs/update-template-graph"] {:as graph}
-  (cond (= "Update" (:action graph))
+(defn update-template-graph-action
+  [runid templateid action graph]
+  (cond (= "Update" action)
         (do
           (update-template-graph graph)
-          (resp/redirect (format "/run/%s#templategraph%s" (:runid graph) (:templateid graph))))
-        (= "Delete" (:action graph))
+          (resp/redirect (format "/run/%s#templategraph%s" runid templateid)))
+        (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/graphs/delete-template-graph-confirm" (:templateid graph)
+         (common/confirm-deletion "/graphs/delete-template-graph-confirm" templateid
                                   "Are you sure you want to delete the graph?"))
         :else
-        (resp/redirect (format "/run/%s" (:runid graph)))))
+        (resp/redirect (format "/run/%s" runid))))
 
-(defpage
-  [:post "/graphs/delete-template-graph-confirm"] {:as confirm}
-  (let [runid (get-run-for-template-graph (:id confirm))]
-    (if (= (:choice confirm) "Confirm deletion")
+(defn delete-template-graph-confirm
+  [id choice]
+  (let [runid (get-run-for-template-graph id)]
+    (if (= choice "Confirm deletion")
       (do
-        (delete-template-graph (:id confirm))
+        (delete-template-graph id)
         (resp/redirect (format "/run/%d" runid)))
       (resp/redirect (format "/run/%d" runid)))))
 
-(defpage
-  [:post "/graphs/new-template-graph"] {:as graph}
-  (let [templateid (new-template-graph graph)]
-    (resp/redirect (format "/run/%s#templategraph%d" (:runid graph) templateid))))
-
-(defpage "/graphs/update/:graphid" {graphid :graphid}
-  (let [graph (get-graph graphid)]
-    (common/layout
-     (format "Update %s" (:name graph))
-     (graph-form graph))))
-
-(defpage "/graphs" {}
+(defn show-all-graphs []
   (let [graphs (list-graphs)]
     (common/layout
      "Graphs"
@@ -403,36 +381,61 @@
             [:pre (:code graph)]]])])
      (graph-form {}))))
 
-(defpage "/graph/:runid/:graphid/png"
-  {runid :runid graphid :graphid}
-  (resp/content-type "image/png" (get-graph-png (Integer/parseInt runid)
-                                                (Integer/parseInt graphid)
-                                                nil)))
+(defn download-graph
+  [graph]
+  (-> (resp/content-type (cond (= "pdf" (:ftype graph))
+                               "application/pdf"
+                               (= "svg" (:ftype graph))
+                               "image/svg+xml"
+                               (= "png" (:ftype graph))
+                               "image/png")
+                         (get-graph-download (Integer/parseInt (:runid graph))
+                                             (try
+                                               (Integer/parseInt (:graphid graph))
+                                               (catch Exception _ nil))
+                                             (try
+                                               (Integer/parseInt (:templateid graph))
+                                               (catch Exception _ nil))
+                                             (:ftype graph)
+                                             (:theme graph)
+                                             (Double/parseDouble (:width graph))
+                                             (Double/parseDouble (:height graph))))
+      (resp/header "Content-Disposition"
+                   (format "attachment; filename=\"%s.%s\"" (:filename graph) (:ftype graph)))))
 
-(defpage "/graph/template/:runid/:templateid/png"
-  {runid :runid templateid :templateid}
-  (resp/content-type "image/png" (get-graph-png (Integer/parseInt runid)
-                                                nil
-                                                (Integer/parseInt templateid))))
-
-(defpage [:post "/graph/download"] {:as graph}
-  (->
-   (resp/content-type (cond (= "pdf" (:ftype graph))
-                            "application/pdf"
-                            (= "svg" (:ftype graph))
-                            "image/svg+xml"
-                            (= "png" (:ftype graph))
-                            "image/png")
-                      (get-graph-download (Integer/parseInt (:runid graph))
-                                          (try
-                                            (Integer/parseInt (:graphid graph))
-                                            (catch Exception _ nil))
-                                          (try
-                                            (Integer/parseInt (:templateid graph))
-                                            (catch Exception _ nil))
-                                          (:ftype graph)
-                                          (:theme graph)
-                                          (Double/parseDouble (:width graph))
-                                          (Double/parseDouble (:height graph))))
-   (header "Content-Disposition"
-           (format "attachment; filename=\"%s.%s\"" (:filename graph) (:ftype graph)))))
+(defroutes graphs-routes
+  (context "/graphs" []
+    (POST "/set-run-graphs" [runid graphsid]
+      (do (set-run-graphs runid graphsid)
+          (resp/redirect (format "/run/%s#graphs" runid))))
+    (POST "/update-graph" [graphid action :as {graph :params}]
+      (update-graph-action graphid action graph))
+    (POST "/delete-graph-confirm" [id choice]
+      (delete-graph-confirm id choice))
+    (POST "/new-graph" [:as {graph :params}]
+      (let [graphid (new-graph graph)]
+        (resp/redirect (format "/graphs#graph%d" graphid))))
+    (POST "/update-template-graph" [runid templateid action :as {graph :params}]
+      (update-template-graph-action runid templateid action graph))
+    (POST "/delete-template-graph-confirm" [id choice]
+      (delete-template-graph-confirm id choice))
+    (POST "/new-template-graph" [:as {graph :params}]
+      (let [templateid (new-template-graph graph)]
+        (resp/redirect (format "/run/%s#templategraph%d" (:runid graph) templateid))))
+    (GET "/update/:graphid" [graphid]
+      (let [graph (get-graph graphid)]
+        (common/layout
+         (format "Update %s" (:name graph))
+         (graph-form graph))))
+    (GET "/" [] (show-all-graphs)))
+  (context "/graph" []
+    (GET "/:runid/:graphid/png" [runid graphid]
+      (resp/content-type "image/png" (get-graph-png (Integer/parseInt runid)
+                                                    (Integer/parseInt graphid)
+                                                    nil)))
+    (GET "/template/:runid/:templateid/png" [runid templateid]
+      (resp/content-type "image/png" (get-graph-png (Integer/parseInt runid)
+                                                    nil
+                                                    (Integer/parseInt templateid))))
+    (POST "/download" [:as {graph :params}]
+      (download-graph graph))))
