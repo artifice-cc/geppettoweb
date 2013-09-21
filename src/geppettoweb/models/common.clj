@@ -1,6 +1,4 @@
-(ns sisyphus.models.common)
-
-(def sisyphus-db (ref nil))
+(ns geppettoweb.models.common)
 
 (defn to-clj
   [s]

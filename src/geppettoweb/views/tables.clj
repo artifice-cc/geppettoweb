@@ -1,17 +1,17 @@
-(ns sisyphus.views.tables
-  (:require [sisyphus.views.common :as common])
-  (:require [noir.response :as resp])
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
+(ns geppettoweb.views.tables
+  (:require [geppettoweb.views.common :as common])
+  (:require [ring.util.response :as resp])
+  (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
   (:use [geppetto.runs :only
          [get-run gather-results-fields get-results]])
-  (:use [sisyphus.models.tables :only [get-table-fields set-table-fields]])
-  (:use [sisyphus.views.fields :only [field-checkboxes]])
-  (:use [sisyphus.views.run :only
+  (:use [geppettoweb.models.tables :only [get-table-fields set-table-fields]])
+  (:use [geppettoweb.views.fields :only [field-checkboxes]])
+  (:use [geppettoweb.views.run :only
          [run-parameters run-metainfo run-delete-run]])
-  (:use [sisyphus.views.results :only
+  (:use [geppettoweb.views.results :only
          [results-table paired-results-table]]))
 
-(defpartial run-fields-form
+(defhtml run-fields-form
   [runid tabletype on-fields fields]
   [:form {:action "/run/tables/set-fields" :method "POST"}
    (hidden-field :runid runid)
@@ -27,7 +27,7 @@
       [:div.form-actions
        [:input.btn.btn-primary {:value "Update" :type "submit"}]]]]]])
 
-(defpartial run-comparative-results-table
+(defhtml run-comparative-results-table
   [runid]
   (let [comparative-fields (gather-results-fields runid :comparative)
         on-fields (get-table-fields runid :comparative)
@@ -38,7 +38,7 @@
      (results-table results on-fields)
      (run-fields-form runid :comparative on-fields comparative-fields)]))
 
-(defpartial run-paired-results-table
+(defhtml run-paired-results-table
   [runid]
   (let [control-fields (gather-results-fields runid :control)
         on-fields (get-table-fields runid :paired)
@@ -50,7 +50,7 @@
      (paired-results-table control-results comparison-results on-fields)
      (run-fields-form runid :paired on-fields control-fields)]))
 
-(defpartial run-non-comparative-results-table
+(defhtml run-non-comparative-results-table
   [runid]
   (let [control-fields (gather-results-fields runid :control)
         on-fields (get-table-fields runid :non-comparative)
@@ -61,13 +61,13 @@
      (results-table results on-fields)
      (run-fields-form runid :non-comparative on-fields control-fields)]))
 
-(defpage
-  [:post "/run/tables/set-fields"] {:as fields}
-  (set-table-fields (:runid fields) (:tabletype fields) (:fields fields))
-  (resp/redirect (format "/run/tables/%s#%s" (:runid fields)
-                         (format "%s-results" (name (:tabletype fields))))))
+(defn set-fields
+  [runid tabletype fields]
+  (set-table-fields runid tabletype fields)
+  (resp/redirect (format "/run/tables/%s#%s" runid (format "%s-results" (name tabletype)))))
 
-(defpage "/run/tables/:runid" {runid :runid}
+(defn show-tables
+  [runid]
   (let [run (get-run runid)]
     (common/layout
      (format "%s/%s run %s" (:problem run) (:name run) runid)
@@ -87,3 +87,10 @@
      (run-parameters run)
      (run-metainfo run)
      (run-delete-run run))))
+
+(defroutes tables-routes
+  (context "/run/tables" []
+    (POST "/set-fields" [runid tabletype fields]
+      (set-fields runid tabletype fields))
+    (GET "/:runid" [runid]
+      (show-tables runid))))

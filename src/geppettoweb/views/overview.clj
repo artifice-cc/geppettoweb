@@ -1,15 +1,14 @@
-(ns sisyphus.views.overview
+(ns geppettoweb.views.overview
   (:require [clojure.set :as set])
   (:require [clojure.string :as str])
-  (:require [sisyphus.views.common :as common])
-  (:require [noir.cookies :as cookies])
-  (:require [noir.response :as resp])
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.analyses :only [analysis-count]])
-  (:use [sisyphus.models.graphs :only [graph-count]])
+  (:require [geppettoweb.views.common :as common])
+  (:require [ring.util.response :as resp])
+  (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
+  (:use [geppettoweb.models.analyses :only [analysis-count]])
+  (:use [geppettoweb.models.graphs :only [graph-count]])
   (:use [geppetto.runs :only [list-runs delete-run]]))
 
-(defpartial run-table-row
+(defhtml run-table-row
   [run show-delete?]
   [:tr
    [:td (link-to (format "/run/%s" (:runid run)) (:runid run))]
@@ -23,7 +22,7 @@
     " / " (:branch run)]
    (when show-delete? [:td (check-box "delete[]" false (:runid run))])])
 
-(defpartial runs-table
+(defhtml runs-table
   [runs problem show-delete?]
   [:table.tablesorter
    [:thead
@@ -37,7 +36,7 @@
      (when show-delete? [:th "Delete?"])]]
    [:tbody (map #(run-table-row % show-delete?) runs)]])
 
-(defpartial runs
+(defhtml runs
   [problem runs project]
   [:div
    [:a {:name (str (str/replace (or problem "Unknown") #"\W" "_")
@@ -45,12 +44,12 @@
     [:h2 problem]]
    (runs-table runs problem true)])
 
-(defpartial runs-by-problem
+(defhtml runs-by-problem
   [runs-grouped-problem project]
   (map (fn [problem] (runs problem (get runs-grouped-problem problem) project))
        (sort (keys runs-grouped-problem))))
 
-(defpartial runs-by-project
+(defhtml runs-by-project
   [runs-grouped-project]
   (map (fn [project]
        (let [project-id (if project (str/replace project #"\W" "_") "Unknown")
@@ -63,14 +62,7 @@
           (runs-by-problem runs-grouped-problem project)]))
      (sort (keys runs-grouped-project))))
 
-(defpage
-  [:post "/delete-runs"] {:as runs}
-  (doseq [runid (:delete runs)]
-    (println "Deleting" runid)
-    (delete-run runid))
-  (resp/redirect "/"))
-
-(defpage "/" []
+(defn overview []
   (let [runs-grouped-project (group-by :project (list-runs))]
     (common/layout
      "Overview"
@@ -79,3 +71,10 @@
               [:div.form-actions
                  [:input.btn.btn-danger
                   {:value "Delete runs" :name "action" :type "submit"}]]))))
+
+(defroutes overview-routes
+  (POST "/delete-runs" [:as {delete :params}]
+    (do (doseq [runid (:delete runs)]
+          (delete-run runid))
+        (resp/redirect "/")))
+  (GET "/" [] (overview)))

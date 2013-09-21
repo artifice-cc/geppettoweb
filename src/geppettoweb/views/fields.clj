@@ -1,13 +1,13 @@
-(ns sisyphus.views.fields
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers))
+(ns geppettoweb.views.fields
+  (:use hiccup.def hiccup.element hiccup.form hiccup.util))
 
-(defpartial field-checkbox
+(defhtml field-checkbox
   [field on-fields]
   [:label.checkbox
    [:input {:type "checkbox" :name "fields[]" :value (name field)
             :checked (on-fields field)}] " " (name field)])
 
-(defpartial field-checkboxes
+(defhtml field-checkboxes
   [on-fields fields]
   (let [field-groups (partition-all (int (Math/ceil (/ (count fields) 2))) fields)]
     (map (fn [fs]

@@ -1,19 +1,18 @@
-(ns sisyphus.views.parameters
+(ns geppettoweb.views.parameters
   (:require [clojure.contrib.string :as str])
-  (:require [sisyphus.views.common :as common])
-  (:require [noir.response :as resp])
-  (:require [noir.cookies :as cookies])
+  (:require [geppettoweb.views.common :as common])
+  (:require [ring.util.response :as resp])
   (:require [clojure.set :as set])
-  (:use noir.core hiccup.core hiccup.page-helpers hiccup.form-helpers)
-  (:use [sisyphus.models.common :only [to-clj]])
+  (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
+  (:use [geppettoweb.models.common :only [to-clj]])
   (:use [geppetto.parameters :only
          [parameters-latest? parameters-latest
           new-parameters update-parameters get-params
           list-parameters runs-with-parameters delete-parameters
           vectorize-params explode-params params-pairable?]])
-  (:use [sisyphus.views.overview :only [runs-table]]))
+  (:use [geppettoweb.views.overview :only [runs-table]]))
 
-(defpartial parameters-form
+(defhtml parameters-form
   [params]
   [:section#parameters-form
    [:div.page-header
@@ -56,7 +55,7 @@
      (if (and (:name params) (empty? (runs-with-parameters (:paramid params))))
        [:input.btn.btn-danger {:value "Delete" :name "action":type "submit"}])]]])
 
-(defpartial params-diff
+(defhtml params-diff
   [ps1 ps2]
   (try
     (let [common-keys (set/intersection (set (keys ps1)) (set (keys ps2)))
@@ -72,12 +71,12 @@
        "}"])
     (catch Exception _)))
 
-(defpartial paramscount
+(defhtml paramscount
   [params]
   [:span.paramscount (count (explode-params (vectorize-params params)))
    [:br [:small "params"]]])
 
-(defpartial parameters-summary
+(defhtml parameters-summary
   [params embedded?]
   (let [param-info (if (parameters-latest? (:paramid params))
                      [:p (link-to (format "/parameters/update/%s" (:paramid params)) "Update")]
@@ -127,48 +126,29 @@
   [:h3 "Runs with these parameters"]
   (runs-table (runs-with-parameters (:paramid params)) (:problem params) false))
 
-(defpage
-  [:post "/parameters/update-parameters"] {:as params}
-  (cond (= "Update" (:action params))
+(defn update-parameters-action
+  [paramid action params]
+  (cond (= "Update" action)
         (do
           (let [paramid-new (update-parameters params)]
             (resp/redirect (format "/parameters#params%s" paramid-new))))
-        (= "Delete" (:action params))
+        (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/parameters/delete-parameters-confirm" (:paramid params)
+         (common/confirm-deletion "/parameters/delete-parameters-confirm" paramid
                                   "Are you sure you want to delete the parameters?"))
         :else
-        (resp/redirect (format "/parameters#params%s" (:paramid params)))))
+        (resp/redirect (format "/parameters#params%s" paramid))))
 
-(defpage
-  [:post "/parameters/delete-parameters-confirm"] {:as confirm}
-  (if (= (:choice confirm) "Confirm deletion")
+(defn delete-parameters-confirm
+  [id choice]
+  (if (= choice "Confirm deletion")
     (do
-      (delete-parameters (:id confirm))
+      (delete-parameters id)
       (resp/redirect "/parameters"))
-    (resp/redirect (format "/parameters#params%s" (:id confirm)))))
+    (resp/redirect (format "/parameters#params%s" id))))
 
-(defpage
-  [:post "/parameters/new-parameters"] {:as params}
-  (let [paramid-new (new-parameters params)]
-    (resp/redirect (format "/parameters#params%s" paramid-new))))
-
-(defpage "/parameters/update/:paramid" {paramid :paramid}
-  (if-let [params (get-params paramid)]
-    (common/layout
-     (format "Parameters: %s/%s" (:problem params) (:name params))
-     (parameters-form params))
-    (resp/redirect "/parameters")))
-
-(defpage "/parameters/:paramid" {paramid :paramid}
-  (if-let [params (get-params paramid)]
-    (common/layout
-     (format "Parameters: %s/%s" (:problem params) (:name params))
-     (parameters-summary params false))
-    (resp/redirect "/parameters")))
-
-(defpage "/parameters" {}
+(defn show-all-parameters []
   (let [{:keys [comparative non-comparative]} (list-parameters)]
     (common/layout
      "Parameters"
@@ -185,3 +165,26 @@
       (for [params non-comparative]
         (parameters-summary params true))]
      (parameters-form nil))))
+
+(defroutes parameters-routes
+  (context "/parameters" []
+    (POST "/update-parameters" [paramid action :as {params :params}]
+      (update-parameters-action paramid action params))
+    (POST "/delete-parameters-confirm" [id choice]
+      (delete-parameters-confirm id choice))
+    (POST "/new-parameters" [:as {params :params}]
+      (let [paramid-new (new-parameters params)]
+        (resp/redirect (format "/parameters#params%s" paramid-new))))
+    (GET "/update/:paramid" [paramid]
+      (if-let [params (get-params paramid)]
+        (common/layout
+         (format "Parameters: %s/%s" (:problem params) (:name params))
+         (parameters-form params))
+        (resp/redirect "/parameters")))
+    (GET "/:paramid" [paramid]
+      (if-let [params (get-params paramid)]
+        (common/layout
+         (format "Parameters: %s/%s" (:problem params) (:name params))
+         (parameters-summary params false))
+        (resp/redirect "/parameters")))
+    (GET "/" [] (show-all-parameters))))
