@@ -383,23 +383,23 @@
 
 (defn download-graph
   [graph]
-  (-> (resp/content-type (cond (= "pdf" (:ftype graph))
+  (-> (resp/response (get-graph-download (Integer/parseInt (:runid graph))
+                                         (try
+                                           (Integer/parseInt (:graphid graph))
+                                           (catch Exception _ nil))
+                                         (try
+                                           (Integer/parseInt (:templateid graph))
+                                           (catch Exception _ nil))
+                                         (:ftype graph)
+                                         (:theme graph)
+                                         (Double/parseDouble (:width graph))
+                                         (Double/parseDouble (:height graph))))
+      (resp/content-type (cond (= "pdf" (:ftype graph))
                                "application/pdf"
                                (= "svg" (:ftype graph))
                                "image/svg+xml"
                                (= "png" (:ftype graph))
-                               "image/png")
-                         (get-graph-download (Integer/parseInt (:runid graph))
-                                             (try
-                                               (Integer/parseInt (:graphid graph))
-                                               (catch Exception _ nil))
-                                             (try
-                                               (Integer/parseInt (:templateid graph))
-                                               (catch Exception _ nil))
-                                             (:ftype graph)
-                                             (:theme graph)
-                                             (Double/parseDouble (:width graph))
-                                             (Double/parseDouble (:height graph))))
+                               "image/png"))
       (resp/header "Content-Disposition"
                    (format "attachment; filename=\"%s.%s\"" (:filename graph) (:ftype graph)))))
 
@@ -430,12 +430,14 @@
     (GET "/" [] (show-all-graphs)))
   (context "/graph" []
     (GET "/:runid/:graphid/png" [runid graphid]
-      (resp/content-type "image/png" (get-graph-png (Integer/parseInt runid)
-                                                    (Integer/parseInt graphid)
-                                                    nil)))
+      (-> (resp/response (get-graph-png (Integer/parseInt runid)
+                                        (Integer/parseInt graphid)
+                                        nil))
+          (resp/content-type "image/png")))
     (GET "/template/:runid/:templateid/png" [runid templateid]
-      (resp/content-type "image/png" (get-graph-png (Integer/parseInt runid)
-                                                    nil
-                                                    (Integer/parseInt templateid))))
+      (-> (resp/response (get-graph-png (Integer/parseInt runid)
+                                        nil
+                                        (Integer/parseInt templateid)))
+          (resp/content-type "image/png")))
     (POST "/download" [:as {graph :params}]
       (download-graph graph))))
