@@ -9,6 +9,8 @@ m <- melt(control, id.vars=c("simulation",
                      ),
           measure.vars=c(<(format "\"%s\"" (:yfield graph))>))
 
+m <- na.omit(m)
+
 dse <- summarySE(m, measurevar="value",
                  groupvars=c(<(format "\"%s\"" (:xfield graph))>,
                    <(if (:facethoriz graph) (format "\"%s\"," (:facethoriz graph)) "")>

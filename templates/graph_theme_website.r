@@ -1,5 +1,5 @@
 # see: https://github.com/wch/ggplot2/wiki/New-theme-system
-custom_palette <- c("#402529", "#6c5036", "#7a7368", "#bd9969", "#adbfd6", "#f2e1c1")
+custom_palette <- c("#f2130d", "#1b0fe9", "#49e90f")
 theme_custom <- function (base_size = 12, base_family = "") {
   theme_grey(base_size=base_size, base_family=base_family) %+replace%
   theme(
