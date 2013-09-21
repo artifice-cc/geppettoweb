@@ -1,10 +1,6 @@
 
-
-graphs_help = /home/josh/git/research/sisyphus/help/graphs.md
-
-port = 3737
-
 geppetto_dbhost = localhost
+geppetto_dbport = 3306
 geppetto_dbname = retrospect
 geppetto_dbuser = user
 geppetto_dbpassword = password
