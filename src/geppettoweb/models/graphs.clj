@@ -2,7 +2,7 @@
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
-  (:use [korma.core])
+  (:use [korma db core])
   (:use [fleet])
   (:use [geppetto.models])
   (:use [geppetto.runs])
@@ -14,10 +14,11 @@
 
 (defn graph-count
   [runid]
-  (+ (:count (first (select run-graphs (where {:runid runid})
-                            (aggregate (count :runid) :count))))
-     (:count (first (select template-graphs (where {:runid runid})
-                            (aggregate (count :runid) :count))))))
+  (with-db @geppetto-db
+    (+ (:count (first (select run-graphs (where {:runid runid})
+                              (aggregate (count :runid) :count))))
+       (:count (first (select template-graphs (where {:runid runid})
+                              (aggregate (count :runid) :count)))))))
 
 (defn default-width-height
   [g]
@@ -29,43 +30,50 @@
 
 (defn list-graphs
   []
-  (let [all-graphs (map default-width-height (select graphs))
-        problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-graphs))]
-    (reduce (fn [m problem]
-              (assoc m problem (filter (fn [g] (some #{problem}
-                                                     (str/split (:problems g) #"\s*,\s*")))
-                                       all-graphs)))
-            {} problems)))
+  (with-db @geppetto-db
+    (let [all-graphs (map default-width-height (select graphs))
+          problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-graphs))]
+      (reduce (fn [m problem]
+                (assoc m problem (filter (fn [g] (some #{problem}
+                                                       (str/split (:problems g) #"\s*,\s*")))
+                                         all-graphs)))
+              {} problems))))
 
 (defn get-graph
   [graphid]
-  (default-width-height
-    (first (select graphs (where {:graphid graphid})))))
+  (with-db @geppetto-db
+    (default-width-height
+      (first (select graphs (where {:graphid graphid}))))))
 
 (defn get-template-graph
   [templateid]
-  (default-width-height
-    (first (select template-graphs (where {:templateid templateid})))))
+  (with-db @geppetto-db
+    (default-width-height
+      (first (select template-graphs (where {:templateid templateid}))))))
 
 (defn get-run-for-template-graph
   [templateid]
-  (:runid (first (select template-graphs (where {:templateid templateid})))))
+  (with-db @geppetto-db
+    (:runid (first (select template-graphs (where {:templateid templateid}))))))
 
 (defn set-run-graphs
   [runid graphids]
-  (delete run-graphs (where {:runid runid}))
-  (insert run-graphs (values (map (fn [graphid] {:runid runid :graphid graphid}) graphids))))
+  (with-db @geppetto-db
+    (delete run-graphs (where {:runid runid}))
+    (insert run-graphs (values (map (fn [graphid] {:runid runid :graphid graphid}) graphids)))))
 
 (defn get-run-graphs
   [runid]
-  (map default-width-height
-     (map #(dissoc % :rungraphid :runid :graphid_2)
-          (select run-graphs (with graphs) (where {:runid runid})))))
+  (with-db @geppetto-db
+    (map default-width-height
+         (map #(dissoc % :rungraphid :runid :graphid_2)
+              (select run-graphs (with graphs) (where {:runid runid}))))))
 
 (defn get-run-template-graphs
   [runid]
-  (map default-width-height
-       (select template-graphs (where {:runid runid}))))
+  (with-db @geppetto-db
+    (map default-width-height
+         (select template-graphs (where {:runid runid})))))
 
 (def r-error-prefix
   "Loading required package: reshape
@@ -177,19 +185,22 @@ Loading required package: proto")
 
 (defn update-graph
   [graph]
-  (delete-cached-graphs (Integer/parseInt (:graphid graph)))
-  (update graphs (set-fields (dissoc graph :graphid :action))
-          (where {:graphid (:graphid graph)})))
+  (with-db @geppetto-db
+    (delete-cached-graphs (Integer/parseInt (:graphid graph)))
+    (update graphs (set-fields (dissoc graph :graphid :action))
+            (where {:graphid (:graphid graph)}))))
 
 (defn new-graph
   [graph]
-  (:generated_key (insert graphs (values [(dissoc graph :graphid :action)]))))
+  (with-db @geppetto-db
+    (:generated_key (insert graphs (values [(dissoc graph :graphid :action)])))))
 
 (defn delete-graph
   [graphid]
-  (delete-cached-graphs (Integer/parseInt graphid))
-  (delete run-graphs (where {:graphid graphid}))
-  (delete graphs (where {:graphid graphid})))
+  (with-db @geppetto-db
+    (delete-cached-graphs (Integer/parseInt graphid))
+    (delete run-graphs (where {:graphid graphid}))
+    (delete graphs (where {:graphid graphid}))))
 
 (defn apply-template
   [run graph]
@@ -219,21 +230,24 @@ Loading required package: proto")
 
 (defn update-template-graph
   [graph]
-  (let [run (get-run (:runid graph))]
-    (delete-cached-template-graphs run (Integer/parseInt (:templateid graph)))
-    (let [g (apply-template run (convert-template-graph-none-fields graph))]
-      (update template-graphs (set-fields (dissoc g :templateid :action))
-              (where {:templateid (:templateid g)})))))
+  (with-db @geppetto-db
+    (let [run (get-run (:runid graph))]
+      (delete-cached-template-graphs run (Integer/parseInt (:templateid graph)))
+      (let [g (apply-template run (convert-template-graph-none-fields graph))]
+        (update template-graphs (set-fields (dissoc g :templateid :action))
+                (where {:templateid (:templateid g)}))))))
 
 (defn new-template-graph
   [graph]
-  (:generated_key
-   (let [run (get-run (:runid graph))
-         g (apply-template run (convert-template-graph-none-fields graph))]
-     (insert template-graphs (values [(dissoc g :templateid :action)])))))
+  (with-db @geppetto-db
+    (:generated_key
+     (let [run (get-run (:runid graph))
+           g (apply-template run (convert-template-graph-none-fields graph))]
+       (insert template-graphs (values [(dissoc g :templateid :action)]))))))
 
 (defn delete-template-graph
   [templateid]
-  (let [run (get-run (:runid (first (select template-graphs (where {:templateid templateid})))))]
-    (delete-cached-template-graphs run (Integer/parseInt templateid))
-    (delete template-graphs (where {:templateid templateid}))))
+  (with-db @geppetto-db
+    (let [run (get-run (:runid (first (select template-graphs (where {:templateid templateid})))))]
+      (delete-cached-template-graphs run (Integer/parseInt templateid))
+      (delete template-graphs (where {:templateid templateid})))))

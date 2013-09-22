@@ -2,7 +2,7 @@
   (:use [clojure.java.shell :only [sh]])
   (:require [clojure.java.io :as io])
   (:require [clojure.string :as str])
-  (:use [korma.core])
+  (:use [korma db core])
   (:use [fleet])
   (:use [geppetto.models])
   (:use [geppetto.runs])
@@ -14,43 +14,50 @@
 
 (defn analysis-count
   [runid]
-  (+ (:count (first (select run-analyses (where {:runid runid})
-                            (aggregate (count :runid) :count))))
-     (:count (first (select template-analyses (where {:runid runid})
-                            (aggregate (count :runid) :count))))))
+  (with-db @geppetto-db
+    (+ (:count (first (select run-analyses (where {:runid runid})
+                              (aggregate (count :runid) :count))))
+       (:count (first (select template-analyses (where {:runid runid})
+                              (aggregate (count :runid) :count)))))))
 
 (defn list-analyses
   []
-  (let [all-analyses (select analyses)
-        problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-analyses))]
-    (reduce (fn [m problem]
-              (assoc m problem (filter (fn [a] (some #{problem}
-                                                     (str/split (:problems a) #"\s*,\s*")))
-                                       all-analyses)))
-            {} problems)))
+  (with-db @geppetto-db
+    (let [all-analyses (select analyses)
+          problems (set (mapcat #(str/split (:problems %) #"\s*,\s*") all-analyses))]
+      (reduce (fn [m problem]
+                (assoc m problem (filter (fn [a] (some #{problem}
+                                                       (str/split (:problems a) #"\s*,\s*")))
+                                         all-analyses)))
+              {} problems))))
 
 (defn get-analysis
   [analysisid]
-  (first (select analyses (where {:analysisid analysisid}))))
+  (with-db @geppetto-db
+    (first (select analyses (where {:analysisid analysisid})))))
 
 (defn get-run-for-template-analysis
   [templateid]
-  (:runid (first (select template-analyses (where {:templateid templateid})))))
+  (with-db @geppetto-db
+    (:runid (first (select template-analyses (where {:templateid templateid}))))))
 
 (defn set-run-analyses
   [runid analysisids]
-  (delete run-analyses (where {:runid runid}))
-  (insert run-analyses (values (map (fn [analysisid]
-                                      {:runid runid :analysisid analysisid}) analysisids))))
+  (with-db @geppetto-db
+    (delete run-analyses (where {:runid runid}))
+    (insert run-analyses (values (map (fn [analysisid]
+                                        {:runid runid :analysisid analysisid}) analysisids)))))
 
 (defn get-run-analyses
   [runid]
-  (map #(dissoc % :runanalysisid :runid :analysisid_2)
-       (select run-analyses (with analyses) (where {:runid runid}))))
+  (with-db @geppetto-db
+    (map #(dissoc % :runanalysisid :runid :analysisid_2)
+         (select run-analyses (with analyses) (where {:runid runid})))))
 
 (defn get-run-template-analyses
   [runid]
-  (select template-analyses (where {:runid runid})))
+  (with-db @geppetto-db
+    (select template-analyses (where {:runid runid}))))
 
 (defn analysis-filename
   [run analysisid templateid]
@@ -101,19 +108,22 @@
 
 (defn update-analysis
   [analysis]
-  (delete-cached-analyses (Integer/parseInt (:analysisid analysis)))
-  (update analyses (set-fields (dissoc analysis :analysisid :action))
-          (where {:analysisid (:analysisid analysis)})))
+  (with-db @geppetto-db
+    (delete-cached-analyses (Integer/parseInt (:analysisid analysis)))
+    (update analyses (set-fields (dissoc analysis :analysisid :action))
+            (where {:analysisid (:analysisid analysis)}))))
 
 (defn new-analysis
   [analysis]
-  (:generated_key (insert analyses (values [(dissoc analysis :analysisid :action)]))))
+  (with-db @geppetto-db
+    (:generated_key (insert analyses (values [(dissoc analysis :analysisid :action)])))))
 
 (defn delete-analysis
   [analysisid]
-  (delete-cached-analyses (Integer/parseInt analysisid))
-  (delete run-analyses (where {:analysisid analysisid}))
-  (delete analyses (where {:analysisid analysisid})))
+  (with-db @geppetto-db
+    (delete-cached-analyses (Integer/parseInt analysisid))
+    (delete run-analyses (where {:analysisid analysisid}))
+    (delete analyses (where {:analysisid analysisid}))))
 
 (defn apply-template
   [run analysis]
@@ -131,21 +141,24 @@
 
 (defn update-template-analysis
   [analysis]
-  (let [run (get-run (:runid analysis))]
-    (delete-cached-template-analyses run (Integer/parseInt (:templateid analysis)))
-    (let [a (apply-template run (convert-template-analysis-none-fields analysis))]
-      (update template-analyses (set-fields (dissoc a :templateid :action))
-              (where {:templateid (:templateid a)})))))
+  (with-db @geppetto-db
+    (let [run (get-run (:runid analysis))]
+      (delete-cached-template-analyses run (Integer/parseInt (:templateid analysis)))
+      (let [a (apply-template run (convert-template-analysis-none-fields analysis))]
+        (update template-analyses (set-fields (dissoc a :templateid :action))
+                (where {:templateid (:templateid a)}))))))
 
 (defn new-template-analysis
   [analysis]
-  (:generated_key
-   (let [run (get-run (:runid analysis))
-         a (apply-template run (convert-template-analysis-none-fields analysis))]
-     (insert template-analyses (values [(dissoc a :templateid :action)])))))
+  (with-db @geppetto-db
+    (:generated_key
+     (let [run (get-run (:runid analysis))
+           a (apply-template run (convert-template-analysis-none-fields analysis))]
+       (insert template-analyses (values [(dissoc a :templateid :action)]))))))
 
 (defn delete-template-analysis
   [templateid]
-  (let [run (get-run (:runid (first (select template-analyses (where {:templateid templateid})))))]
-    (delete-cached-template-analyses run (Integer/parseInt templateid))
-    (delete template-analyses (where {:templateid templateid}))))
+  (with-db @geppetto-db
+    (let [run (get-run (:runid (first (select template-analyses (where {:templateid templateid})))))]
+      (delete-cached-template-analyses run (Integer/parseInt templateid))
+      (delete template-analyses (where {:templateid templateid})))))
