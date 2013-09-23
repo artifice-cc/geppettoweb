@@ -405,8 +405,8 @@
 
 (defroutes graphs-routes
   (context "/graphs" []
-    (POST "/set-run-graphs" [runid graphsid]
-      (do (set-run-graphs runid graphsid)
+    (POST "/set-run-graphs" [runid graphids]
+      (do (set-run-graphs runid graphids)
           (resp/redirect (format "/run/%s#graphs" runid))))
     (POST "/update-graph" [graphid action :as {graph :params}]
       (update-graph-action graphid action graph))
