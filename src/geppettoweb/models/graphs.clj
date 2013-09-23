@@ -9,7 +9,6 @@
   (:use [geppetto.misc])
   (:use [geppetto.r])
   (:use [geppettoweb.config])
-  (:use [geppettoweb.models.common])
   (:use [geppettoweb.models.commonr]))
 
 (defn graph-count

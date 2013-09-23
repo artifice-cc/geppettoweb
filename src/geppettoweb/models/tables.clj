@@ -3,8 +3,7 @@
   (:use [korma db core])
   (:use [geppetto.runs :only [get-run]])
   (:use [geppetto.models])
-  (:use [geppetto.misc])
-  (:use [geppettoweb.models.common]))
+  (:use [geppetto.misc]))
 
 (defn get-table-fields
   [runid tabletype]

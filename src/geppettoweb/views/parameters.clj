@@ -4,12 +4,11 @@
   (:require [ring.util.response :as resp])
   (:require [clojure.set :as set])
   (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
-  (:use [geppettoweb.models.common :only [to-clj]])
   (:use [geppetto.parameters :only
          [parameters-latest? parameters-latest
           new-parameters update-parameters get-params
           list-parameters runs-with-parameters delete-parameters
-          vectorize-params explode-params params-pairable?]])
+          read-params-string vectorize-params explode-params params-pairable?]])
   (:use [geppettoweb.views.overview :only [runs-table]]))
 
 (defhtml parameters-form
@@ -97,8 +96,8 @@
        param-info
        [:p (:description params)]]))
   (if (:comparison params)
-    (let [control-params (to-clj (:control params))
-          comparison-params (to-clj (:comparison params))]
+    (let [control-params (read-params-string (:control params))
+          comparison-params (read-params-string (:comparison params))]
       [:div
        (when-not (params-pairable? control-params comparison-params)
          [:div.row-fluid
@@ -117,7 +116,7 @@
          [:div.params
           (paramscount comparison-params)
           (params-diff comparison-params control-params)]]]])
-    (let [control-params (to-clj (:control params))]
+    (let [control-params (read-params-string (:control params))]
       [:div.row-fluid
        [:div.span6.columns
         [:div.params

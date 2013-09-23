@@ -5,7 +5,6 @@
   (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
   (:use [geppetto.runs :only
          [get-run list-projects set-project delete-run gather-results-fields]])
-  (:use [geppettoweb.models.common])
   (:use [geppettoweb.config])
   (:use [geppettoweb.views.graphs :only [graphs]])
   (:use [geppettoweb.views.analyses :only [analyses]])
