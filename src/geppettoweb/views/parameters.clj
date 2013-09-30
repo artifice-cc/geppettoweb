@@ -7,7 +7,7 @@
   (:use [geppetto.parameters :only
          [parameters-latest? parameters-latest
           new-parameters update-parameters get-params
-          list-parameters runs-with-parameters delete-parameters
+          list-parameters runs-with-parameters delete-parameters count-params
           read-params-string vectorize-params explode-params params-pairable?]])
   (:use [geppettoweb.views.overview :only [runs-table]]))
 
@@ -72,7 +72,7 @@
 
 (defhtml paramscount
   [params]
-  [:span.paramscount (count (explode-params (vectorize-params params)))
+  [:span.paramscount (count-params params)
    [:br [:small "params"]]])
 
 (defhtml parameters-summary
