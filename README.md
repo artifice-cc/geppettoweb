@@ -1,6 +1,6 @@
 # Geppetto web interface
 
-The user interface for [Geppetto: Experimental support for engineering intelligent systems](https://geppetto.artifice.cc).
+The user interface for [Geppetto: Experimental support for engineering intelligent systems](http://geppetto.artifice.cc).
 
 ## Usage
 
