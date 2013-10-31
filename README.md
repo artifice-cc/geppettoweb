@@ -1,5 +1,7 @@
 # Geppetto web interface
 
+The user interface for [Geppetto: Experimental support for engineering intelligent systems](https://geppetto.artifice.cc).
+
 ## Usage
 
 ```bash
