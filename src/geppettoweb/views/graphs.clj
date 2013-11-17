@@ -93,7 +93,7 @@
    [:div.control-group
     [:label.control-label {:for "template"} "Template"]
     [:div.controls
-     (drop-down :template ["line" "line-comparative" "bars" "bars-comparative"
+     (drop-down :template ["line" "line-comparative" "line-errorbars" "bars" "bars-comparative"
                            "points" "density" "histogram"]
                 (:template graph))]]
    [:div.control-group

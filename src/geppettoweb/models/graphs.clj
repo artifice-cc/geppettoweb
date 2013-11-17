@@ -139,9 +139,9 @@ Loading required package: proto")
                       load('%s/comparative.rbin')
                       p <- ggplot()
                       %s # graph code
-                      p <- p + theme_custom() # load theme
-                      %s # scale_colour
-                      %s # scale_fill
+                      #p <- p + theme_custom() # load theme
+                      #%s # scale_colour
+                      #%s # scale_fill
                       ggsave(\"%s\", plot = p, dpi = %d, width = %.2f, height = %.2f)"
                      extra-funcs
                      (apply-theme theme)
@@ -211,6 +211,8 @@ Loading required package: proto")
                             "templates/graph_template_line.r"
                             (= (:template graph) "line-comparative")
                             "templates/graph_template_line_comparative.r"
+                            (= (:template graph) "line-errorbars")
+                            "templates/graph_template_line_errorbars.r"
                             (= (:template graph) "density")
                             "templates/graph_template_density.r"
                             (= (:template graph) "histogram")
