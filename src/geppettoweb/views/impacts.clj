@@ -18,7 +18,7 @@
     (for [[metric effs] (sort-by (comp name first) effects)]
       [:tr [:td metric]
        (for [[param stats] (sort-by (comp name first) effs)]
-         [:td (format "%.2f" (:f-stat stats))])])]])
+         [:td (format "%.7f" (:p-value stats))])])]])
 
 (defn show-impacts
   [runid]
