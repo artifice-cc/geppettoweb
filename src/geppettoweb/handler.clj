@@ -4,6 +4,7 @@
   (:use [compojure.core])
   (:require [geppettoweb.views.run]
             [geppettoweb.views.tables]
+            [geppettoweb.views.impacts]
             [geppettoweb.views.graphs]
             [geppettoweb.views.analyses]
             [geppettoweb.views.overview]
@@ -13,6 +14,7 @@
 (def app
   (handler/site (routes geppettoweb.views.run/run-routes
                         geppettoweb.views.tables/tables-routes
+                        geppettoweb.views.impacts/impacts-routes
                         geppettoweb.views.graphs/graphs-routes
                         geppettoweb.views.analyses/analyses-routes
                         geppettoweb.views.overview/overview-routes

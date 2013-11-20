@@ -1,7 +1,7 @@
 (defproject cc.artifice/geppettoweb "2.5.0-SNAPSHOT"
   :description "Web-based viewer for Geppetto data."
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [cc.artifice/geppetto "2.5.0-SNAPSHOT"]
+                 [cc.artifice/geppetto "3.0.0-SNAPSHOT"]
                  [compojure "1.1.5"]
                  [ring/ring-core "1.1.7"]
                  [hiccup "1.0.4"]

@@ -140,7 +140,9 @@
                (if (:comparison run)
                  "comparative" "non-comparative"))]]]
      [:p (link-to (format "/run/tables/%s" runid)
-                  "View tables...")]
+                  "View results tables...")]
+     [:p (link-to (format "/run/impacts/%s" runid)
+                  "View parameter impacts...")]
      (graphs run comparative-fields control-fields)
      (analyses run comparative-fields control-fields)
      (run-parameters run)
