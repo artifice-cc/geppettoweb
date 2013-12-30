@@ -54,7 +54,8 @@
      [:label.control-label {:for "code"} "R code"]
      [:div.controls
       [:textarea.input-xxlarge {:id "code" :name "code" :rows 30
-                                :style "font-family: monospace;"}
+                                :style "font-family: monospace;"
+                                :data-editor "r"}
        (if (:code graph) (:code graph) "")]
       [:span.help-block "Assume the existence of a data table named
                                     'control', and tables 'comparison' and 'comparative'
@@ -189,10 +190,10 @@
                      :type "text" :value (:width graph)}]
       [:span.add-on "in"]]]]
    [:div.control-group
-    [:label.control-label {:for "heigh"} "Height"]
+    [:label.control-label {:for "height"} "Height"]
     [:div.controls
      [:div.input-append
-      [:input.span6 {:id "heigh" :name "height" :size 5
+      [:input.span6 {:id "height" :name "height" :size 5
                      :type "text" :value (:height graph)}]
       [:span.add-on "in"]]]]
    [:div.control-group

@@ -40,7 +40,8 @@
      [:label.control-label {:for "code"} "R code"]
      [:div.controls
       [:textarea.input-xxlarge {:id "code" :name "code" :rows 30
-                                :style "font-family: monospace;"}
+                                :style "font-family: monospace;"
+                                :data-editor "r"}
        (if (:code analysis) (:code analysis) "")]
       [:span.help-block "Assume the existence of data frames named 'control',
                                     'comparison', and 'comparative'."]]]

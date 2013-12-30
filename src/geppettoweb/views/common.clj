@@ -16,10 +16,8 @@
       (include-js "/js/jquery-1.6.3.min.js")
       (include-js "/js/jquery.tablesorter.min.js")
       (include-js "/js/bootstrap-modal.js")
-      (include-js "/js/geppettoweb.js")
-      (javascript-tag "$(document).ready(function()
-                     { $(\"table.tablesorter\").each(function(index)
-                       { $(this).tablesorter(); }) });")]
+      (include-js "/js/ace/ace.js")
+      (include-js "/js/geppettoweb.js")]
      [:body
       [:a {:name "top"}]
       [:div.navbar

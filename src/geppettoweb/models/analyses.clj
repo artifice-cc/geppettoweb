@@ -81,6 +81,7 @@
   [output]
   (-> output
       (str/replace #"Loading required package: \w+" "")
+      (str/replace #"(?s)<p\s+align=\s*center\s*>\s*<table\s+cellspacing=0\s+border=1>\s*<caption\s+align=bottom\s+class=captiondataframe>\s*</caption>\s*<tr>\s*<td>(.*?)</td>\s*</table>\s*<br>" "$1")
       (str/replace #"<table border=0 class=dataframe>"
                    "<table class=\"tablesorter zebra-striped\">")
       (str/replace #"(?s)<tbody>\s*<tr\s*class\s*=\s*firstline\s*>(.*?)</tr>"
