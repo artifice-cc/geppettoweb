@@ -215,6 +215,14 @@
     [:input.btn.btn-success
      {:name "ftype" :value "svg" :type "submit"}]]])
 
+(defn template-graph-name
+  [graph]
+  (if (not= "" (:name graph)) (format "%s (%s)" (:name graph) (:template graph))
+      (format "(%s vs. %s %s)"
+              (if (not= "" (:xlabel graph)) (:xlabel graph) (:xfield graph))
+              (if (not= "" (:ylabel graph)) (:ylabel graph) (:yfield graph))
+              (:template graph))))
+
 (defhtml show-graph
   [run graph comparative-fields control-fields & opts]
   (let [widthpx (int (* 100 (:width graph)))
@@ -223,8 +231,7 @@
      [:a {:name (if (:templateid graph)
                   (format "templategraph%d" (:templateid graph))
                   (format "graph%d" (:graphid graph)))}
-      [:h2 (format "%s%s" (:name graph)
-              (if (:templateid graph) (format " (template %s)" (:template graph)) ""))]]
+      [:h2 (if (:templateid graph) (template-graph-name graph) (:name graph))]]
      [:p (:caption graph)]
      [:p
       (if-let [err (:err (render-graph-file run graph "png" "website"
