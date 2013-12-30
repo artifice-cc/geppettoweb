@@ -36,8 +36,10 @@ for(xfield in unique(m$<(:xfield graph)>.y)) {
     result <- rbind(result, data.frame(
                               <(str (if (:fill graph) "fill=fill," ""))>
                               <(str (if (:color graph) "color=color," ""))>
-                              <(str (if (:facethoriz graph) "facethoriz=facethoriz," ""))>
-                              <(str (if (:facetvert graph) "facetvert=facetvert," ""))>
+                              <(str (if (:facethoriz graph)
+                                       (str (:facethoriz graph) "=facethoriz,") ""))>
+                              <(str (if (:facetvert graph)
+                                       (str (:facetvert graph) "=facetvert,") ""))>
                               xfield=xfield,
                               value=dse$value, se=dse$se))
   }
@@ -59,8 +61,8 @@ p <- p + scale_y_continuous("<(if (not= "" (:ylabel graph)) (:ylabel graph) (:yf
 
 <(if (or (:facethoriz graph) (:facetvert graph)) ">
 p <- p + facet_grid(
-<(str (if (:facetvert graph) "facetvert" "."))>
+<(str (if (:facetvert graph) (:facetvert graph) "."))>
 ~
-<(str (if (:facethoriz graph) "facethoriz" "."))>
-)
+<(str (if (:facethoriz graph) (:facethoriz graph) "."))>
+, labeller = facet_labeller)
 <")>
