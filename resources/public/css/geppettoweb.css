@@ -38,3 +38,20 @@ code, pre {
     font-family: Consolas, monospace;
 }
 
+#geppetto-nav-column-container {
+    top: 0;
+    position: fixed;
+    margin-top: 52px;
+    height: 100%;
+}
+
+#geppetto-nav-column {
+    overflow: auto;
+    height: 100%;
+}
+
+#geppetto-main-column {
+    padding-left: 23.404255319148934%;
+}
+
+

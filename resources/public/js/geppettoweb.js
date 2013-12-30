@@ -49,3 +49,11 @@ jQuery(document).ready(function() {
         widgets: ['zebra']
     });
 });
+
+jQuery(document).ready(function() {
+    jQuery("#geppetto-nav-column-container").height(jQuery(window).height() - 52);
+    jQuery(window).resize(function() {
+        jQuery("#geppetto-nav-column-container").height(jQuery(window).height() - 52);
+    });
+});
+
