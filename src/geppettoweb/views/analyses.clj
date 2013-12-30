@@ -111,7 +111,8 @@
             (if (:templateid analysis) (format " (template %s)" (:template analysis)) ""))]]
    [:p (:caption analysis)]
    [:p
-    [:pre (get-analysis-output run analysis)]
+    (let [output (get-analysis-output run analysis)]
+      (if (re-find #"<table" output) output [:pre output]))
     (if (:templateid analysis)
       [:div
        [:p

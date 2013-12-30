@@ -2,6 +2,10 @@
 
 The user interface for [Geppetto: Experimental support for engineering intelligent systems](http://geppetto.artifice.cc).
 
+## Required R packages
+
+- [R2HTML](http://cran.r-project.org/web/packages/R2HTML/index.html)
+
 ## Usage
 
 ```bash

@@ -43,3 +43,9 @@ jQuery(document).ready(function() {
             jQuery(this).parent().next().next().slideToggle(500);
         });
 });
+
+jQuery(document).ready(function() {
+    jQuery("table.tablesorter").tablesorter({
+        widgets: ['zebra']
+    });
+});

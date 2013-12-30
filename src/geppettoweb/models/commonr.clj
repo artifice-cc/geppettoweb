@@ -45,5 +45,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
 
 options(width=1000)
 
+library(R2HTML)
+
 ")
 
