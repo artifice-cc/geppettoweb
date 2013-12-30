@@ -164,6 +164,10 @@
       :type "submit"}]
     " "
     (if (:name graph)
+      [:input.btn.btn-info
+       {:value "Clone" :name "action" :type "submit"}])
+    " "
+    (if (:name graph)
       [:input.btn.btn-danger
        {:value "Delete" :name "action" :type "submit"}])]])
 
@@ -340,6 +344,9 @@
         (do
           (update-template-graph graph)
           (resp/redirect (format "/run/%s#templategraph%s" runid templateid)))
+        (= "Clone" action)
+        (let [new-templateid (new-template-graph graph)]
+          (resp/redirect (format "/run/%s#templategraph%d" (:runid graph) new-templateid)))
         (= "Delete" action)
         (common/layout
          "Confirm deletion"
