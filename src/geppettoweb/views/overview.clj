@@ -74,7 +74,7 @@
 
 (defroutes overview-routes
   (POST "/delete-runs" [:as {delete :params}]
-    (do (doseq [runid (:delete runs)]
-          (delete-run runid))
+    (do (doseq [runid (:delete delete)]
+             (delete-run runid))
         (resp/redirect "/")))
   (GET "/" [] (overview)))
