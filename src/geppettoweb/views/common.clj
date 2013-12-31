@@ -43,7 +43,7 @@
                       [:div (cond (= d 1) [:b l]
                                   (= d 2) [:i [:span "&nbsp;&nbsp;" l]]
                                   :else [:span "&nbsp;&nbsp;&nbsp;&nbsp;" l])])) headers)]]]
-          [:div#geppetto-main-column.span9 chtml]])]])))
+          [:div#geppetto-main-column.span11 chtml]])]])))
 
 (defhtml date-format
   [timestamp]
