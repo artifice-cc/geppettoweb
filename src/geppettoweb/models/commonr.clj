@@ -43,10 +43,14 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
     return(datac)
 }
 
+stderr <- function(x) { sd(x, na.rm=TRUE)/sqrt(length(x)) }
+
 options(width=1000)
 
-library(R2HTML)
-library(reshape2)
+suppressPackageStartupMessages(library(R2HTML))
+suppressPackageStartupMessages(library(tables))
+suppressPackageStartupMessages(library(xtable))
+suppressPackageStartupMessages(library(reshape2))
 
 facet_labeller <- function(variable, value) { paste(variable, value) }
 
