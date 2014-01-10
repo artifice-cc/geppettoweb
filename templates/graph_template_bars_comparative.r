@@ -32,7 +32,7 @@ for(xfield in unique(m$<(:xfield graph)>.y)) {
   if(nrow(data) > 0) {
     d <- data.frame(label="Diff<(:yfield graph)>",
                     value=data$<(:yfield graph)>.y-data$<(:yfield graph)>.x)
-    dse <- summarySE(d, measurevar="value", groupvars=c("label"))
+    dse <- summarySE(d, measurevar="value", groupvars=c("label"), na.rm=TRUE)
     result <- rbind(result, data.frame(
                               <(str (if (:fill graph) "fill=fill," ""))>
                               <(str (if (:color graph) "color=color," ""))>
