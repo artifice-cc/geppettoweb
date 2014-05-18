@@ -1,4 +1,5 @@
 (ns geppettoweb.views.parameters
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [clojure.contrib.string :as str])
   (:require [geppettoweb.views.common :as common])
   (:require [ring.util.response :as resp])
@@ -19,8 +20,8 @@
       [:h1 (format "Update %s/%s" (:problem params) (:name params))]
       [:a {:name "form"}
        [:h1 "New parameters"]])]
-   [:form.form-horizontal {:method "POST" :action (if (:name params) "/parameters/update-parameters"
-                                                      "/parameters/new-parameters")}
+   [:form.form-horizontal {:method "POST" :action (if (:name params) (gurl "/parameters/update-parameters")
+                                                      (gurl "/parameters/new-parameters"))}
     (hidden-field :paramid (:paramid params))
     [:div.control-group
      [:label.control-label {:for "problem"} "Problem"]
@@ -78,10 +79,10 @@
 (defhtml parameters-summary
   [params embedded?]
   (let [param-info (if (parameters-latest? (:paramid params))
-                     [:p (link-to (format "/parameters/update/%s" (:paramid params)) "Update")]
+                     [:p (link-to (gurl (format "/parameters/update/%s" (:paramid params))) "Update")]
                      [:p "This is an old version. "
-                      (link-to (format "/parameters/%s" (:paramid (parameters-latest
-                                                              (:problem params) (:name params))))
+                      (link-to (gurl (format "/parameters/%s" (:paramid (parameters-latest
+                                                                         (:problem params) (:name params)))))
                                "View the latest version.")])]
     (if embedded?
       [:div.row-fluid
@@ -130,22 +131,22 @@
   (cond (= "Update" action)
         (do
           (let [paramid-new (update-parameters params)]
-            (resp/redirect (format "/parameters#params%s" paramid-new))))
+            (resp/redirect (gurl (format "/parameters#params%s" paramid-new)))))
         (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/parameters/delete-parameters-confirm" paramid
+         (common/confirm-deletion (gurl "/parameters/delete-parameters-confirm") paramid
                                   "Are you sure you want to delete the parameters?"))
         :else
-        (resp/redirect (format "/parameters#params%s" paramid))))
+        (resp/redirect (gurl (format "/parameters#params%s" paramid)))))
 
 (defn delete-parameters-confirm
   [id choice]
   (if (= choice "Confirm deletion")
     (do
       (delete-parameters id)
-      (resp/redirect "/parameters"))
-    (resp/redirect (format "/parameters#params%s" id))))
+      (resp/redirect (gurl "/parameters")))
+    (resp/redirect (gurl (format "/parameters#params%s" id)))))
 
 (defn show-all-parameters []
   (let [{:keys [comparative non-comparative]} (list-parameters)]
@@ -173,17 +174,17 @@
       (delete-parameters-confirm id choice))
     (POST "/new-parameters" [:as {params :params}]
       (let [paramid-new (new-parameters params)]
-        (resp/redirect (format "/parameters#params%s" paramid-new))))
+        (resp/redirect (gurl (format "/parameters#params%s" paramid-new)))))
     (GET "/update/:paramid" [paramid]
       (if-let [params (get-params paramid)]
         (common/layout
          (format "Parameters: %s/%s" (:problem params) (:name params))
          (parameters-form params))
-        (resp/redirect "/parameters")))
+        (resp/redirect (gurl "/parameters"))))
     (GET "/:paramid" [paramid]
       (if-let [params (get-params paramid)]
         (common/layout
          (format "Parameters: %s/%s" (:problem params) (:name params))
          (parameters-summary params false))
-        (resp/redirect "/parameters")))
+        (resp/redirect (gurl "/parameters"))))
     (GET "/" [] (show-all-parameters))))

@@ -1,4 +1,5 @@
 (ns geppettoweb.views.analyses
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [geppettoweb.views.common :as common])
   (:require [ring.util.response :as resp])
   (:require [clojure.string :as str])
@@ -14,8 +15,8 @@
       [:h1 (format "Update %s" (:name analysis))]
       [:a {:name "new"}
        [:h1 "New analysis"]])]
-   [:form.form-horizontal {:method "POST" :action (if (:name analysis) "/analyses/update-analysis"
-                                                      "/analyses/new-analysis")}
+   [:form.form-horizontal {:method "POST" :action (if (:name analysis) (gurl "/analyses/update-analysis")
+                                                      (gurl "/analyses/new-analysis"))}
     (hidden-field :analysisid (:analysisid analysis))
     [:div.control-group
      [:label.control-label {:for "problems"} "Problems"]
@@ -68,8 +69,8 @@
 
 (defhtml template-analysis-form
   [run analysis comparative-fields control-fields]
-  [:form.form-horizontal {:method "POST" :action (if (:name analysis) "/analyses/update-template-analysis"
-                                                     "/analyses/new-template-analysis")}
+  [:form.form-horizontal {:method "POST" :action (if (:name analysis) (gurl "/analyses/update-template-analysis")
+                                                     (gurl "/analyses/new-template-analysis"))}
    (hidden-field :runid (:runid run))
    (hidden-field :templateid (:templateid analysis))
    [:div.control-group
@@ -125,7 +126,7 @@
       [:div
        [:p
         [:a.code_header "Code"] " / "
-        (link-to (format "/analyses/update/%s" (:analysisid analysis)) "Update")]
+        (link-to (format (gurl "/analyses/update/%s") (:analysisid analysis)) "Update")]
        [:pre.code (:code analysis)]])]])
 
 (defhtml analyses
@@ -177,36 +178,36 @@
   (cond (= "Update" action)
         (do
           (update-analysis analysis)
-          (resp/redirect (format "/analyses#analysis%s" analysisid)))
+          (resp/redirect (gurl (format "/analyses#analysis%s" analysisid))))
         (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/analyses/delete-analysis-confirm" analysisid
+         (common/confirm-deletion (gurl "/analyses/delete-analysis-confirm") analysisid
                                   "Are you sure you want to delete the analysis?"))
         :else
-        (resp/redirect "/analyses")))
+        (resp/redirect (gurl "/analyses"))))
 
 (defn delete-analysis-confirm
   [id choice]
   (if (= choice "Confirm deletion")
     (do
       (delete-analysis id)
-      (resp/redirect "/analyses"))
-    (resp/redirect "/analyses")))
+      (resp/redirect (gurl "/analyses")))
+    (resp/redirect (gurl "/analyses"))))
 
 (defn update-template-analysis-action
   [runid templateid action analysis]
   (cond (= "Update" action)
         (do
           (update-template-analysis analysis)
-          (resp/redirect (format "/run/%s#templateanalysis%s" runid templateid)))
+          (resp/redirect (gurl (format "/run/%s#templateanalysis%s" runid templateid))))
         (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/analyses/delete-template-analysis-confirm" templateid
+         (common/confirm-deletion (gurl "/analyses/delete-template-analysis-confirm") templateid
                                   "Are you sure you want to delete the analysis?"))
         :else
-        (resp/redirect (format "/run/%s" runid))))
+        (resp/redirect (gurl (format "/run/%s" runid)))))
 
 (defn delete-template-analysis-confirm
   [id choice]
@@ -214,8 +215,8 @@
     (if (= choice "Confirm deletion")
       (do
         (delete-template-analysis id)
-        (resp/redirect (format "/run/%d" runid)))
-      (resp/redirect (format "/run/%d" runid)))))
+        (resp/redirect (gurl (format "/run/%d" runid))))
+      (resp/redirect (gurl (format "/run/%d" runid))))))
 
 (defn show-all-analyses []
   (let [analyses (list-analyses)]
@@ -234,7 +235,7 @@
               [:small (format "%s<br/>(%s)"
                               (:problems analysis) (:resultstype analysis))]]]
             [:p (:caption analysis)]
-            [:p (link-to (format "/analyses/update/%s" (:analysisid analysis))
+            [:p (link-to (gurl (format "/analyses/update/%s" (:analysisid analysis)))
                          "Update analysis")]]
            [:div.span8.columns
             [:pre (:code analysis)]]])])
@@ -244,21 +245,21 @@
   (context "/analyses" []
     (POST "/set-run-analyses" [runid analysisids]
       (do (set-run-analyses runid analysisids)
-          (resp/redirect (format "/run/%s#analysis" runid))))
+          (resp/redirect (gurl (format "/run/%s#analysis" runid)))))
     (POST "/update-analysis" [analysisid action :as {analysis :params}]
       (update-analysis-action analysisid action analysis))
     (POST "/delete-analysis-confirm" [id choice]
       (delete-analysis-confirm id choice))
     (POST "/new-analysis" [:as {analysis :params}]
       (let [analysisid (new-analysis analysis)]
-        (resp/redirect (format "/analyses#analysis%d" analysisid))))
+        (resp/redirect (gurl (format "/analyses#analysis%d" analysisid)))))
     (POST "/update-template-analysis" [runid templateid action :as {analysis :params}]
       (update-template-analysis-action runid templateid action analysis))
     (POST "/delete-template-analysis-confirm" [id choice]
       (delete-template-analysis-confirm id choice))
     (POST "/new-template-analysis" [:as {analysis :params}]
       (let [templateid (new-template-analysis analysis)]
-        (resp/redirect (format "/run/%s#templateanalysis%d" (:runid analysis) templateid))))
+        (resp/redirect (gurl (format "/run/%s#templateanalysis%d" (:runid analysis) templateid)))))
     (GET "/update/:analysisid" [analysisid]
       (let [analysis (get-analysis analysisid)]
         (common/layout

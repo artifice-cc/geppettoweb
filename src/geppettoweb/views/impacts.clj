@@ -1,4 +1,5 @@
 (ns geppettoweb.views.impacts
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [geppettoweb.views.common :as common])
   (:require [ring.util.response :as resp])
   (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
@@ -30,7 +31,7 @@
       [:div.row-fluid
        [:h1 (format "%s/%s run %s parameter impacts <small>(%s)</small>"
                     (:problem run) (:name run)
-                    (format "<a href=\"/run/%s\">%s</a>" runid runid)
+                    (link-to (gurl (format "/run/%s" runid)) runid)
                     (if (:comparison run)
                       "comparative" "non-comparative"))]]]
      (effects-table effects)

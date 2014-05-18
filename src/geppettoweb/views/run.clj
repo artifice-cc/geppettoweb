@@ -1,11 +1,11 @@
 (ns geppettoweb.views.run
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [clojure.java.io :as io])
   (:require [geppettoweb.views.common :as common])
   (:require [ring.util.response :as resp])
   (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
   (:use [geppetto.runs :only
          [get-run list-projects set-project delete-run gather-results-fields]])
-  (:use [geppettoweb.config])
   (:use [geppettoweb.views.graphs :only [graphs]])
   (:use [geppettoweb.views.analyses :only [analyses]])
   (:use [geppettoweb.views.parameters :only [parameters-summary]]))
@@ -81,7 +81,7 @@
      [:div.page-header
       [:a {:name "project"}
        [:h1 "Project"]]]
-     [:form.form-horizontal {:method "POST" :action "/run/set-project"}
+     [:form.form-horizontal {:method "POST" :action (gurl "/run/set-project")}
       (hidden-field :runid (:runid run))
       [:div.control-group
        [:label.control-label {:for "project-select"} "Existing project"]
@@ -97,7 +97,7 @@
   [:section
    [:div.page-header
     [:h1 "Delete"]]
-   (form-to [:post "/run/delete-run"]
+   (form-to [:post (gurl "/run/delete-run")]
             (hidden-field :runid (:runid run))
             [:div.form-actions
              [:input.btn.btn-danger {:value "Delete run" :type "submit"}]])])
@@ -105,17 +105,17 @@
 (defn set-project-action
   [project]
   (if (and (= "New..." (:project-select project)) (empty? (:new-project project)))
-    (resp/redirect (format "/run/%s" (:runid project)))
+    (resp/redirect (gurl (format "/run/%s" (:runid project))))
     (do
       (set-project (:runid project) (if (= "New..." (:project-select project))
                                       (:new-project project) (:project-select project)))
-      (resp/redirect (format "/run/%s#project" (:runid project))))))
+      (resp/redirect (gurl (format "/run/%s#project" (:runid project)))))))
 
 (defn delete-run-ask
   [runid]
   (common/layout
    "Confirm deletion"
-   (common/confirm-deletion "/run/delete-run-confirm" runid
+   (common/confirm-deletion (gurl "/run/delete-run-confirm") runid
                             "Are you sure you want to delete the run?")))
 
 (defn delete-run-confirm
@@ -123,8 +123,8 @@
   (if (= choice "Confirm deletion")
     (do
       (delete-run id)
-      (resp/redirect "/"))
-    (resp/redirect (format "/run/%s" id))))
+      (resp/redirect (gurl "/")))
+    (resp/redirect (gurl (format "/run/%s" id)))))
 
 (defn show-run
   [runid]
@@ -139,9 +139,9 @@
                (:problem run) (:name run) runid
                (if (:comparison run)
                  "comparative" "non-comparative"))]]]
-     [:p (link-to (format "/run/tables/%s" runid)
+     [:p (link-to (gurl (format "/run/tables/%s" runid))
                   "View results tables...")]
-     [:p (link-to (format "/run/impacts/%s" runid)
+     [:p (link-to (gurl (format "/run/impacts/%s" runid))
                   "View parameter impacts...")]
      (graphs run comparative-fields control-fields)
      (analyses run comparative-fields control-fields)

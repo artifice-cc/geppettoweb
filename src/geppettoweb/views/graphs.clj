@@ -1,10 +1,10 @@
 (ns geppettoweb.views.graphs
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [geppettoweb.views.common :as common])
   (:require [ring.util.response :as resp])
   (:require [clojure.string :as str])
   (:require [clojure.set :as set])
   (:use [geppettoweb.models.graphs :exclude [graphs]])
-  (:use [geppettoweb.config])
   (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util))
 
 (defhtml graph-form
@@ -14,8 +14,8 @@
     [:a {:name "new"}
      [:h1 (if (:name graph) (format "Update %s" (:name graph))
               "New graph")]]]
-   [:form.form-horizontal {:method "POST" :action (if (:name graph) "/graphs/update-graph"
-                                                      "/graphs/new-graph")}
+   [:form.form-horizontal {:method "POST" :action (if (:name graph) (gurl "/graphs/update-graph")
+                                                      (gurl "/graphs/new-graph"))}
     (hidden-field :graphid (:graphid graph))
     [:div.control-group
      [:label.control-label {:for "problems"} "Problems"]
@@ -87,8 +87,8 @@
 
 (defhtml template-graph-form
   [run graph comparative-fields control-fields]
-  [:form.form-horizontal {:method "POST" :action (if (:name graph) "/graphs/update-template-graph"
-                                                     "/graphs/new-template-graph")}
+  [:form.form-horizontal {:method "POST" :action (if (:name graph) (gurl "/graphs/update-template-graph")
+                                                     (gurl "/graphs/new-template-graph"))}
    (hidden-field :runid (:runid run))
    (hidden-field :templateid (:templateid graph))
    [:div.control-group
@@ -174,7 +174,7 @@
 
 (defhtml graph-download-form
   [run graph]
-  [:form.form-horizontal {:method "POST" :action "/graph/download"}
+  [:form.form-horizontal {:method "POST" :action (gurl "/graph/download")}
    (hidden-field :runid (:runid run))
    (hidden-field :graphid (:graphid graph))
    (hidden-field :templateid (:templateid graph))
@@ -250,12 +250,12 @@
                           run graph comparative-fields control-fields)]]
            [:p
             [:a.code_header "Code"] " / "
-            (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")])
+            (link-to (gurl (format "/graphs/update/%s" (:graphid graph))) "Update")])
          [:pre.code {:style (format "width: %dpx;" widthpx)} (:code graph)]]        
         [:div
          [:img {:src (if (:templateid graph)
-                       (format "/graph/template/%s/%s/png" (:runid run) (:templateid graph))
-                       (format "/graph/%s/%s/png" (:runid run) (:graphid graph)))
+                       (gurl (format "/graph/template/%s/%s/png" (:runid run) (:templateid graph)))
+                       (gurl (format "/graph/%s/%s/png" (:runid run) (:graphid graph))))
                 :width widthpx
                 :height heightpx}]
          (if (not (some #{:no-select} opts))
@@ -273,7 +273,7 @@
              [:div
               [:p
                [:a.code_header "Code"] " / "
-               (link-to (format "/graphs/update/%s" (:graphid graph)) "Update")
+               (link-to (gurl (format "/graphs/update/%s" (:graphid graph))) "Update")
                " / "
                [:a.download_header "Download"]]
               [:pre.code (:code graph)]
@@ -302,7 +302,7 @@
             [:p [:b [:a.fields_checkboxes_header "Choose graphs..."]]]]]
           [:div.fields_checkboxes
            (form-to
-            [:post "/graphs/set-run-graphs"]
+            [:post (gurl "/graphs/set-run-graphs")]
             (hidden-field :runid (:runid run))
             [:div.row-fluid
              (for [graph-group (partition-all (int (Math/ceil (/ (count avail-graphs) 2)))
@@ -329,39 +329,39 @@
   (cond (= "Update" action)
         (do
           (update-graph graph)
-          (resp/redirect (format "/graphs#graph%s" graphid)))
+          (resp/redirect (gurl (format "/graphs#graph%s" graphid))))
         (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/graphs/delete-graph-confirm" graphid
+         (common/confirm-deletion (gurl "/graphs/delete-graph-confirm") graphid
                                   "Are you sure you want to delete the graph?"))
         :else
-        (resp/redirect "/graphs")))
+        (resp/redirect (gurl "/graphs"))))
 
 (defn delete-graph-confirm
   [id choice]
   (if (= choice "Confirm deletion")
     (do
       (delete-graph id)
-      (resp/redirect "/graphs"))
-    (resp/redirect "/graphs")))
+      (resp/redirect (gurl "/graphs")))
+    (resp/redirect (gurl "/graphs"))))
 
 (defn update-template-graph-action
   [runid templateid action graph]
   (cond (= "Update" action)
         (do
           (update-template-graph graph)
-          (resp/redirect (format "/run/%s#templategraph%s" runid templateid)))
+          (resp/redirect (gurl (format "/run/%s#templategraph%s" runid templateid))))
         (= "Clone" action)
         (let [new-templateid (new-template-graph graph)]
-          (resp/redirect (format "/run/%s#templategraph%d" (:runid graph) new-templateid)))
+          (resp/redirect (gurl (format "/run/%s#templategraph%d" (:runid graph) new-templateid))))
         (= "Delete" action)
         (common/layout
          "Confirm deletion"
-         (common/confirm-deletion "/graphs/delete-template-graph-confirm" templateid
+         (common/confirm-deletion (gurl "/graphs/delete-template-graph-confirm") templateid
                                   "Are you sure you want to delete the graph?"))
         :else
-        (resp/redirect (format "/run/%s" runid))))
+        (resp/redirect (gurl (format "/run/%s" runid)))))
 
 (defn delete-template-graph-confirm
   [id choice]
@@ -369,8 +369,8 @@
     (if (= choice "Confirm deletion")
       (do
         (delete-template-graph id)
-        (resp/redirect (format "/run/%d" runid)))
-      (resp/redirect (format "/run/%d" runid)))))
+        (resp/redirect (gurl (format "/run/%d" runid))))
+      (resp/redirect (gurl (format "/run/%d" runid))))))
 
 (defn show-all-graphs []
   (let [graphs (list-graphs)]
@@ -390,7 +390,7 @@
                          (:problems graph) (:width graph) (:height graph)
                          (:resultstype graph))]]]
             [:p (:caption graph)]
-            [:p (link-to (format "/graphs/update/%s" (:graphid graph))
+            [:p (link-to (gurl (format "/graphs/update/%s" (:graphid graph)))
                          "Update graph")]]
            [:div.span8.columns
             [:pre (:code graph)]]])])
@@ -422,21 +422,21 @@
   (context "/graphs" []
     (POST "/set-run-graphs" [runid graphids]
       (do (set-run-graphs runid graphids)
-          (resp/redirect (format "/run/%s#graphs" runid))))
+          (resp/redirect (gurl (format "/run/%s#graphs" runid)))))
     (POST "/update-graph" [graphid action :as {graph :params}]
       (update-graph-action graphid action graph))
     (POST "/delete-graph-confirm" [id choice]
       (delete-graph-confirm id choice))
     (POST "/new-graph" [:as {graph :params}]
       (let [graphid (new-graph graph)]
-        (resp/redirect (format "/graphs#graph%d" graphid))))
+        (resp/redirect (gurl (format "/graphs#graph%d" graphid)))))
     (POST "/update-template-graph" [runid templateid action :as {graph :params}]
       (update-template-graph-action runid templateid action graph))
     (POST "/delete-template-graph-confirm" [id choice]
       (delete-template-graph-confirm id choice))
     (POST "/new-template-graph" [:as {graph :params}]
       (let [templateid (new-template-graph graph)]
-        (resp/redirect (format "/run/%s#templategraph%d" (:runid graph) templateid))))
+        (resp/redirect (gurl (format "/run/%s#templategraph%d" (:runid graph) templateid)))))
     (GET "/update/:graphid" [graphid]
       (let [graph (get-graph graphid)]
         (common/layout

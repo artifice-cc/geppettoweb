@@ -1,4 +1,5 @@
 (ns geppettoweb.views.tables
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [geppettoweb.views.common :as common])
   (:require [ring.util.response :as resp])
   (:use compojure.core hiccup.def hiccup.element hiccup.form hiccup.util)
@@ -13,7 +14,7 @@
 
 (defhtml run-fields-form
   [runid tabletype on-fields fields]
-  [:form {:action "/run/tables/set-fields" :method "POST"}
+  [:form {:action (gurl "/run/tables/set-fields") :method "POST"}
    (hidden-field :runid runid)
    (hidden-field :tabletype tabletype)
    [:div.row-fluid
@@ -55,6 +56,7 @@
   (let [control-fields (gather-results-fields runid :control)
         on-fields (get-table-fields runid :non-comparative)
         results (get-results runid :control on-fields)]
+    (prn results)
     [:section#non-comparative-results
      [:a {:name "results"}
       [:h1 "Results"]]
@@ -64,7 +66,7 @@
 (defn set-fields
   [runid tabletype fields]
   (set-table-fields runid tabletype fields)
-  (resp/redirect (format "/run/tables/%s#%s" runid (format "%s-results" (name tabletype)))))
+  (resp/redirect (gurl (format "/run/tables/%s#%s" runid (format "%s-results" (name tabletype))))))
 
 (defn show-tables
   [runid]
@@ -75,7 +77,7 @@
       [:div.row-fluid
        [:h1 (format "%s/%s run %s <small>(%s)</small>"
                (:problem run) (:name run)
-               (format "<a href=\"/run/%s\">%s</a>" runid runid)
+               (link-to (gurl (format "/run/%s" runid)) runid)
                (if (:comparison run)
                  "comparative" "non-comparative"))]]]
      (if (:comparison run)

@@ -8,7 +8,6 @@
   (:use [geppetto.runs])
   (:use [geppetto.misc])
   (:use [geppetto.r])
-  (:use [geppettoweb.config])
   (:use [geppettoweb.models.commonr]))
 
 (defn analysis-count
