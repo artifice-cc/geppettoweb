@@ -38,3 +38,31 @@ code, pre {
     font-family: Consolas, monospace;
 }
 
+#geppetto-nav-column-container {
+    top: 0;
+    position: fixed;
+    margin-top: 52px;
+    height: 100%;
+}
+
+#geppetto-nav-column {
+    overflow: auto;
+    height: 100%;
+}
+
+#geppetto-main-column {
+    padding-left: 23.404255319148934%;
+}
+
+.ace_editor {
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -moz-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border linear .2s,box-shadow linear .2s;
+    -moz-transition: border linear .2s,box-shadow linear .2s;
+    -o-transition: border linear .2s,box-shadow linear .2s;
+    transition: border linear .2s,box-shadow linear .2s;
+    border: 1px solid #bbb;
+    
+}
+

@@ -1,7 +1,8 @@
-
+context = /myexp
+title = Experiments
 geppetto_dbhost = localhost
 geppetto_dbport = 3306
-geppetto_dbname = retrospect
+geppetto_dbname = mydb
 geppetto_dbuser = user
 geppetto_dbpassword = password
 

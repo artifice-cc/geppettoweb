@@ -1,14 +1,15 @@
 library(reshape2)
 
-m <- melt(control, id.vars=c("simulation"
+m <- melt(control, id.vars=c("simulation",
                      <(if (:facethoriz graph) (format ", \"%s\"" (:facethoriz graph)) "")>
                      <(if (:facetvert graph) (format ", \"%s\"" (:facetvert graph)) "")>
                      <(if (:color graph) (format ", \"%s\"" (:color graph)) "")>
                      <(if (:linetype graph) (format ", \"%s\"" (:linetype graph)) "")>
+                     <(format "\"%s\"" (:xfield graph))>
                      ),
           measure.vars=c(<(format "\"%s\"" (:xfield graph))>))
 
-p <- ggplot(m, aes(x="value",
+p <- ggplot(m, aes(x=value,
                    <(if (:color graph) (format "color=factor(%s)," (:color graph)) "")>
                    <(if (:linetype graph) (format "linetype=factor(%s)," (:linetype graph)) "")>
                    ))
@@ -27,5 +28,5 @@ p <- p + facet_grid(
 <(str (if (:facetvert graph) (:facetvert graph) "."))>
 ~
 <(str (if (:facethoriz graph) (:facethoriz graph) "."))>
-)
+, labeller = facet_labeller)
 <")>

@@ -1,18 +1,18 @@
-(defproject cc.artifice/geppettoweb "2.5.0-SNAPSHOT"
+(defproject cc.artifice/geppettoweb "3.0.0-SNAPSHOT"
   :description "Web-based viewer for Geppetto data."
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [cc.artifice/geppetto "3.0.0-SNAPSHOT"]
-                 [compojure "1.1.5"]
-                 [ring/ring-core "1.1.7"]
-                 [hiccup "1.0.4"]
-                 [org.clojure/java.jdbc "0.2.3"]
-                 [korma "0.3.0-RC2"]
-                 [mysql/mysql-connector-java "5.1.6"]
-                 [org.markdownj/markdownj "0.3.0-1.0.2b4"]
-                 [fleet "0.9.5"]
-                 [propertea "1.2.3"]]
+                 [compojure "1.1.8"]
+                 [ring/ring-core "1.2.2"]
+                 [hiccup "1.0.5"]
+                 [org.clojure/java.jdbc "0.3.3"]
+                 [korma "0.3.1"]
+                 [mysql/mysql-connector-java "5.1.30"]
+                 [org.pegdown/pegdown "1.4.2"]
+                 [fleet "0.10.1"]
+                 [propertea "1.3.1"]
+                 [environ "0.5.0"]]
   :plugins [[lein-ring "0.8.2"]]
-  :profiles {:dev {:dependencies [[ring-mock "0.1.3"]]}}
-  :ring {:handler geppettoweb.handler/app
-         :init geppettoweb.config/load-config})
+  :profiles {:dev {:dependencies [[ring-mock "0.1.5"]]}}
+  :ring {:handler geppettoweb.handler/app})
 

@@ -8,7 +8,6 @@
   (:use [geppetto.runs])
   (:use [geppetto.misc])
   (:use [geppetto.r])
-  (:use [geppettoweb.config])
   (:use [geppettoweb.models.commonr]))
 
 (defn analysis-count
@@ -77,6 +76,16 @@
   [run templateid]
   (.delete (io/file (format "%s/template-analysis-%d.txt" (:recorddir run) templateid))))
 
+(defn cleanup-analysis-output
+  [output]
+  (-> output
+      (str/replace #"Loading required package: \w+" "")
+      (str/replace #"(?s)<p\s+align=\s*center\s*>\s*<table\s+cellspacing=0\s+border=1>\s*<caption\s+align=bottom\s+class=captiondataframe>\s*</caption>\s*<tr>\s*<td>(.*?)</td>\s*</table>\s*<br>" "$1")
+      (str/replace #"<table border=0 class=dataframe>"
+                   "<table class=\"tablesorter zebra-striped\">")
+      (str/replace #"(?s)<tbody>\s*<tr\s*class\s*=\s*firstline\s*>(.*?)</tr>"
+                   "<thead><tr>$1</tr></thead><tbody>")))
+
 (defn get-analysis-output
   [run analysis]
   (let [analysis-fname (analysis-filename run (:analysisid analysis) (:templateid analysis))]
@@ -101,9 +110,9 @@
         ;; run Rscript
         (let [status (sh "/usr/bin/Rscript" rscript-fname)]
           (with-open [writer (io/writer analysis-fname)]
-            (.write writer (str (:out status) (:err status))))
+            (.write writer (cleanup-analysis-output (str (:out status) (:err status)))))
           (.delete (io/file rscript-fname))
-          (str (:out status) (:err status)))))))
+          (cleanup-analysis-output (str (:out status) (:err status))))))))
 
 (defn update-analysis
   [analysis]

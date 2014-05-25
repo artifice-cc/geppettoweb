@@ -38,5 +38,5 @@ p <- p + facet_grid(
 <(str (if (:facetvert graph) (:facetvert graph) "."))>
 ~
 <(str (if (:facethoriz graph) (:facethoriz graph) "."))>
-)
+, labeller = facet_labeller)
 <")>

@@ -1,4 +1,5 @@
 (ns geppettoweb.views.overview
+  (:use [geppettoweb.views.common :only [gurl]])
   (:require [clojure.set :as set])
   (:require [clojure.string :as str])
   (:require [geppettoweb.views.common :as common])
@@ -11,10 +12,10 @@
 (defhtml run-table-row
   [run show-delete?]
   [:tr
-   [:td (link-to (format "/run/%s" (:runid run)) (:runid run))]
+   [:td (link-to (gurl (format "/run/%s" (:runid run))) (:runid run))]
    [:td [:div {:style "white-space: nowrap;"} (common/date-format (:starttime run))]]
    [:td (:username run)]
-   [:td (link-to (format "/parameters/%d" (:paramid run)) (:name run))]
+   [:td (link-to (gurl (format "/parameters/%d" (:paramid run))) (:name run))]
    [:td (:simcount run)]
    [:td (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"
                     (:commit run))
@@ -66,7 +67,7 @@
   (let [runs-grouped-project (group-by :project (list-runs))]
     (common/layout
      "Overview"
-     (form-to [:post "/delete-runs"]
+     (form-to [:post (gurl "/delete-runs")]
               (runs-by-project runs-grouped-project)
               [:div.form-actions
                  [:input.btn.btn-danger
@@ -74,7 +75,7 @@
 
 (defroutes overview-routes
   (POST "/delete-runs" [:as {delete :params}]
-    (do (doseq [runid (:delete runs)]
-          (delete-run runid))
-        (resp/redirect "/")))
+    (do (doseq [runid (:delete delete)]
+             (delete-run runid))
+        (resp/redirect (gurl "/"))))
   (GET "/" [] (overview)))
