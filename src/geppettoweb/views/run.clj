@@ -47,7 +47,7 @@
                                        (* 1000 60)))))]
         [:dd (format "%s%s" (common/date-format (:starttime run)) mins)])]]
     [:div.span4.columns
-     [:dl [:dt "Reptitions"]
+     [:dl [:dt "Repetitions"]
       [:dd (:repetitions run)]]
      [:dl [:dt "Seed"]
       [:dd (:seed run)]]]
