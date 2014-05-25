@@ -34,8 +34,7 @@
         on-fields (get-table-fields runid :comparative)
         results (get-results runid :comparative on-fields)]
     [:section#comparative-results
-     [:a {:name "comparative-results"}
-      [:h2 "Comparative results"]]
+     [:h2 [:a {:name "comparative-results"}] "Comparative results"]
      (results-table results on-fields)
      (run-fields-form runid :comparative on-fields comparative-fields)]))
 
@@ -46,8 +45,7 @@
         control-results (get-results runid :control on-fields)
         comparison-results (get-results runid :comparison on-fields)]    
     [:section#paired-results
-     [:a {:name "control-comparison-results"}
-      [:h2 "Control/comparison results"]]
+     [:h2 [:a {:name "control-comparison-results"}] "Control/comparison results"]
      (paired-results-table control-results comparison-results on-fields)
      (run-fields-form runid :paired on-fields control-fields)]))
 
@@ -56,10 +54,8 @@
   (let [control-fields (gather-results-fields runid :control)
         on-fields (get-table-fields runid :non-comparative)
         results (get-results runid :control on-fields)]
-    (prn results)
     [:section#non-comparative-results
-     [:a {:name "results"}
-      [:h1 "Results"]]
+     [:h1 [:a {:name "results"}] "Results"]
      (results-table results on-fields)
      (run-fields-form runid :non-comparative on-fields control-fields)]))
 
@@ -75,11 +71,12 @@
      (format "%s/%s run %s" (:problem run) (:name run) runid)
      [:div.header.jumbotron.subhead
       [:div.row-fluid
-       [:h1 (format "%s/%s run %s <small>(%s)</small>"
-               (:problem run) (:name run)
-               (link-to (gurl (format "/run/%s" runid)) runid)
-               (if (:comparison run)
-                 "comparative" "non-comparative"))]]]
+       [:h1 [:a {:name "tables"}]
+        (format "%s/%s run <a href=\"%s\">%s</a> <small>(%s)</small>"
+                (:problem run) (:name run)
+                (gurl (format "/run/%s" runid)) runid
+                (if (:comparison run)
+                  "comparative" "non-comparative"))]]]
      (if (:comparison run)
        (run-comparative-results-table runid))
      (if (:comparison run)

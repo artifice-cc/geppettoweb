@@ -29,11 +29,12 @@
      (format "%s/%s run %s parameter impacts" (:problem run) (:name run) runid)
      [:div.header.jumbotron.subhead
       [:div.row-fluid
-       [:h1 (format "%s/%s run %s parameter impacts <small>(%s)</small>"
-                    (:problem run) (:name run)
-                    (link-to (gurl (format "/run/%s" runid)) runid)
-                    (if (:comparison run)
-                      "comparative" "non-comparative"))]]]
+       [:h1 [:a {:name "impacts"}]
+        (format "%s/%s run <a href=\"%s\">%s</a> parameter impacts <small>(%s)</small>"
+                (:problem run) (:name run)
+                (gurl (format "/run/%s" runid)) runid
+                (if (:comparison run)
+                  "comparative" "non-comparative"))]]]
      (effects-table effects)
      (run-parameters run)
      (run-metainfo run)
@@ -41,6 +42,6 @@
 
 (defroutes impacts-routes
   (context "/run/impacts" []
-           (GET "/:runid" [runid]
-                (show-impacts runid))))
+    (GET "/:runid" [runid]
+      (show-impacts runid))))
 

@@ -9,7 +9,7 @@
                  [korma "0.3.1"]
                  [mysql/mysql-connector-java "5.1.30"]
                  [org.pegdown/pegdown "1.4.2"]
-                 [fleet "0.10.1"]
+                 [cc.artifice/fleet "0.10.2"]
                  [propertea "1.3.1"]
                  [environ "0.5.0"]]
   :plugins [[lein-ring "0.8.2"]]

@@ -17,9 +17,8 @@
   [:section#parameters-form
    [:div.page-header
     (if (and (:name params) (:problem params))
-      [:h1 (format "Update %s/%s" (:problem params) (:name params))]
-      [:a {:name "form"}
-       [:h1 "New parameters"]])]
+      [:h1 [:a {:name "update"}] (format "Update %s/%s" (:problem params) (:name params))]
+      [:h1 [:a {:name "new"}] "New parameters"])]
    [:form.form-horizontal {:method "POST" :action (if (:name params) (gurl "/parameters/update-parameters")
                                                       (gurl "/parameters/new-parameters"))}
     (hidden-field :paramid (:paramid params))
@@ -87,13 +86,13 @@
     (if embedded?
       [:div.row-fluid
        [:div.span12.columns
-        [:a {:name (format "params%d" (:paramid params))}
-         [:h2 (format "%s/%s" (:problem params) (:name params))]]
+        [:h2 [:a {:name (format "params%d" (:paramid params))}]
+         (format "%s/%s" (:problem params) (:name params))]
         param-info
         [:p (:description params)]]]
       [:section
        [:div.page-header
-        [:h1 (format "%s/%s" (:problem params) (:name params))]]
+        [:h1 [:a {:name "params"}] (format "%s/%s" (:problem params) (:name params))]]
        param-info
        [:p (:description params)]]))
   (if (:comparison params)
@@ -154,14 +153,14 @@
      "Parameters"
      [:section#comparative-parameters
       [:div.page-header
-       [:a {:name "comparative"}
-        [:h1 "Comparative parameters"]]]
+       [:h1 [:a {:name "comparative"}]
+        "Comparative parameters"]]
       (for [params comparative]
         (parameters-summary params true))]
      [:section#non-comparative-parameters
       [:div.page-header
-       [:a {:name "noncomparative"}
-        [:h1 "Non-comparative parameters"]]]
+       [:h1 [:a {:name "noncomparative"}]
+        "Non-comparative parameters"]]
       (for [params non-comparative]
         (parameters-summary params true))]
      (parameters-form nil))))

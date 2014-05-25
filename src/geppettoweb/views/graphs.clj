@@ -11,9 +11,9 @@
   [graph]
   [:section#graph-form
    [:div.page-header
-    [:a {:name "new"}
-     [:h1 (if (:name graph) (format "Update %s" (:name graph))
-              "New graph")]]]
+    [:h1 [:a {:name "new"}]
+     (if (:name graph) (format "Update %s" (:name graph))
+         "New graph")]]
    [:form.form-horizontal {:method "POST" :action (if (:name graph) (gurl "/graphs/update-graph")
                                                       (gurl "/graphs/new-graph"))}
     (hidden-field :graphid (:graphid graph))
@@ -70,7 +70,7 @@
      (if (:name graph)
        [:input.btn.btn-danger
         {:value "Delete" :name "action" :type "submit"}])]]
-   [:a {:name "help"} [:h1 "Help"]]
+   [:h1 [:a {:name "help"}] "Help"]
    (common/convert-md "help/graphs.md")])
 
 (defhtml template-graph-fields
@@ -219,20 +219,24 @@
 (defn template-graph-name
   [graph]
   (if (not= "" (:name graph)) (format "%s (%s)" (:name graph) (:template graph))
-      (format "(%s vs. %s %s)"
-              (if (not= "" (:xlabel graph)) (:xlabel graph) (:xfield graph))
-              (if (not= "" (:ylabel graph)) (:ylabel graph) (:yfield graph))
-              (:template graph))))
+      (if (:yfield graph)
+        (format "(%s vs. %s %s)"
+                (if (not= "" (:xlabel graph)) (:xlabel graph) (:xfield graph))
+                (if (not= "" (:ylabel graph)) (:ylabel graph) (:yfield graph))
+                (:template graph))
+        (format "(%s %s)"
+                (if (not= "" (:xlabel graph)) (:xlabel graph) (:xfield graph))
+                (:template graph)))))
 
 (defhtml show-graph
   [run graph comparative-fields control-fields & opts]
   (let [widthpx (int (* 100 (:width graph)))
         heightpx (int (* 100 (:height graph)))]
     [:div
-     [:a {:name (if (:templateid graph)
-                  (format "templategraph%d" (:templateid graph))
-                  (format "graph%d" (:graphid graph)))}
-      [:h2 (if (:templateid graph) (template-graph-name graph) (:name graph))]]
+     [:h2 [:a {:name (if (:templateid graph)
+                       (format "templategraph%d" (:templateid graph))
+                       (format "graph%d" (:graphid graph)))}]
+      (if (:templateid graph) (template-graph-name graph) (:name graph))]
      [:p (:caption graph)]
      [:p
       (if-let [err (:err (render-graph-file run graph "png" "website"
@@ -282,15 +286,15 @@
 (defhtml graphs
   [run comparative-fields control-fields & opts]
   (let [avail-graphs (filter #(or (:comparison run)
-                             (= "non-comparative" (:resultstype %)))
-                        (get (list-graphs) (:problem run)))
+                                  (= "non-comparative" (:resultstype %)))
+                             (get (list-graphs) (:problem run)))
         active-graphs (set/union (set (get-run-graphs (:runid run)))
-                             (set (get-run-template-graphs (:runid run))))]
+                                 (set (get-run-template-graphs (:runid run))))]
     (if (or (not-empty avail-graphs) (not (some #{:no-select} opts)))
       [:section
        [:div.page-header
-        [:a {:name "graphs"}
-         [:h1 "Graphs"]]]
+        [:h1 [:a {:name "graphs"}]
+         "Graphs"]]
        (if (empty? active-graphs)
          [:p "No graphs."]
          (for [g (sort-by :name active-graphs) :when g]
@@ -379,16 +383,16 @@
      (for [problem (sort (keys graphs))]
        [:section {:id problem}
         [:div.page-header
-         [:a {:name (str/replace problem #"\W" "_")}
-          [:h1 (format "%s graphs" problem)]]]
+         [:h1 [:a {:name (str/replace problem #"\W" "_")}]
+          (format "%s graphs" problem)]]
         (for [graph (sort-by :name (get graphs problem))]
           [:div.row-fluid
            [:div.span4.columns
-            [:a {:name (format "graph%d" (:graphid graph))}
-             [:h2 (:name graph) [:br]
-              [:small (format "%s<br/>(%.1f by %.1f inches)<br/>(%s)"
-                         (:problems graph) (:width graph) (:height graph)
-                         (:resultstype graph))]]]
+            [:h2 [:a {:name (format "graph%d" (:graphid graph))}]
+             (:name graph) [:br]
+             [:small (format "%s<br/>(%.1f by %.1f inches)<br/>(%s)"
+                             (:problems graph) (:width graph) (:height graph)
+                             (:resultstype graph))]]
             [:p (:caption graph)]
             [:p (link-to (gurl (format "/graphs/update/%s" (:graphid graph)))
                          "Update graph")]]

@@ -40,9 +40,9 @@
 (defhtml runs
   [problem runs project]
   [:div
-   [:a {:name (str (str/replace (or problem "Unknown") #"\W" "_")
-                   (str/replace (or project "Unknown") #"\W" "_"))}
-    [:h2 problem]]
+   [:h2 [:a {:name (str (str/replace (or problem "Unknown") #"\W" "_")
+                        (str/replace (or project "Unknown") #"\W" "_"))}]
+    problem]
    (runs-table runs problem true)])
 
 (defhtml runs-by-problem
@@ -53,15 +53,15 @@
 (defhtml runs-by-project
   [runs-grouped-project]
   (map (fn [project]
-       (let [project-id (if project (str/replace project #"\W" "_") "Unknown")
-             runs-grouped-problem
-             (group-by :problem (get runs-grouped-project project))]
-         [:section {:id (format "runs-project-%s" project-id)}
-          [:div.page-header
-           [:a {:name (or project-id "unknown")}
-            [:h1 (or project "Unknown project")]]]
-          (runs-by-problem runs-grouped-problem project)]))
-     (sort (keys runs-grouped-project))))
+         (let [project-id (if project (str/replace project #"\W" "_") "Unknown")
+               runs-grouped-problem
+               (group-by :problem (get runs-grouped-project project))]
+           [:section {:id (format "runs-project-%s" project-id)}
+            [:div.page-header
+             [:h1 [:a {:name (or project-id "unknown")}]
+              (or project "Unknown project")]]
+            (runs-by-problem runs-grouped-problem project)]))
+       (sort (keys runs-grouped-project))))
 
 (defn overview []
   (let [runs-grouped-project (group-by :project (list-runs))]

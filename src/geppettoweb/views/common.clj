@@ -34,18 +34,18 @@
            [:li (link-to (gurl "/graphs") "Graphs")]
            [:li (link-to (gurl "/analyses") "Analyses")]]]]]]
       [:div.container-fluid
-       (let [headers (re-seq #"<a name=\"([^\"]+)\"><h(\d)>([^<]+)" chtml)]
+       (let [headers (re-seq (re-pattern "<h(\\d)>\\s*<a name=\"(.+?)\">\\s*</a>\\s*(.*?)\\s*(<small|</h\\1>)") chtml)]
          [:div.row-fluid
           [:div#geppetto-nav-column-container.span3
            [:div#geppetto-nav-column
             [:p
-             (map (fn [[_ anchor ds title]]
+             (map (fn [[_ ds anchor title]]
                     (let [a (str/replace anchor #"\W" "_")
                           l (link-to (format "#%s" a) title)
                           d (Integer/parseInt ds)]
-                      [:div (cond (= d 1) [:b l]
-                                  (= d 2) [:i [:span "&nbsp;&nbsp;" l]]
-                                  :else [:span "&nbsp;&nbsp;&nbsp;&nbsp;" l])])) headers)]]]
+                      (cond (= d 1) [:div.sidebar-h1 [:b l]]
+                            (= d 2) [:div.sidebar-h2 [:i [:span "&nbsp;&nbsp;" l]]]
+                            :else [:div.sidebar-hlower [:span "&nbsp;&nbsp;&nbsp;&nbsp;" l]]))) headers)]]]
           [:div#geppetto-main-column.span11 chtml]])]])))
 
 (defhtml date-format

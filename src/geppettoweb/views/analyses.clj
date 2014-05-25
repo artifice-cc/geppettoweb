@@ -12,9 +12,8 @@
   [:section#analysis-form
    [:div.page-header
     (if (:name analysis)
-      [:h1 (format "Update %s" (:name analysis))]
-      [:a {:name "new"}
-       [:h1 "New analysis"]])]
+      [:h1 [:a {:name "update"}] (format "Update %s" (:name analysis))]
+      [:h1 [:a {:name "new"}] "New analysis"])]
    [:form.form-horizontal {:method "POST" :action (if (:name analysis) (gurl "/analyses/update-analysis")
                                                       (gurl "/analyses/new-analysis"))}
     (hidden-field :analysisid (:analysisid analysis))
@@ -106,11 +105,11 @@
 (defhtml show-analysis
   [run analysis comparative-fields control-fields]
   [:div
-   [:a {:name (if (:templateid analysis)
-                (format "templateanalysis%d" (:templateid analysis))
-                (format "analysis%d" (:analysisid analysis)))}
-    [:h2 (format "%s%s" (:name analysis)
-            (if (:templateid analysis) (format " (template %s)" (:template analysis)) ""))]]
+   [:h2 [:a {:name (if (:templateid analysis)
+                     (format "templateanalysis%d" (:templateid analysis))
+                     (format "analysis%d" (:analysisid analysis)))}]
+    (format "%s%s" (:name analysis)
+            (if (:templateid analysis) (format " (template %s)" (:template analysis)) ""))]
    [:p (:caption analysis)]
    [:p
     (let [output (get-analysis-output run analysis)]
@@ -138,8 +137,7 @@
                                (set (get-run-template-analyses (:runid run))))]
     [:section
      [:div.page-header
-      [:a {:name "analyses"}
-       [:h1 "Analyses"]]]
+      [:h1 [:a {:name "analyses"}] "Analyses"]]
      (if (empty? active-analyses)
        [:p "No analyses."]
        (for [a (sort-by :name active-analyses) :when a]
@@ -225,15 +223,14 @@
      (for [problem (sort (keys analyses))]
        [:section {:id problem}
         [:div.page-header
-         [:a {:name (str/replace problem #"\W" "_")}
-          [:h1 (format "%s analyses" problem)]]]
+         [:h1 [:a {:name (str/replace problem #"\W" "_")}] (format "%s analyses" problem)]]
         (for [analysis (sort-by :name (get analyses problem))]
           [:div.row-fluid
            [:div.span4.columns
-            [:a {:name (format "analysis%d" (:analysisid analysis))}
-             [:h2 (:name analysis) [:br]
-              [:small (format "%s<br/>(%s)"
-                              (:problems analysis) (:resultstype analysis))]]]
+            [:h2 [:a {:name (format "analysis%d" (:analysisid analysis))}]
+             (:name analysis) [:br]
+             [:small (format "%s<br/>(%s)"
+                             (:problems analysis) (:resultstype analysis))]]
             [:p (:caption analysis)]
             [:p (link-to (gurl (format "/analyses/update/%s" (:analysisid analysis)))
                          "Update analysis")]]

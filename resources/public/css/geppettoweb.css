@@ -66,3 +66,15 @@ code, pre {
     
 }
 
+div.sidebar-h1 {
+    margin-top: 0.65em;
+    margin-bottom: 0.15em;
+}
+
+div.sidebar-h2 {
+    margin-bottom: 0.1em;
+}
+
+div.sidebar-hlower {
+    margin-bottom: 0.05em;
+}

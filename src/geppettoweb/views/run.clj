@@ -20,11 +20,10 @@
   [run]
   [:section
    [:div.page-header
-    [:a {:name "metadata"}
-     [:h1 "Metadata"]]]
+    [:h1 [:a {:name "metadata"}] "Metadata"]]
    [:div.row-fluid
     [:div.span12.columns
-     [:h2 "Commit message"]
+     [:h2 [:a {:name "commit"}] "Commit message"]
      [:p (link-to (format "https://bitbucket.org/joshuaeckroth/retrospect/changeset/%s"
                      (:commit run))
                   (subs (:commit run) 0 10))
@@ -34,7 +33,7 @@
      [:pre (:commitmsg run)]]]
    [:div.row-fluid
     [:div.span12.columns
-     [:h2 "Simulation properties"]]]
+     [:h2 [:a {:name "simprops"}] "Simulation properties"]]]
    [:div.row-fluid
     [:div.span4.columns
      [:dl [:dt "User@host"]
@@ -58,19 +57,18 @@
       [:dd (if (:comparison run) "comparative" "non-comparative")]]]]
    [:div.row-fluid
     [:div.span12.columns
-     [:h2 "Record directory"]
+     [:h2 [:a {:name "recdir"}] "Record directory"]
      [:p (:recorddir run)]]]
    [:div.row-fluid
     [:div.span12.columns
-     [:h2 "Run command"]
+     [:h2 [:a {:name "runcmd"}] "Run command"]
      [:pre (make-run-command run)]]]])
 
 (defhtml run-parameters
   [run]
   [:section
    [:div.page-header
-    [:a {:name "parameters"}
-     [:h1 "Parameters"]]]
+    [:h1 [:a {:name "parameters"}] "Parameters"]]
    ;; treat run as params since it has all the right fields
    (parameters-summary run true)])
 
@@ -79,8 +77,7 @@
   (let [projects (list-projects)]
     [:section
      [:div.page-header
-      [:a {:name "project"}
-       [:h1 "Project"]]]
+      [:h1 [:a {:name "project"}] "Project"]]
      [:form.form-horizontal {:method "POST" :action (gurl "/run/set-project")}
       (hidden-field :runid (:runid run))
       [:div.control-group
@@ -96,7 +93,7 @@
   [run]
   [:section
    [:div.page-header
-    [:h1 "Delete"]]
+    [:h1 [:a {:name "delete"}] "Delete"]]
    (form-to [:post (gurl "/run/delete-run")]
             (hidden-field :runid (:runid run))
             [:div.form-actions
@@ -135,10 +132,11 @@
      (format "%s/%s run %s" (:problem run) (:name run) runid)
      [:header.jumbotron.subhead
       [:div.row-fluid
-       [:h1 (format "%s/%s run %s <small>(%s)</small>"
-               (:problem run) (:name run) runid
-               (if (:comparison run)
-                 "comparative" "non-comparative"))]]]
+       [:h1 [:a {:name "run"}]
+        (format "%s/%s run %s <small>(%s)</small>"
+                (:problem run) (:name run) runid
+                (if (:comparison run)
+                  "comparative" "non-comparative"))]]]
      [:p (link-to (gurl (format "/run/tables/%s" runid))
                   "View results tables...")]
      [:p (link-to (gurl (format "/run/impacts/%s" runid))
